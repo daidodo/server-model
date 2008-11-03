@@ -323,7 +323,7 @@ namespace Tools
     //根据timeMs毫秒生成到期时间
     void GetTimespec(U32 timeMs,struct timespec & ts);
 
-    //得到微秒级的当前时间 + elapse(毫秒)
+    //得到微秒级的当前时间 + elapse(微秒)
     U64 GetTimeUs(U64 elapse = 0);
 
     //秒级别的时间字符串,格式设置参考strftime函数

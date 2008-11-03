@@ -53,7 +53,9 @@
 #       define LOGGER_WARN(a,b)     LOG4CPLUS_WARN(a,b)
 #       define LOGGER_ERROR(a,b)    LOG4CPLUS_ERROR(a,b)
 #       define LOGGER_FATAL(a,b)    LOG4CPLUS_FATAL(a,b)
+        NS_SERVER_BEGIN
         extern log4cplus::Logger logger;
+        NS_SERVER_END
 #   endif
 #else
 #   define INIT_LOGGER(filename)
