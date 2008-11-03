@@ -5,6 +5,10 @@
 
 NS_SERVER_BEGIN
 
+#if defined(LOGGER) && !defined(LOGSYS)
+GLOBAL_LOGGER(logger,"");
+#endif
+
 #ifndef NDEBUG
 CMutex _G_cerr_mutex;   //global mutex for std::cerr
 #endif
