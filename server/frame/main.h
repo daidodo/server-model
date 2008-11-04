@@ -10,14 +10,14 @@
 
 using namespace std;
 using namespace NS_SERVER;
-
-NS_SERVER_BEGIN
-
-#if defined(LOGGER) && !defined(LOGSYS)
-GLOBAL_LOGGER(logger,"");
-#endif
-
-NS_SERVER_END
+//
+//NS_SERVER_BEGIN
+//
+//#if defined(LOGGER) && !defined(LOGSYS)
+//GLOBAL_LOGGER(logger,"");
+//#endif
+//
+//NS_SERVER_END
 
 static const char * programName = 0;
 
