@@ -58,7 +58,6 @@ bool test_entry(int choice)
 
 int main(int argc,char ** argv)
 {
-    INIT_LOGGER(0);
     __DZ_STRING configfile;
     if(argc == 1)
         configfile = "test.conf";

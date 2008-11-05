@@ -62,7 +62,6 @@ void CStatsServer::writeHead() const
 {
     assert(acceptServer_ && (epollServer_ || pollServer_) && tcpServer_ && cmdHandler_);
     LOCAL_LOGGER(logger,"CStatsServer::writeHead");
-    DEBUG("open server stats file "<<serverStatusFile_);
     std::ofstream outf(serverStatusFile_.c_str());
     if(!outf.is_open()){
         ERROR("cannot open server status file="<<serverStatusFile_);
@@ -95,7 +94,6 @@ void CStatsServer::writeStats()
 {
     assert(acceptServer_ && (epollServer_ || pollServer_) && tcpServer_ && cmdHandler_);
     LOCAL_LOGGER(logger,"CStatsServer::writeStats");
-    DEBUG("open server stats file "<<serverStatusFile_<<" and write");
     std::ofstream outf(serverStatusFile_.c_str(),std::ios_base::app);
     if(!outf.is_open()){
         ERROR("cannot open server status file="<<serverStatusFile_);

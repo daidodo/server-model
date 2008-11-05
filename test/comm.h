@@ -12,6 +12,8 @@
 #include <common/EncryptorAes.h>
 #include <common/Sockets.h>
 
+using namespace NS_SERVER;
+
 #define USE_ENCRYPT 0
 
 const size_t HEAD_LEN = 12;
