@@ -20,6 +20,7 @@
         20081016    调整类结构，引入CDataStreamBase作为所有数据流基类
                     重写CInByteStream和COutByteStream，加入更多类型支持
                     引入manipulator，并实现多种输入输出方式
+        20081106    增加Manip::insert
     Manual:
         请参考"docs/DataStream-manual.txt"
     
@@ -362,6 +363,19 @@ public:
         Seek(old,Begin);
         return *this;
     }
+    //insert value into a particular position and change cur_ relatively
+    template<class T>
+    __Myt & operator <<(const NS_IMPL::CManipulatorInsert<T> & m){
+        __Myt ds;
+        ds.need_reverse_ = need_reverse_;
+        if(ds<<m.Value()){
+            __DZ_VECTOR(char) tmp;
+            ds.ExportData(tmp);
+            data_.insert(data_.begin() + m.Off(),tmp.begin(),tmp.end());
+            cur_ += tmp.size();
+        }
+        return *this;
+    }
 private:
     template<typename T>
     __Myt & writePod(T c){
@@ -405,60 +419,58 @@ private:
 namespace Manip{
     //write array( = length + raw array)
     template<class T>
-    inline NS_IMPL::CManipulatorArray<T> array(T * c,size_t sz,size_t * real_sz = 0)
-    {
+    inline NS_IMPL::CManipulatorArray<T> array(T * c,size_t sz,size_t * real_sz = 0){
         return NS_IMPL::CManipulatorArray<T>(c,sz,real_sz);
     }
 
     //read/write raw array
     template<class T>
-    inline NS_IMPL::CManipulatorRaw<T> raw(T * c,size_t sz)
-    {
+    inline NS_IMPL::CManipulatorRaw<T> raw(T * c,size_t sz){
         return NS_IMPL::CManipulatorRaw<T>(c,sz);
     }
 
     //read/write range [first,last) of raw array
     template<class Iter>
-    inline NS_IMPL::CManipulatorRange<Iter> range(Iter first,Iter last)
-    {
+    inline NS_IMPL::CManipulatorRange<Iter> range(Iter first,Iter last){
         return NS_IMPL::CManipulatorRange<Iter>(first,last);
     }
 
     //set byte order type(NetOrder or HostOrder)
-    inline NS_IMPL::CManipulatorSetOrder set_order(NS_IMPL::CDataStreamBase::EOrderType order)
-    {
+    inline NS_IMPL::CManipulatorSetOrder set_order(NS_IMPL::CDataStreamBase::EOrderType order){
         return NS_IMPL::CManipulatorSetOrder(order);
     }
 
-    inline NS_IMPL::CManipulatorSetOrder set_order(bool netByteOrder)
-    {
+    inline NS_IMPL::CManipulatorSetOrder set_order(bool netByteOrder){
         return NS_IMPL::CManipulatorSetOrder(
             netByteOrder ? NS_IMPL::CDataStreamBase::NetOrder : NS_IMPL::CDataStreamBase::HostOrder);
     }
 
     //set read/write position
-    inline NS_IMPL::CManipulatorSeek seek(ssize_t off,NS_IMPL::CDataStreamBase::ESeekDir dir = NS_IMPL::CDataStreamBase::Begin)
-    {
+    inline NS_IMPL::CManipulatorSeek seek(ssize_t off,NS_IMPL::CDataStreamBase::ESeekDir dir = NS_IMPL::CDataStreamBase::Begin){
         return NS_IMPL::CManipulatorSeek(off,dir);
     }
 
     //skip/reserve certain bytes
-    inline NS_IMPL::CManipulatorSeek skip(size_t off)
-    {
+    inline NS_IMPL::CManipulatorSeek skip(size_t off){
         return NS_IMPL::CManipulatorSeek(off,NS_IMPL::CDataStreamBase::Cur);
     }
 
     //read/write value from offset position
     template<class T>
-    inline NS_IMPL::CManipulatorOffsetValue<T> offset_value(size_t offset,T & val)
-    {
+    inline NS_IMPL::CManipulatorOffsetValue<T> offset_value(size_t offset,T & val){
         return NS_IMPL::CManipulatorOffsetValue<T>(offset,val);
     }
     template<class T>
-    inline NS_IMPL::CManipulatorOffsetValue<const T> offset_value(size_t offset,const T & val)
-    {
+    inline NS_IMPL::CManipulatorOffsetValue<const T> offset_value(size_t offset,const T & val){
         return NS_IMPL::CManipulatorOffsetValue<const T>(offset,val);
     }
+
+    //insert value into offset position
+    template<class T>
+    inline NS_IMPL::CManipulatorInsert<T> insert(size_t offset,const T & val){
+        return NS_IMPL::CManipulatorInsert<T>(offset,val);
+    }
+
 }//namespace Manip
 
 NS_SERVER_END

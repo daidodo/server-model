@@ -80,8 +80,8 @@ public:
         , sz1_(sz)
         , sz2_(p)
     {}
-    T * const & Ptr() const{return c_;}
-    const size_t & Size1() const{return sz1_;}
+    T * Ptr() const{return c_;}
+    size_t Size1() const{return sz1_;}
     void Size2(size_t sz) const{
         if(sz2_)
             *sz2_ = sz;
@@ -95,8 +95,8 @@ class CManipulatorRaw
     size_t  sz_;
 public:
     CManipulatorRaw(T * c,size_t sz):c_(c),sz_(sz){}
-    T * const & Ptr() const{return c_;}
-    const size_t & Size() const{return sz_;}
+    T * Ptr() const{return c_;}
+    size_t Size() const{return sz_;}
 };
 
 template<typename Iter>
@@ -108,8 +108,8 @@ public:
         : beg_(first)
         , end_(last)
     {}
-    const Iter & Begin() const{return beg_;}
-    const Iter & End() const{return end_;}
+    Iter Begin() const{return beg_;}
+    Iter End() const{return end_;}
 };
 
 class CManipulatorSetOrder
@@ -117,7 +117,7 @@ class CManipulatorSetOrder
     CDataStreamBase::EOrderType order_;
 public:
     explicit CManipulatorSetOrder(CDataStreamBase::EOrderType od):order_(od){}
-    const CDataStreamBase::EOrderType & Order() const{return order_;}
+    CDataStreamBase::EOrderType Order() const{return order_;}
 };
 
 class CManipulatorSeek
@@ -129,8 +129,8 @@ public:
         : off_(off)
         , dir_(dir)
     {}
-    const ssize_t & Off() const{return off_;}
-    const CDataStreamBase::ESeekDir & Dir() const{return dir_;}
+    ssize_t Off() const{return off_;}
+    CDataStreamBase::ESeekDir Dir() const{return dir_;}
 };
 
 template<class T>
@@ -144,7 +144,21 @@ public:
         , off_(off)
     {}
     T & Value() const{return val_;}
-    const size_t & Off() const{return off_;}
+    size_t Off() const{return off_;}
+};
+
+template<class T>
+class CManipulatorInsert
+{
+    const T &   val_;
+    size_t      off_;
+public:
+    CManipulatorInsert(size_t off,const T & val)
+        : val_(val)
+        , off_(off)
+    {}
+    const T & Value() const{return val_;}
+    size_t Off() const{return off_;}
 };
 
 NS_IMPL_END
