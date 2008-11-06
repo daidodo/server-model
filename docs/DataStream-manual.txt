@@ -306,6 +306,15 @@ COutByteStream::operator <<()支持的其他功能：
 			//首先从当前写指针位置向前跳14字节，写入一个U32，然后
 			//向前后10字节，回到原来的位置
 
-
-
+向指定位置插入数据，通过Manip::insert()函数实现。
+例如：
+	COutByteStream ds;
+	ds<<U32(1)<<std::string("abc")
+	    <<Manip::insert(4,U64(123));
+			//将U64(123)插入缓冲区偏移为4的位置，所有后面的数据将自
+			//向后移动8字节（U64的字节长度），写指针也会随之向后移
+			//动8字节
+等价于：
+	COutByteStream ds;
+	ds<<U32(1)<<U64(123)<<std::string("abc");
 

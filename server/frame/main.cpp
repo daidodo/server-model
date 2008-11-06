@@ -1,5 +1,5 @@
 //for test
-#define __DZ_TEST   0
+#define __DZ_TEST   1
 
 #include "main.h"
 
@@ -9,6 +9,7 @@
 //#   include <common/Logger.h>
 //#   include <common/Threads.h>
 #   include <common/Tools.h>
+#   include <common/DataStream.h>
 //#   include <common/LockInt.h>
 //#   include <common/LockQueue.h>
 //#   include <common/Epoll.h>
@@ -35,7 +36,14 @@ void * thread(void * arg)
 int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
-
+    COutByteStream ds;
+    ds<<U32(1)<<U8(2)<<__DZ_STRING("abc");
+    cout<<ds.Tell()<<endl;
+    ds<<Manip::insert(4,U32(8));
+    cout<<ds.Tell()<<endl;
+    __DZ_VECTOR(char) data;
+    ds.ExportData(data);
+    cout<<"data="<<Tools::DumpHex(data)<<endl;
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;
