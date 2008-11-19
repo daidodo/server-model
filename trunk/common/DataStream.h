@@ -30,6 +30,7 @@
 #include <string>
 #include <vector>
 #include <common/impl/DataStream_impl.h>
+#include <common/Tools.h>
 
 NS_SERVER_BEGIN
 
