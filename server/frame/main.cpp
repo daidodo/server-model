@@ -1,5 +1,5 @@
 //for test
-#define __DZ_TEST   1
+#define __DZ_TEST   0
 
 #include "main.h"
 

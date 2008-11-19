@@ -21,7 +21,6 @@ __DZ_STRING CSockAddr::ToString() const
     const char * UNKNOWN = "unknown";
     if(sa_.size() < sizeof(__SA4))
         return UNKNOWN;
-    //socklen_t salen = socklen_t(sa_.size());
     char str[128];  //Unix domain is largest
     __DZ_OSTRINGSTREAM oss;
 	switch(SA()->sa_family){
