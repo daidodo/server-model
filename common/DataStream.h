@@ -361,7 +361,8 @@ public:
         size_t old = cur_;
         Seek(m.Off(),Begin);
         *this<<(m.Value());
-        Seek(old,Begin);
+        if(old > cur_)
+            Seek(old,Begin);
         return *this;
     }
     //insert value into a particular position and change cur_ relatively
@@ -405,9 +406,12 @@ private:
     }
     template<typename T>
     __Myt & writeArray(const T * c,size_t sz){
-        assert(c);
         operator <<(U32(sz));
-        return writeRaw(c,sz);
+        if(sz){
+            assert(c);
+            return writeRaw(c,sz);
+        }else
+            return *this;
     }
     void ensure(size_t len){
         size_t curLen = data_.size();
@@ -452,7 +456,7 @@ namespace Manip{
     }
 
     //skip/reserve certain bytes
-    inline NS_IMPL::CManipulatorSeek skip(size_t off){
+    inline NS_IMPL::CManipulatorSeek skip(ssize_t off){
         return NS_IMPL::CManipulatorSeek(off,NS_IMPL::CDataStreamBase::Cur);
     }
 

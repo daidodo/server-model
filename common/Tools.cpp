@@ -122,9 +122,9 @@ namespace Tools{
         for(const char *t = v,*e = v + check_len;t < e;++t)
             if(*t && IsReadable(*t))
                 ++readable;
-        if(readable < (check_len >> 2))
+        if(readable <= (check_len >> 1))
             ret += DumpHex(v,std::min(sz,show_sz),' ',false);
-        else if(readable < (check_len - (check_len >> 2)))
+        else if(readable < check_len)
             ret += DumpVal(v,std::min(sz,show_sz),8,false);
         else
             ret += DumpStr(v,std::min(sz,show_sz),'.',false);

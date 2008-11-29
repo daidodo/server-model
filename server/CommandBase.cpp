@@ -41,6 +41,7 @@ RCmdBase::RCmdBase(U32 cmdtype)
     : version_(CMD_VERSION)
     , cmdtype_(cmdtype)
     , seq_(0)
+    , length_(0)
     , useHttp_(false)
 {}
 
@@ -48,13 +49,14 @@ RCmdBase::RCmdBase(U32 cmdtype,const QCmdBase & qhead)
     : version_(qhead.version_)
     , cmdtype_(cmdtype)
     , seq_(qhead.seq_)
+    , length_(0)
     , useHttp_(qhead.useHttp_)
 {}
 
 void RCmdBase::Encode(COutByteStream & ds) const
 {
     size_t start = ds.Size();
-    if(0){  //encrypt data if neccessary
+    if(version_ > 100){  //encrypt data if neccessary
         COutByteStream dss;
         RCmdBase::EncodeParam(dss);
         EncodeParam(dss);
@@ -62,7 +64,7 @@ void RCmdBase::Encode(COutByteStream & ds) const
         dss.ExportData(data);
         CEncryptorAes aes;
         aes.SetKey(&data[0],QCmdBase::ENCRYPT_KEY_LEN);
-        aes.Encrypt(data,QCmdBase::CMD_TYPE_OFFSET,encryptData);
+        aes.Encrypt(data,QCmdBase::HEAD_LEN,encryptData);
         ds<<Manip::raw(&encryptData[0],encryptData.size());
     }else{
         RCmdBase::EncodeParam(ds);

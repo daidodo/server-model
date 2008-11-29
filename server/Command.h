@@ -28,7 +28,7 @@ struct CQueryRespCmd : public RCmdBase
     U8          result_;
     __DZ_STRING fileHash_;
     __DZ_STRING clientHash_;
-    __DZ_STRING peerId_;
+    __DZ_VECTOR(__DZ_STRING) peerId_;
     //functions:
     explicit CQueryRespCmd(const QCmdBase & head);
     __DZ_STRING ToStringHelp() const;
