@@ -31,11 +31,13 @@ QCmdBase * QCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
     LOCAL_LOGGER(logger,"QCmdBase::CreateCommand");
     DEBUG("create command from data="<<Tools::DumpHex(data));
     CInByteStream ds(data);
+    U16 ver;
+    ds>>Manip::offset_value(0,ver);
     __DZ_VECTOR(char) decryptData;
-    if(0){    //decrypt data if neccessary
+    if(ver > 100){    //decrypt data if neccessary
         CEncryptorAes aes;
         aes.SetKey(&data[0],ENCRYPT_KEY_LEN);
-        int n = aes.Decrypt(data,CMD_TYPE_OFFSET,decryptData);
+        int n = aes.Decrypt(data,HEAD_LEN,decryptData);
         if(n < 0){
             ERROR("decrypt cmd data="<<Tools::DumpHex(data)<<" return "<<n);
             return 0;
@@ -158,9 +160,10 @@ __DZ_STRING CQueryRespCmd::ToStringHelp() const
     __DZ_OSTRINGSTREAM oss;
     oss<<"(result_="<<U32(result_)
         <<",fileHash_="<<Tools::DumpHex(fileHash_)
-        <<",clientHash_="<<Tools::DumpHex(clientHash_)
-        <<",peerId_="<<peerId_
-        <<")";
+        <<",clientHash_="<<Tools::DumpHex(clientHash_);
+    for(size_t i = 0;i < peerId_.size();++i)
+        oss<<",peerId_["<<i<<"]="<<peerId_[i];
+    oss<<")";
     return oss.str();
 }
 
@@ -168,7 +171,8 @@ void CQueryRespCmd::EncodeParam(COutByteStream & ds) const
 {
     LOCAL_LOGGER(logger,"CQueryRespCmd::EncodeParam");
     DEBUG(ToString());
-    ds<<result_<<fileHash_<<clientHash_<<peerId_;
+    ds<<result_<<fileHash_<<clientHash_
+        <<Manip::array(&peerId_[0],peerId_.size());
 }
 
 NS_SERVER_END

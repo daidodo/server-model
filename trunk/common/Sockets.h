@@ -145,6 +145,8 @@ public:
     //from返回谁发送了数据,如果不需要,请使用CSocket::RecvData
     ssize_t RecvData(CSockAddr & from,__DZ_VECTOR(char) & buf,size_t sz,bool block = false);
     bool SendData(const CSockAddr & to,const __DZ_VECTOR(char) & buf,U32 timeoutMs);
+    using CSocket::RecvData;
+    using CSocket::SendData;
 private:
     bool ensureSock(const CSockAddr & addr);
 };

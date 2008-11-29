@@ -36,14 +36,7 @@ void * thread(void * arg)
 int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
-    COutByteStream ds;
-    ds<<U32(1)<<U8(2)<<__DZ_STRING("abc");
-    cout<<ds.Tell()<<endl;
-    ds<<Manip::insert(4,U32(8));
-    cout<<ds.Tell()<<endl;
-    __DZ_VECTOR(char) data;
-    ds.ExportData(data);
-    cout<<"data="<<Tools::DumpHex(data)<<endl;
+    cout<<Tools::TimeString(1227442967)<<endl;
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;

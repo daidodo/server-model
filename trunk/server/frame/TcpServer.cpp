@@ -132,44 +132,46 @@ bool CTcpServer::recvCmdData(int fd,__SockPtr & pSock,U32 & cc,U32 & rc,U32 & hc
             ret = __CmdSock::RET_CONTINUE;
         }
     }
+    bool r = true;
     if(ret == __CmdSock::RET_CLOSED){           //peer closed
         DEBUG("pSock="<<Tools::ToStringPtr(pSock)<<" closed");
         pSock->ResetRecv();
         ++cc;
+        r = false;
     }else if(ret == __CmdSock::RET_ERROR){      //recv error
         ERROR("recv from pSock="<<Tools::ToStringPtr(pSock)<<" error"
             <<CSocket::ErrMsg());
         pSock->ResetRecv();
         ++rc;
+        r = false;
     }else if(ret == __CmdSock::RET_CMD_ERROR){  //cmd head error
         CCmdBuf cmdbuf;
         pSock->ExportCmdData(cmdbuf);
         ERROR("error cmd head buf="<<Tools::DumpVal(cmdbuf.Buf)<<" from pSock="
             <<Tools::ToStringPtr(pSock)<<", close it");
         ++hc;
-    }else{                                      //succ, decode
-        DEBUG("recv "<<cmdData.size()<<" cmd bufs from pSock="
-            <<Tools::ToStringPtr(pSock));
-        for(__CmdData::const_iterator i = cmdData.begin();i != cmdData.end();++i){
-            QCmdBase * pCmd = QCmdBase::CreateCommand(i->Buf);
-            if(!pCmd){                          //decode body error
-                ERROR("decode command error from "<<Tools::ToStringPtr(pSock)
-                    <<", data buffer="<<Tools::DumpVal(i->Buf));
-                ++bc;
-                continue;
-            }
-            pCmd->UseHttp(i->UseHttp);
-            DEBUG("push command="<<Tools::ToStringPtr<QCmdBase *>(pCmd)<<" from "
-                <<Tools::ToStringPtr(pSock)<<" into queryCmdQue_");
-            if(!queryCmdQue_.Push(__CmdTriple(pCmd,fd,pSock))){
-                WARN("queryCmdQue_.Push failed for pCmd="<<Tools::ToStringPtr(pCmd)
-                    <<" from "<<Tools::ToStringPtr(pSock)<<", release pCmd");
-                QCmdBase::ReleaseCommand(pCmd);
-            }
+        r = false;
+    }//decode
+    DEBUG("recv "<<cmdData.size()<<" cmd bufs from pSock="
+        <<Tools::ToStringPtr(pSock));
+    for(__CmdData::const_iterator i = cmdData.begin();i != cmdData.end();++i){
+        QCmdBase * pCmd = QCmdBase::CreateCommand(i->Buf);
+        if(!pCmd){                          //decode body error
+            ERROR("decode command error from "<<Tools::ToStringPtr(pSock)
+                <<", data buffer="<<Tools::DumpVal(i->Buf));
+            ++bc;
+            continue;
         }
-        return true;
+        pCmd->UseHttp(i->UseHttp);
+        DEBUG("push command="<<Tools::ToStringPtr<QCmdBase *>(pCmd)<<" from "
+            <<Tools::ToStringPtr(pSock)<<" into queryCmdQue_");
+        if(!queryCmdQue_.Push(__CmdTriple(pCmd,fd,pSock))){
+            WARN("queryCmdQue_.Push failed for pCmd="<<Tools::ToStringPtr(pCmd)
+                <<" from "<<Tools::ToStringPtr(pSock)<<", release pCmd");
+            QCmdBase::ReleaseCommand(pCmd);
+        }
     }
-    return false;
+    return r;
 }
 
 NS_SERVER_END

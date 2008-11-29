@@ -60,7 +60,9 @@ void CCmdHandler::processCmd(CQueryCmd & cmd,__Buf & respdata,CCommandStats & st
     resp.result_ = 0;
     resp.fileHash_ = cmd.fileHash_;
     resp.clientHash_ = cmd.clientHash_;
-    resp.peerId_ = cmd.peerId_;
+    resp.peerId_.push_back(cmd.peerId_);
+    resp.peerId_.push_back(cmd.peerId_ + "abc");
+    resp.peerId_.push_back(cmd.peerId_ + "efg");
     INFO("resp cmd="<<resp.ToString());
     readyForSend(resp,respdata);
 }
