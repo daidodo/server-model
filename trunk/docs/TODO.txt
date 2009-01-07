@@ -21,6 +21,8 @@
 (FIXED)3.CmdHandler线程里太频繁的执行Tools::GetTimeUs()，可能成为性能瓶颈
 	通过配置，选择是否统计命令执行时间
 (FIXED)4.CEpollServer::handleExpiredFd里没有从epoll_里删除fd
+(FIXED)5.CCmdSock::RecvCommand函数内，如果recv_left_为0，会误认为对方关闭连接
+	此时应该返回RET_COMPLETE
 
                 SEVER TEST:
 

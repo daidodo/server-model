@@ -36,7 +36,7 @@ void * thread(void * arg)
 int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
-    cout<<Tools::TimeString(1227442967)<<endl;
+    cout<<Tools::TimeString(1229601600)<<endl;
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;
