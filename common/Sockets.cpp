@@ -178,6 +178,22 @@ bool CSocket::SetReuse(bool on)
     return setsockopt(fd_,SOL_SOCKET,SO_REUSEADDR,&flag,sizeof flag) == 0;
 }
 
+bool CSocket::SetSendTimeout(U32 timeMs)
+{
+    struct timeval tv;
+    tv.tv_sec = timeMs / 1000;
+    tv.tv_usec = timeMs % 1000;
+    return setsockopt(fd_,SOL_SOCKET,SO_RCVTIMEO,(const char *)&tv,sizeof tv) == 0;
+}
+
+bool CSocket::SetRecvTimeout(U32 timeMs)
+{
+    struct timeval tv;
+    tv.tv_sec = timeMs / 1000;
+    tv.tv_usec = timeMs % 1000;
+    return setsockopt(fd_,SOL_SOCKET,SO_SNDTIMEO,(const char *)&tv,sizeof tv) == 0;
+}
+
 bool CSocket::SetSendSize(size_t sz)
 {
     if(!IsValid())

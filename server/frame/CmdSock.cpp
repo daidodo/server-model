@@ -28,6 +28,8 @@ CCmdSock::CCmdSock()
 int CCmdSock::RecvCommand(bool block,int cmdtype)
 {
     size_t oldsz = recv_data_.size();
+    if(!recv_left_)
+        return RET_COMPLETE;
     ssize_t n =  RecvData(recv_data_,recv_left_,block);
     if(n > 0){      //recv succ
         if(U32(n) < recv_left_){

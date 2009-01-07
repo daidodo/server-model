@@ -121,7 +121,8 @@ clean : cleandist
 
 love: clean all
 
+.PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleandist clean love  
+
 sinclude $(SERVERDEP) $(COMMONDEP) $(TESTDEP)
 
-.PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleandist clean love  
 

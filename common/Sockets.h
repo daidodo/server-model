@@ -88,6 +88,8 @@ public:
     bool SetLinger(bool on = true,int timeout = 0);
     bool SetBlock(bool on = true);
     bool SetReuse(bool on = true);
+    bool SetSendTimeout(U32 timeMs);
+    bool SetRecvTimeout(U32 timeMs);
     bool SetSendSize(size_t sz);
     bool SetRecvSize(size_t sz);
     size_t GetSendSize() const;
