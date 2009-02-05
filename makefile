@@ -8,7 +8,7 @@ TEST_TARGET    :=test.out
 SRC_SUFFIX     :=cpp c
 
     #external
-EXTERN_FLAGS   :=#-O3
+EXTERN_FLAGS   :=
 EXTERN__LIB    :=
 
 ####以下是可选的编译参数
@@ -18,7 +18,7 @@ LOG            :=-DLOGGER
 LOGSYS         :=-DLOGSYS
 #LOG4CLIB       :=-llog4cplus
     #------debug mode or not(-DNDEBUG)
-#RELEASE        :=-DNDEBUG
+#RELEASE        :=-DNDEBUG -O3
     #------use zlib or not
 #ZIP           :=-lz
     #------use openssl(-lcrypto) or not
@@ -123,6 +123,16 @@ love: clean all
 
 .PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleandist clean love  
 
+ifneq (${MAKECMDGOALS},force)
+ifneq (${MAKECMDGOALS},cleanobj)
+ifneq (${MAKECMDGOALS},cleandep)
+ifneq (${MAKECMDGOALS},cleandist)
+ifneq (${MAKECMDGOALS},clean)
 sinclude $(SERVERDEP) $(COMMONDEP) $(TESTDEP)
+endif
+endif
+endif
+endif
+endif
 
 
