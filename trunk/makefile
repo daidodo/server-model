@@ -8,7 +8,7 @@ TEST_TARGET    :=test.out
 SRC_SUFFIX     :=cpp c
 
     #external
-EXTERN_FLAGS   :=
+EXTERN_FLAGS   :=#-pg
 EXTERN__LIB    :=
 
 ####以下是可选的编译参数
