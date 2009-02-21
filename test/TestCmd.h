@@ -8,3 +8,5 @@ bool Query(int fd,U16 port);
 bool BatchQuery(const CSockAddr & servAddr);
 
 #endif
+
+//Test message!!!
