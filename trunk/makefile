@@ -36,7 +36,7 @@ PROGRAMVERSION :=$(SERVERDIR)ProgramVersion
 
 CC             :=$(CXX)
 INCLUDE        :=-I./ -I/usr/local/mysql/include/
-CXXFLAGS       :=-Wall -g $(INCLUDE) $(LOG) $(LOGSYS) $(RELEASE) $(EPOLL) $(EXTERN_FLAGS)
+CXXFLAGS       :=-Wall -g $(INCLUDE) -D_REENTRANT $(LOG) $(LOGSYS) $(RELEASE) $(EPOLL) $(EXTERN_FLAGS)
 LIB            :=-L/usr/local/mysql/lib -L/usr/lib -L/usr/local/lib -L./lib -lstdc++ -lpthread -lrt $(MYSQL) $(LOG4CLIB) $(ZIP) $(CRYPTO) $(EXTERN__LIB)
 CFLAGS         :=$(CXXFLAGS)
 
