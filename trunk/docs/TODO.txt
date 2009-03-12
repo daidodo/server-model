@@ -13,6 +13,8 @@
 	这样会导致用户的设置无效
 (DONE)11.用名字空间包裹整个代码
 (CANCLE)12.CLockHashTable代码需要改进一下
+13.CmdBase只能支持一种命令头，如果有多套命令，将会非常麻烦
+14.CmdSock与命令的耦合太强，在多套命令体系里不适用，需要优化设计
 
                 SERVER BUGS:
 (FIXED)1.在服务器fd个数满了之后，accept线程会陷入死循环，浪费CPU

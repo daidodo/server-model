@@ -151,7 +151,7 @@ class CMyResult
     MYSQL_RES * res_;
     bool        stored_;    //是否是mysql_store_result返回的
 public:
-    CMyResult():res_(0){}
+    CMyResult():res_(0),stored_(false){}
     ~CMyResult(){Free();}
     //结果是否有效(不为空)
     bool IsValid() const{return res_ != 0;}

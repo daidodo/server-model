@@ -19,6 +19,7 @@ LOGSYS         :=-DLOGSYS
 #LOG4CLIB       :=-llog4cplus
     #------debug mode or not(-DNDEBUG)
 #RELEASE        :=-DNDEBUG -O3
+DEBUG           :=-O0
     #------use zlib or not
 #ZIP           :=-lz
     #------use openssl(-lcrypto) or not
@@ -36,7 +37,7 @@ PROGRAMVERSION :=$(SERVERDIR)ProgramVersion
 
 CC             :=$(CXX)
 INCLUDE        :=-I./ -I/usr/local/mysql/include/
-CXXFLAGS       :=-Wall -g $(INCLUDE) -D_REENTRANT $(LOG) $(LOGSYS) $(RELEASE) $(EPOLL) $(EXTERN_FLAGS)
+CXXFLAGS       :=-Wall -g $(INCLUDE) -D_REENTRANT $(LOG) $(LOGSYS) $(DEBUG) $(RELEASE) $(EPOLL) $(EXTERN_FLAGS)
 LIB            :=-L/usr/local/mysql/lib -L/usr/lib -L/usr/local/lib -L./lib -lstdc++ -lpthread -lrt $(MYSQL) $(LOG4CLIB) $(ZIP) $(CRYPTO) $(EXTERN__LIB)
 CFLAGS         :=$(CXXFLAGS)
 
@@ -113,22 +114,26 @@ cleandep :
 	$(RM) $(foreach dir,$(SERVERDIR),$(dir)*.d)
 	$(RM) $(foreach dir,$(TESTDIR),$(dir)*.d)
 
-cleandist : cleanobj cleandep
-
-clean : cleandist
+cleanbin :
 	$(RM) $(BINDIR)$(SERVER_TARGET)
 	$(RM) $(TEST_TARGET_LIST)
 
-love: clean all
+cleandist : cleanobj cleandep
 
-.PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleandist clean love  
+clean : cleandist cleanbin
+
+love: cleanobj cleanbin all
+
+.PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleanbin cleandist clean love  
 
 ifneq (${MAKECMDGOALS},force)
 ifneq (${MAKECMDGOALS},cleanobj)
 ifneq (${MAKECMDGOALS},cleandep)
 ifneq (${MAKECMDGOALS},cleandist)
+ifneq (${MAKECMDGOALS},cleanbin)
 ifneq (${MAKECMDGOALS},clean)
 sinclude $(SERVERDEP) $(COMMONDEP) $(TESTDEP)
+endif
 endif
 endif
 endif
