@@ -5,6 +5,8 @@
     对桶加锁的hash set和map,在CLockHashTable基础上实现
         CLockHashSet
         CLockHashMap
+    History:
+        20090316    CLockHashMap增加BucketSize和Iterate函数，提供遍历容器的途径
 //*/
 
 #include <functional>           //std::equal_to
@@ -95,6 +97,7 @@ public:
     size_type Size() const{return ht_.Size();}
     bool Empty() const{return ht_.Empty();}
     void Clear(){ht_.Clear();}
+    size_type BucketSize() const{return ht_.BucketSize();}
     //Insert返回插入是否成功
     //read_pointer接受返回的只读对象指针(加读锁)
     //write_pointer接受返回的可写对象指针(加写锁)
@@ -125,6 +128,15 @@ public:
     }
     bool Find(const key_type & k,write_pointer & xp){
         return ht_.Find(k,xp);
+    }
+    //遍历容器
+    //Iterate返回链表是否有元素
+    //wh为桶位置
+    bool Iterate(size_type wh,read_pointer & xp) const{
+        return ht_.Iterate(wh,xp);
+    }
+    bool Iterate(size_type wh,write_pointer & xp){
+        return ht_.Iterate(wh,xp);
     }
     //Erase返回移除的节点个数
     size_type Erase(const key_type & k){

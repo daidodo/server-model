@@ -55,7 +55,7 @@ public:
     virtual ~CMutex(){
         pthread_mutex_destroy(&mutex_);
     }
-    void Lock(){
+    void Lock() throw(std::runtime_error){
         int eno = pthread_mutex_lock(&mutex_);
         if(eno)
             throw std::runtime_error(Tools::ErrorMsg(eno).c_str());
@@ -63,8 +63,10 @@ public:
     bool TryLock(){
         return !pthread_mutex_trylock(&mutex_);
     }
-    void Unlock() const{
-        pthread_mutex_unlock(&mutex_);
+    void Unlock() const throw(std::runtime_error){
+        int eno = pthread_mutex_unlock(&mutex_);
+        if(eno)
+            throw std::runtime_error(Tools::ErrorMsg(eno).c_str());
     }
     //在指定的timeMs毫秒内如果不能lock,返回false
     bool TimeLock(U32 timeMs){
@@ -153,7 +155,7 @@ public:
     ~CRWLock(){
         pthread_rwlock_destroy(&lock_);
     }
-    void ReadLock() const{
+    void ReadLock() const throw(std::runtime_error){
         int eno = pthread_rwlock_rdlock(&lock_);
         if(eno)
             throw std::runtime_error(Tools::ErrorMsg(eno).c_str());
@@ -167,7 +169,7 @@ public:
         Tools::GetTimespec(timeMs,ts);
         return !pthread_rwlock_timedrdlock(&lock_,&ts);
     }
-    void WriteLock(){
+    void WriteLock() throw(std::runtime_error){
         int eno = pthread_rwlock_wrlock(&lock_);
         if(eno)
             throw std::runtime_error(Tools::ErrorMsg(eno).c_str());
@@ -201,7 +203,7 @@ public:
     ~CSpinLock(){
         pthread_spin_destroy(&lock_);
     }
-    void Lock(){
+    void Lock() throw(std::runtime_error){
         int eno = pthread_spin_lock(&lock_);
         if(eno)
             throw std::runtime_error(Tools::ErrorMsg(eno).c_str());
