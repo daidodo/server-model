@@ -5,6 +5,8 @@
     对桶进行加锁的hash table,只作为其他容器的内部实现
     建议不要直接使用
         CLockHashTable
+    History:
+        20090316    增加BucketSize和Iterate函数，提供遍历容器的途径
 //*/
 
 #include <vector>
@@ -67,6 +69,7 @@ public:
     ~CLockHashTable(){cleanup();}
     size_type Size() const{return size_;}
     bool Empty() const{return !Size();}
+    size_type BucketSize() const{return bucket_.size();}
     //Insert返回插入是否成功
     //read_pointer接受返回的只读对象指针(加读锁)
     //write_pointer接受返回的可写对象指针(加写锁)
@@ -88,7 +91,7 @@ public:
         key_type k = extract_key()(v);
         size_type buck_pos = hasher()(k) % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(!!xp)
+        if(xp)
             xp.release();
         bool ret = false;
         writeLock(lock);
@@ -111,7 +114,7 @@ public:
         key_type k = extract_key()(v);
         size_type buck_pos = hasher()(k) % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(!!xp)
+        if(xp)
             xp.release();
         bool ret = false;
         writeLock(lock);
@@ -141,7 +144,7 @@ public:
     bool Find(const key_type & k,read_pointer & xp) const{
         size_type buck_pos = hasher()(k) % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(!!xp)
+        if(xp)
             xp.release();
         bool ret = false;
         readLock(lock);
@@ -157,7 +160,7 @@ public:
     bool Find(const key_type & k,write_pointer & xp){
         size_type buck_pos = hasher()(k) % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(!!xp)
+        if(xp)
             xp.release();
         bool ret = false;
         writeLock(lock);
@@ -198,6 +201,41 @@ public:
             unlock(lock_[k]);
         }
         size_ = 0;
+    }
+    //遍历容器
+    //Iterate返回链表是否有元素
+    //wh为桶位置
+    bool Iterate(size_type wh,read_pointer & xp) const{
+        size_type buck_pos = wh % bucket_.size();
+        __LockPtr lock = locker(buck_pos);
+        if(xp)
+            xp.release();
+        bool ret = false;
+        readLock(lock);
+        __NodePtr p =  bucket_[buck_pos];
+        if(p){  //not empty
+            xp.pl_ = lock;
+            xp.pv_ = &p->data_;
+            ret = true;
+        }else
+            unlock(lock);
+        return ret; //user will unlock lock when call xp.release() or destroy xp
+    }
+    bool Iterate(size_type wh,write_pointer & xp){
+        size_type buck_pos = wh % bucket_.size();
+        __LockPtr lock = locker(buck_pos);
+        if(xp)
+            xp.release();
+        bool ret = false;
+        writeLock(lock);
+        __NodePtr p =  bucket_[buck_pos];
+        if(p){  //not empty
+            xp.pl_ = lock;
+            xp.pv_ = &p->data_;
+            ret = true;
+        }else
+            unlock(lock);
+        return ret; //user will unlock lock when call xp.release() or destroy xp
     }
     //改变对象指针的读写锁状态
     //把读锁rp变成写锁wp，rp会被release

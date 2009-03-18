@@ -6,7 +6,7 @@
         CLockQueue
     History
         20070925    把pthread_cond_t和pthread_mutex_t替换成CCondMutex
-        20071025    加入capacity_,并把CCondMutex和分成CMutex和CCondition
+        20071025    加入capacity_,并把CCondMutex分成和CMutex和CCondition
         20080128    加入PushFront(),把元素放到队列前面
         20080203    加入Mutex(),统一接口
         20080903    增加PopAll(),避免频繁Pop()
