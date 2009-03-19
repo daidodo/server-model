@@ -7,95 +7,96 @@
 //#   include <string>
 //#   include <ctime>
 //#   include <common/Logger.h>
-#   include <common/Threads.h>
+//#   include <common/Threads.h>
 //#   include <common/Tools.h>
 //#   include <common/DataStream.h>
 //#   include <common/LockInt.h>
-#   include <common/LockQueue.h>
-#   include <common/RingBuffer.h>
+//#   include <common/LockQueue.h>
+//#   include <common/RingBuffer.h>
 //#   include <common/Epoll.h>
 //#   include <common/Poll.h>
 //#   include <common/FdMap.h>
-//#   include <common/Mutex.h>
+#   include <common/Mutex.h>
 //#   include <server/frame/CmdSock.h>
 //#   include <common/List.h>
 //#   include <common/Tree.h>
+#   include <common/Semaphore.h>
 
 using namespace NS_SERVER;
 
-//typedef __DZ_STRING __Type;
-typedef int __Type;
-
-//#define WWH
-
-#ifdef WWH
-typedef pv_queue<__Type> __Que;
-#else
-//typedef CLockQueue<__Type> __Que;
-typedef CRingBuf<__Type> __Que;
-#endif
-
-__Que que(1000);
-
-__DZ_STRING randVal()
-{
-    int len = (rand() & 0xF) + 3;
-    __DZ_STRING ret(len,0);
-    for(int i = 0;i < len;++i)
-        ret[i] = (rand() & 63) + 33;
-    return ret;
-}
-
-int randVal(int)
-{
-    return rand();
-}
-
-
-void * thread1(void * arg)
-{
-    const int COUNT = int(arg);
-    for(int j = 0;j < COUNT;++j)
-    for(int i = 0;i < COUNT;){
-#ifdef WWH
-        if(que.push(randVal(i)) < 0){
-#else
-        if(!que.Push(randVal(i))){
-#endif
-            sleep(0);
-        }else
-            ++i;
-    }
-    sleep(-1);
-    return 0;
-}
-
-void * thread2(void * arg)
-{
-    const int COUNT = int(arg);
-    int c = 0;
-    for(int j = 0;j < COUNT;++j)
-    for(__Type s;;){
-        if(c >= COUNT)
-            exit(0);
-#ifdef WWH
-        if(que.empty()){
-            sleep(0);
-        }else{
-            s = que.front();
-            que.pop();
-#else
-        if(!que.Pop(s)){
-            sleep(0);
-        }else{
-#endif
-            ++c;
-            if(!(c & 1023))
-                cout<<s<<endl;
-        }
-    }
-    return 0;
-}
+////typedef __DZ_STRING __Type;
+//typedef int __Type;
+//
+////#define WWH
+//
+//#ifdef WWH
+//typedef pv_queue<__Type> __Que;
+//#else
+////typedef CLockQueue<__Type> __Que;
+//typedef CRingBuf<__Type> __Que;
+//#endif
+//
+//__Que que(1000);
+//
+//__DZ_STRING randVal()
+//{
+//    int len = (rand() & 0xF) + 3;
+//    __DZ_STRING ret(len,0);
+//    for(int i = 0;i < len;++i)
+//        ret[i] = (rand() & 63) + 33;
+//    return ret;
+//}
+//
+//int randVal(int)
+//{
+//    return rand();
+//}
+//
+//
+//void * thread1(void * arg)
+//{
+//    const int COUNT = int(arg);
+//    for(int j = 0;j < COUNT;++j)
+//    for(int i = 0;i < COUNT;){
+//#ifdef WWH
+//        if(que.push(randVal(i)) < 0){
+//#else
+//        if(!que.Push(randVal(i))){
+//#endif
+//            sleep(0);
+//        }else
+//            ++i;
+//    }
+//    sleep(-1);
+//    return 0;
+//}
+//
+//void * thread2(void * arg)
+//{
+//    const int COUNT = int(arg);
+//    int c = 0;
+//    for(int j = 0;j < COUNT;++j)
+//    for(__Type s;;){
+//        if(c >= COUNT)
+//            exit(0);
+//#ifdef WWH
+//        if(que.empty()){
+//            sleep(0);
+//        }else{
+//            s = que.front();
+//            que.pop();
+//#else
+//        if(!que.Pop(s)){
+//            sleep(0);
+//        }else{
+//#endif
+//            ++c;
+//            if(!(c & 1023))
+//                cout<<s<<endl;
+//        }
+//    }
+//    return 0;
+//}
 
 #endif
 
@@ -103,20 +104,8 @@ int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
     INIT_LOGGER(0);
-    if(argc < 2){
-        cerr<<argv[0]<<" COUNT\n";
-        return 1;
-    }
-    int COUNT = atoi(argv[1]);
-    if(COUNT < 2){
-        cerr<<"COUNT = "<<argv[1]<<" is invalid\n";
-        return 1;
-    }
-    CThreads th1(thread1,1),th2(thread2,1);
-    th1.StartThreads("th1",(void *)COUNT,false);
-    th2.StartThreads("th2",(void *)COUNT,false);
-    th1.WaitAll();
-    th2.WaitAll();
+    CSemaphore sem(-1);
+    cout<<SEM_VALUE_MAX<<endl;
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;
