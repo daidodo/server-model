@@ -15,7 +15,6 @@
         20080920    增加lock_type，adapter_type和guard_type，修改GetLock()，Lock()和Unlock()
 //*/
 
-#include <limits>               //std::numeric_limits
 #include <common/Mutex.h>
 #include <common/List.h>
 #include <common/SingleList.h>
@@ -39,6 +38,7 @@ public:
     typedef CLockAdapter<lock_type>             adapter_type;
     typedef CGuard<lock_type>                   guard_type;
 private:
+    static const size_t CAPACITY_DEFAULT = 10000;   //默认容量
     template<class E,class A>
     static void _append(CSingleList<E,A> & to,CSingleList<E,A> & from){
         to.append(from);
@@ -48,11 +48,11 @@ private:
         to.splice(to.end(),from);
     }
 public:
-    explicit CLockQueue(size_t capacity = std::numeric_limits<size_t>::max())
+    explicit CLockQueue(size_t capacity = CAPACITY_DEFAULT)
         : capacity_(capacity)
         , top_size_(0)
     {}
-    explicit CLockQueue(const __MyBase & con,size_t capacity = std::numeric_limits<size_t>::max())
+    explicit CLockQueue(const __MyBase & con,size_t capacity = CAPACITY_DEFAULT)
         : __MyBase(con)
         , capacity_(capacity)
         , top_size_(con.size())

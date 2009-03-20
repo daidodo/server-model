@@ -57,7 +57,7 @@ int CAcceptServer::doIt()
         DEBUG("set fdSockMap_["<<fd<<"]="<<Tools::ToStringPtr(client)
             <<" and push into addingFdQue_");
         fdSockMap_.SetSock(fd,client);
-        if(!addingFdQue_.Push(__FdEvent(fd,__FdEvent::EVENT_READ))){
+        if(!addingFdQue_.Push(__FdEvent(fd,__FdEvent::EVENT_READ),200)){
             ERROR("push fd="<<fd<<" into addingFdQue_ failed, close it");
             fdSockMap_.SetSock(fd,0);
         }else if(stats_)

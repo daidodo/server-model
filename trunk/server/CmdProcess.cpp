@@ -40,12 +40,17 @@ void CCmdHandler::process(const __Job & cmdTriple)
                     int i = fd % EVENT_QUE_SZ_;
                     int ev = __FdEvent::EVENT_WRITE;
                     DEBUG("push fd="<<fd<<", event="<<ev<<" into eventFdQue_["<<i<<"]");
-                    eventFdQue_[i].Push(__FdEvent(fd,ev));
+                    if(!eventFdQue_[i].Push(__FdEvent(fd,ev),500)){
+                        ERROR("push fd="<<fd<<", event=EVENT_WRITE into eventFdQue_["
+                            <<i<<"] failed");
+                    }
                 }
             }else{  //send flag not set, push to addingFdQue_
                 int ev = __FdEvent::EVENT_WRITE;
                 DEBUG("push fd="<<fd<<", event="<<ev<<" into addingFdQue_");
-                addingFdQue_.Push(__FdEvent(fd,ev));
+                if(!addingFdQue_.Push(__FdEvent(fd,ev),1000)){
+                    ERROR("push fd="<<fd<<", event=EVENT_WRITE into addingFdQue_ failed");
+                }
             }
         }
     }

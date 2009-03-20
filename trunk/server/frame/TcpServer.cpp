@@ -69,9 +69,15 @@ int CTcpServer::doIt()
                 }
             }
         }
-        if(!useEpoll_)
-            addingFdQue_.PushAll(addingQue);
-        removeFdQue_.PushAll(removeQue);
+        if(!useEpoll_ && !addingFdQue_.PushAll(addingQue,500)){
+            ERROR("push all to addingFdQue_ failed, close all sockets");
+            fdSockMap_.CloseSock(const_iter_adapt_fun<int>(addingQue.begin(),__FdEvent::ExtractFd)
+                ,const_iter_adapt_fun<int>(addingQue.end(),__FdEvent::ExtractFd));
+        }
+        if(!removeFdQue_.PushAll(removeQue,500)){
+            ERROR("push all to removeFdQue_ failed, close all sockets");
+            fdSockMap_.CloseSock(removeQue.begin(),removeQue.end());
+        }
         if(stats_)
             stats_->Put(cc,rc,hc,bc,sc,se,su);
     }
@@ -165,8 +171,8 @@ bool CTcpServer::recvCmdData(int fd,__SockPtr & pSock,U32 & cc,U32 & rc,U32 & hc
         pCmd->UseHttp(i->UseHttp);
         DEBUG("push command="<<Tools::ToStringPtr<QCmdBase *>(pCmd)<<" from "
             <<Tools::ToStringPtr(pSock)<<" into queryCmdQue_");
-        if(!queryCmdQue_.Push(__CmdTriple(pCmd,fd,pSock))){
-            WARN("queryCmdQue_.Push failed for pCmd="<<Tools::ToStringPtr(pCmd)
+        if(!queryCmdQue_.Push(__CmdTriple(pCmd,fd,pSock),200)){
+            WARN("push into queryCmdQue_ failed for pCmd="<<Tools::ToStringPtr(pCmd)
                 <<" from "<<Tools::ToStringPtr(pSock)<<", release pCmd");
             QCmdBase::ReleaseCommand(pCmd);
         }
