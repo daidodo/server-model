@@ -124,6 +124,7 @@ void CStatsServer::writeStats()
     outf<<"\t"<<tcpServer_->ActiveCount()<<"/"<<tcpServer_->ResetActiveMax();
     outf<<"\t"<<cmdHandler_->ActiveCount()<<"/"<<cmdHandler_->ThreadCount();
     //business
+
     //command stats
     if(cmdHandler_->stats_){
         typedef __CmdStats::container_type      __Cont;

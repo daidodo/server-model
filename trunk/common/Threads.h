@@ -86,6 +86,9 @@ class CThreadManager
 protected:
     typedef typename __Queue::value_type    __Job;
 private:
+    static const int SCHEDULE_INTERVAL_DEFAULT = 1; //s, 默认调度间隔
+    static const int THREAD_COUNT_MIN_DEFAULT = 2;  //默认最少线程数
+    static const int THREAD_COUNT_MAX_DEFAULT = 32; //默认最多线程数
     //worker thread
     static void * threadProc(void * arg){
         assert(arg);
@@ -122,10 +125,10 @@ public:
         : inputQue_(input_que)
         , stackSz_(stack_sz)
         , schedule_(0)
-        , interval_(1)
+        , interval_(SCHEDULE_INTERVAL_DEFAULT)
         , deleteCount_(0)
-        , threadCountMax_(32)
-        , threadCountMin_(2)
+        , threadCountMax_(THREAD_COUNT_MAX_DEFAULT)
+        , threadCountMin_(THREAD_COUNT_MIN_DEFAULT)
     {}
     virtual ~CThreadManager(){}
     //name为服务线程的名字
@@ -153,16 +156,19 @@ public:
     bool Started() const{return !name_.empty();}
     int ThreadCount() const{return threadCount_;}
     int ActiveCount() const{return activeCount_;}
-    void SetThreadCountMax(int thread_max){
+    //设置调度线程的处理间隔时间（秒）
+    void ScheduleInterval(int timeS){interval_ = timeS;}
+    void ThreadCountMax(int thread_max){
         if(thread_max >= threadCountMin_)
             threadCountMax_ = thread_max;
     }
-    void SetThreadCountMin(int thread_min){
-        if(thread_min <= threadCountMax_)
+    void ThreadCountMin(int thread_min){
+        if(thread_min <= threadCountMax_ && thread_min >= THREAD_COUNT_MIN_DEFAULT)
             threadCountMin_ = thread_min;
     }
-    //设置调度线程的处理间隔时间（秒）
-    void SetScheduleInterval(int timeS){interval_ = timeS;}
+    int ScheduleInterval() const{return interval_;}
+    int ThreadCountMax() const{return threadCountMax_;}
+    int ThreadCountMin() const{return threadCountMin_;}
 protected:
     virtual void doIt(__Job &) = 0;
 private:

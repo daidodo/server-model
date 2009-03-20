@@ -55,6 +55,8 @@ void CMainServer::Init(const char * serverconf)
     }
     showConfigFile_ = config.GetString("show.config.file.name","show_config.txt");
     __CmdSock::MaxCmdLength = config.GetInt("tcp.cmd.max.length",1024,64);
+    useEpoll_ = config.GetInt("use.epoll.server");
+    serverStatsOn_ = config.GetInt("server.stats.on");
     //thread statck size
     acceptServerStatckSz_ = config.GetInt("accept.server.stack.size",16 << 10,4 << 10);
     pollServerStackSz_ = config.GetInt("poll.server.stack.size",16 << 10,4 << 10);
@@ -63,10 +65,7 @@ void CMainServer::Init(const char * serverconf)
     cmdHandlerStackSz_ = config.GetInt("command.handler.stack.size",16 << 10,4 << 10);
     statsServerStackSz_ = config.GetInt("server.stats.stack.size",16 << 10,4 << 10);
     //thread count
-    useEpoll_ = config.GetInt("use.epoll.server");
-    serverStatsOn_ = config.GetInt("server.stats.on");
-    tcpServerThreadCount_ = config.GetInt("tcp.server.thread.count",5,1);
-    //cmdHandlerThreadCount_ = config.GetInt("command.handler.thread.count",10,1);
+    tcpServerThreadCount_ = config.GetInt("tcp.server.thread.count",4,1);
     //business
 
     //service
@@ -126,6 +125,8 @@ void CMainServer::ShowConfig(__DZ_STRING verInfo) const
         <<"  configFile_ = "<<configFile_<<endl
         <<"  showConfigFile_ = "<<showConfigFile_<<endl
         <<"  MaxCmdLength = "<<__CmdSock::MaxCmdLength<<endl
+        <<"  useEpoll_ = "<<useEpoll_<<endl
+        <<"  serverStatsOn_ = "<<serverStatsOn_<<endl
         //thread statck size
         <<"  acceptServerStatckSz_ = "<<acceptServerStatckSz_<<endl
         <<"  pollServerStackSz_ = "<<pollServerStackSz_<<endl
@@ -134,10 +135,7 @@ void CMainServer::ShowConfig(__DZ_STRING verInfo) const
         <<"  cmdHandlerStackSz_ = "<<cmdHandlerStackSz_<<endl
         <<"  statsServerStackSz_ = "<<statsServerStackSz_<<endl
         //thread count
-        <<"  useEpoll_ = "<<useEpoll_<<endl
-        <<"  serverStatsOn_ = "<<serverStatsOn_<<endl
         <<"  tcpServerThreadCount_ = "<<tcpServerThreadCount_<<endl
-        //<<"  cmdHandlerThreadCount_ = "<<cmdHandlerThreadCount_<<endl
         //business
         ;
     acceptServer_->ShowConfig(file);
