@@ -260,6 +260,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\Semaphore.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\SharedPtr.h"
 				>
 			</File>

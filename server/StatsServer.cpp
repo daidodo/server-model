@@ -25,7 +25,7 @@ CStatsServer::CStatsServer(CMainServer & mainServer)
 
 void CStatsServer::Init(const __Config & config)
 {
-    __DZ_STRING timestamp       = config.GetString("server.stats.file.name.timestamp",".%y%m%d%H%M%S");
+    __DZ_STRING timestamp       = config.GetString("server.stats.file.name.timestamp",".%y%m%d.%H%M%S");
     serverStatusFile_           = config.GetString("server.stats.file.name");
     serverStatusTimeInterval_   = config.GetInt("server.stats.time.interval",30,5);
     serverStatusFile_ += Tools::TimeString(time(0),timestamp);
@@ -122,7 +122,7 @@ void CStatsServer::writeStats()
     outf<<"\t"<<queryCmdQue_.Size()<<"/"<<queryCmdQue_.ResetTopSize();
     //thread
     outf<<"\t"<<tcpServer_->ActiveCount()<<"/"<<tcpServer_->ResetActiveMax();
-    outf<<"\t"<<cmdHandler_->ActiveCount()<<"/"<<cmdHandler_->ResetActiveMax();
+    outf<<"\t"<<cmdHandler_->ActiveCount()<<"/"<<cmdHandler_->ThreadCount();
     //business
     //command stats
     if(cmdHandler_->stats_){

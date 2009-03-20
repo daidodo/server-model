@@ -7,9 +7,12 @@
 
 NS_SERVER_BEGIN
 
-class CCmdHandler:public CThreadPool
+typedef CMainServer::__QueryCmdQue  __QueryCmdQue;
+
+class CCmdHandler:public CThreadManager<__QueryCmdQue>
 {
 //typedefs:
+    typedef CThreadManager<__QueryCmdQue>   __MyBase;
     typedef CMainServer::__Config       __Config;
     typedef CMainServer::__CmdSock      __CmdSock;
     typedef __CmdSock::buffer_type      __Buf;
@@ -17,8 +20,8 @@ class CCmdHandler:public CThreadPool
     typedef CMainServer::__FdEvent      __FdEvent;
     typedef CMainServer::__FdEventQue   __FdEventQue;
     typedef CMainServer::__FdSockMap    __FdSockMap;
-    typedef CMainServer::__CmdTriple    __CmdTriple;
-    typedef CMainServer::__QueryCmdQue  __QueryCmdQue;
+    //typedef CMainServer::__CmdTriple    __CmdTriple;
+    typedef __MyBase::__Job             __Job;
     struct __Stats{
         __CmdStats cmdStats_;
     };
@@ -28,7 +31,7 @@ class CCmdHandler:public CThreadPool
     __FdSockMap &           fdSockMap_;
     __FdEventQue &          addingFdQue_;
     __FdEventQue * const    eventFdQue_;
-    __QueryCmdQue &         queryCmdQue_;
+    //__QueryCmdQue &         queryCmdQue_;
     const int               EVENT_QUE_SZ_;
     const bool              useEpoll_;
 public:
@@ -45,11 +48,11 @@ public:
     virtual int StartThreads(__DZ_STRING name);
     virtual void WaitAll();
 protected:
-	int doIt();
+	void doIt(__Job & job);
 private:
     void readyForSend(const RCmdBase & cmd,__Buf & respdata);
     //以下函数在"CmdProcess.cpp"内定义
-    void process(const __CmdTriple & cmdTriple);
+    void process(const __Job & cmdTriple);
     //ADD NEW COMMAND PROCESS HERE
     void processCmd(CQueryCmd & cmd,__Buf & respdata,CCommandStats & stats);
     //business:

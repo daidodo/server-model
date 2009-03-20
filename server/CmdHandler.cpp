@@ -6,11 +6,10 @@
 NS_SERVER_BEGIN
 
 CCmdHandler::CCmdHandler(CMainServer & mainServer)
-    : CThreadPool(mainServer.cmdHandlerThreadCount_,mainServer.cmdHandlerStackSz_)
+    : __MyBase(mainServer.queryCmdQue_,mainServer.cmdHandlerStackSz_)
     , fdSockMap_(mainServer.fdSockMap_)
     , addingFdQue_(mainServer.addingFdQue_)
     , eventFdQue_(mainServer.eventFdQue_)
-    , queryCmdQue_(mainServer.queryCmdQue_)
     , EVENT_QUE_SZ_(mainServer.tcpServerThreadCount_)
     , useEpoll_(mainServer.useEpoll_)
     , stats_(mainServer.serverStatsOn_ ? new __Stats : 0)
@@ -54,30 +53,31 @@ void CCmdHandler::ShowConfig(std::ofstream & file) const
 int CCmdHandler::StartThreads(__DZ_STRING name)
 {
     //business
-    return CThreadPool::StartThreads(name);
+    return __MyBase::StartThreads(name);
 }
 
 void CCmdHandler::WaitAll()
 {
     //business
-    CThreadPool::WaitAll();
+    __MyBase::WaitAll();
 }
 
-int CCmdHandler::doIt()
+void CCmdHandler::doIt(__Job & job)
 {
-    LOCAL_LOGGER(logger,"CCmdHandler::doIt");
-    ASSERT(eventFdQue_ && EVENT_QUE_SZ_ > 0,"eventFdQue_="<<eventFdQue_
-        <<", EVENT_QUE_SZ_="<<EVENT_QUE_SZ_<<" invalid");
-	for(__CmdTriple triple;;){
-		if(!queryCmdQue_.Pop(triple)){
-			WARN("pop from queryCmdQue_ failed");
-			continue;
-		}
-		__Active active(Cnt());	//活跃线程计数
-        process(triple);
-    }
-    FATAL_COUT("thread quit");
-	return 0;
+ //   LOCAL_LOGGER(logger,"CCmdHandler::doIt");
+ //   ASSERT(eventFdQue_ && EVENT_QUE_SZ_ > 0,"eventFdQue_="<<eventFdQue_
+ //       <<", EVENT_QUE_SZ_="<<EVENT_QUE_SZ_<<" invalid");
+	//for(__CmdTriple triple;;){
+	//	if(!queryCmdQue_.Pop(triple)){
+	//		WARN("pop from queryCmdQue_ failed");
+	//		continue;
+	//	}
+	//	__Active active(Cnt());	//活跃线程计数
+ //       process(triple);
+ //   }
+ //   FATAL_COUT("thread quit");
+	//return 0;
+    process(job);
 }
 
 void CCmdHandler::readyForSend(const RCmdBase & cmd,__Buf & respdata)
