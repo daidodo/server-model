@@ -29,6 +29,7 @@ void CCmdHandler::Init(const __Config & config)
         CCommandStats::SetCmdStats(&stats_->cmdStats_);
         CCommandStats::TimeStats(config.GetInt("server.stats.cmd.time.on"));
     }
+    __MyBase::ThreadCountMax(config.GetInt("command.handler.thread.count.max"));
     //business
 }
 
@@ -36,6 +37,7 @@ void CCmdHandler::Reconfig(const __Config & config)
 {
     if(stats_)
         CCommandStats::TimeStats(config.GetInt("server.stats.cmd.time.on"));
+    __MyBase::ThreadCountMax(config.GetInt("command.handler.thread.count.max"));
     //business
 }
 
@@ -45,12 +47,13 @@ void CCmdHandler::ShowConfig(std::ofstream & file) const
     if(!file.is_open())
         return;
     file<<"\nCmdHandler :\n"
-        <<"  CCommandStats::TimeStats="<<CCommandStats::TimeStats()<<endl
+        <<"  CCommandStats::TimeStats = "<<CCommandStats::TimeStats()<<endl
+        <<"  ThreadCountMax = "<<__MyBase::ThreadCountMax()<<endl
         //business
         ;
 }
 
-int CCmdHandler::StartThreads(__DZ_STRING name)
+int CCmdHandler::StartThreads(__DZ_STRING name,int thread_count)
 {
     //business
     return __MyBase::StartThreads(name);
@@ -64,19 +67,6 @@ void CCmdHandler::WaitAll()
 
 void CCmdHandler::doIt(__Job & job)
 {
- //   LOCAL_LOGGER(logger,"CCmdHandler::doIt");
- //   ASSERT(eventFdQue_ && EVENT_QUE_SZ_ > 0,"eventFdQue_="<<eventFdQue_
- //       <<", EVENT_QUE_SZ_="<<EVENT_QUE_SZ_<<" invalid");
-	//for(__CmdTriple triple;;){
-	//	if(!queryCmdQue_.Pop(triple)){
-	//		WARN("pop from queryCmdQue_ failed");
-	//		continue;
-	//	}
-	//	__Active active(Cnt());	//活跃线程计数
- //       process(triple);
- //   }
- //   FATAL_COUT("thread quit");
-	//return 0;
     process(job);
 }
 

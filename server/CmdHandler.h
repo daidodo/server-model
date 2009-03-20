@@ -7,12 +7,10 @@
 
 NS_SERVER_BEGIN
 
-typedef CMainServer::__QueryCmdQue  __QueryCmdQue;
-
-class CCmdHandler:public CThreadManager<__QueryCmdQue>
+class CCmdHandler:public CThreadManager<CMainServer::__QueryCmdQue>
 {
 //typedefs:
-    typedef CThreadManager<__QueryCmdQue>   __MyBase;
+    typedef CThreadManager<CMainServer::__QueryCmdQue>   __MyBase;
     typedef CMainServer::__Config       __Config;
     typedef CMainServer::__CmdSock      __CmdSock;
     typedef __CmdSock::buffer_type      __Buf;
@@ -20,7 +18,6 @@ class CCmdHandler:public CThreadManager<__QueryCmdQue>
     typedef CMainServer::__FdEvent      __FdEvent;
     typedef CMainServer::__FdEventQue   __FdEventQue;
     typedef CMainServer::__FdSockMap    __FdSockMap;
-    //typedef CMainServer::__CmdTriple    __CmdTriple;
     typedef __MyBase::__Job             __Job;
     struct __Stats{
         __CmdStats cmdStats_;
@@ -31,7 +28,6 @@ class CCmdHandler:public CThreadManager<__QueryCmdQue>
     __FdSockMap &           fdSockMap_;
     __FdEventQue &          addingFdQue_;
     __FdEventQue * const    eventFdQue_;
-    //__QueryCmdQue &         queryCmdQue_;
     const int               EVENT_QUE_SZ_;
     const bool              useEpoll_;
 public:
@@ -45,7 +41,7 @@ public:
     void Init(const __Config & config);
     void Reconfig(const __Config & config);     //重新读取配置文件
     void ShowConfig(std::ofstream & file) const;//显示当前配置信息
-    virtual int StartThreads(__DZ_STRING name);
+    virtual int StartThreads(__DZ_STRING name,int thread_count = 0);
     virtual void WaitAll();
 protected:
 	void doIt(__Job & job);

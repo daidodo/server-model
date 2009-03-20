@@ -64,8 +64,7 @@ struct CMainServer
     int         tcpServerStackSz_;
     int         cmdHandlerStackSz_;
     int         statsServerStackSz_;
-    int         tcpServerThreadCount_;  //各个线程的数量,不能重新配置
-    //int         cmdHandlerThreadCount_;
+    int         tcpServerThreadCount_;  //线程数量,不能重新配置
     //business
 
 };
