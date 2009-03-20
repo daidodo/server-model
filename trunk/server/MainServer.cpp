@@ -66,7 +66,7 @@ void CMainServer::Init(const char * serverconf)
     useEpoll_ = config.GetInt("use.epoll.server");
     serverStatsOn_ = config.GetInt("server.stats.on");
     tcpServerThreadCount_ = config.GetInt("tcp.server.thread.count",5,1);
-    cmdHandlerThreadCount_ = config.GetInt("command.handler.thread.count",10,1);
+    //cmdHandlerThreadCount_ = config.GetInt("command.handler.thread.count",10,1);
     //business
 
     //service
@@ -137,7 +137,7 @@ void CMainServer::ShowConfig(__DZ_STRING verInfo) const
         <<"  useEpoll_ = "<<useEpoll_<<endl
         <<"  serverStatsOn_ = "<<serverStatsOn_<<endl
         <<"  tcpServerThreadCount_ = "<<tcpServerThreadCount_<<endl
-        <<"  cmdHandlerThreadCount_ = "<<cmdHandlerThreadCount_<<endl
+        //<<"  cmdHandlerThreadCount_ = "<<cmdHandlerThreadCount_<<endl
         //business
         ;
     acceptServer_->ShowConfig(file);

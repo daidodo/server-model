@@ -6,11 +6,14 @@
         CActive         用于活跃线程数计数
         CThreads
         CThreadPool     线程池
+        CThreadManager  自动伸缩的线程池
 //*/
 
+#include <errno.h>          //errno
 #include <pthread.h>
 #include <string>
 #include <vector>
+#include <common/Logger.h>
 #include <common/LockInt.h> //CLockIntMax
 
 NS_SERVER_BEGIN
@@ -44,7 +47,7 @@ private:
     __ThreadProc            proc_;
     void *                  proc_arg_;
     int                     count_;     //防止重复启动
-    size_t                  stack_sz_;
+    const size_t            stack_sz_;
     __DZ_VECTOR(pthread_t)  threads_;
     __ActiveCnt             activeCnt_;
     __DZ_STRING             name_;
@@ -70,6 +73,159 @@ protected:
     virtual int doIt() = 0;
 private:
     CThreads    threads_;
+};
+
+template<class Que>
+class CThreadManager
+{
+    typedef Que                     __Queue;
+    typedef CLockInt<int,CSpinLock> __ThreadCount;
+    typedef CActive<__ThreadCount>  __Active;
+    typedef CSpinLock               __Lock;
+    typedef CGuard<__Lock>          __Guard;
+protected:
+    typedef typename __Queue::value_type    __Job;
+private:
+    //worker thread
+    static void * threadProc(void * arg){
+        assert(arg);
+        CThreadManager & self = *reinterpret_cast<CThreadManager *>(arg);
+        for(__Job job;self.querySurvive();){
+            self.inputQue_.Pop(job);
+            __Active act(self.activeCount_);
+            self.doIt(job);
+        }
+        --self.threadCount_;
+        return 0;
+    }
+    //schedule thread
+    static void * threadSchedule(void * arg){
+        assert(arg);
+        CThreadManager & self = *reinterpret_cast<CThreadManager *>(arg);
+        for(;;){
+            sleep(self.interval_);
+            int active = self.activeCount_;
+            int count = self.threadCount_;
+            active = self.adjustThreadCount(active << 1);   //Expect
+            if(active > count)  //need more threads
+                self.addThreads(active - count);
+            else{               //have waste threads
+                count -= active;    //Waste
+                if(count >= 5 && count >= (active >> 1))
+                    self.deleteThread(count);
+            }
+        }
+        return 0;
+    }
+public:
+    CThreadManager(__Queue & input_que,size_t stack_sz = 16 << 10)
+        : inputQue_(input_que)
+        , stackSz_(stack_sz)
+        , schedule_(0)
+        , interval_(1)
+        , deleteCount_(0)
+        , threadCountMax_(32)
+        , threadCountMin_(2)
+    {}
+    virtual ~CThreadManager(){}
+    //name为服务线程的名字
+    //thread_count为初始线程数，如果超过[threadCountMin_,threadCountMax_]的范围，则采用默认值
+    //return +n(启动的线程数),-1(错误)
+    virtual int StartThreads(__DZ_STRING name,int thread_count = 0){
+        LOCAL_LOGGER(logger,"CThreadManager::StartThreads");
+        if(Started())
+            return -1;  //重复启动
+        name_ = name;
+        if(name_.empty())
+            name_.push_back(' ');
+        //start schedule thread
+        if(pthread_create(&schedule_,0,threadSchedule,this)){
+            FATAL_COUT(name_<<"'s schedule thread start failed"<<Tools::ErrorMsg(errno));
+        }else{
+            INFO(name_<<"'s schedule thread("<<schedule_<<") starts");
+        }
+        //start worker threads
+        return addThreads(adjustThreadCount(thread_count));
+    }
+    virtual void WaitAll(){
+        pthread_join(schedule_,0);
+    }
+    bool Started() const{return !name_.empty();}
+    int ThreadCount() const{return threadCount_;}
+    int ActiveCount() const{return activeCount_;}
+    void SetThreadCountMax(int thread_max){
+        if(thread_max >= threadCountMin_)
+            threadCountMax_ = thread_max;
+    }
+    void SetThreadCountMin(int thread_min){
+        if(thread_min <= threadCountMax_)
+            threadCountMin_ = thread_min;
+    }
+    //设置调度线程的处理间隔时间（秒）
+    void SetScheduleInterval(int timeS){interval_ = timeS;}
+protected:
+    virtual void doIt(__Job &) = 0;
+private:
+    //return启动的线程数
+    int addThreads(int thread_count){
+        assert(thread_count > 0);
+        LOCAL_LOGGER(logger,"CThreadManager::addThreads_aux");
+        //set stack size
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setstacksize(&attr,stackSz_);
+        pthread_t th = 0;
+        int ret = 0;
+        for(int i = 0;i < thread_count;++i){
+            if(pthread_create(&th,&attr,threadProc,this)){
+                ERROR_COUT("pthread_create error"<<Tools::ErrorMsg(errno));
+            }else{
+                pthread_detach(th);
+                INFO(name_<<"("<<th<<") thread starts");
+                ++ret;
+            }
+        }
+        pthread_attr_destroy(&attr);
+        threadCount_ += ret;
+        return ret;
+    }
+    void deleteThread(int thread_count){
+        assert(thread_count > 0);
+        __Guard g(deleteLock_);
+        deleteCount_ = thread_count;
+    }
+    bool querySurvive(){
+        __Guard g(deleteLock_);
+        assert(deleteCount_ >= 0);
+        if(!deleteCount_)
+            return true;
+        --deleteCount_;
+        return false;
+    }
+    int adjustThreadCount(int thread_count) const{
+        const int t_min = threadCountMin_;
+        const int t_max = threadCountMax_;
+        if(thread_count < t_min)
+            return t_min;
+        if(thread_count > t_max)
+            return t_max;
+        return thread_count;
+    }
+    //fields:
+    __Queue & inputQue_;
+    const size_t stackSz_;
+    __DZ_STRING name_;
+    //schedule thread
+    pthread_t   schedule_;
+    int         interval_;  //s, 调度频率
+    //用于删除多余线程
+    CSpinLock   deleteLock_;
+    int         deleteCount_;
+    //thread counts
+    __ThreadCount threadCount_;
+    __ThreadCount activeCount_;
+    volatile int threadCountMax_;
+    volatile int threadCountMin_;
 };
 
 NS_SERVER_END

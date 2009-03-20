@@ -7,7 +7,7 @@
 //#   include <string>
 //#   include <ctime>
 //#   include <common/Logger.h>
-//#   include <common/Threads.h>
+#   include <common/Threads.h>
 //#   include <common/Tools.h>
 //#   include <common/DataStream.h>
 //#   include <common/LockInt.h>
@@ -23,80 +23,6 @@
 #   include <common/Semaphore.h>
 
 using namespace NS_SERVER;
-
-////typedef __DZ_STRING __Type;
-//typedef int __Type;
-//
-////#define WWH
-//
-//#ifdef WWH
-//typedef pv_queue<__Type> __Que;
-//#else
-////typedef CLockQueue<__Type> __Que;
-//typedef CRingBuf<__Type> __Que;
-//#endif
-//
-//__Que que(1000);
-//
-//__DZ_STRING randVal()
-//{
-//    int len = (rand() & 0xF) + 3;
-//    __DZ_STRING ret(len,0);
-//    for(int i = 0;i < len;++i)
-//        ret[i] = (rand() & 63) + 33;
-//    return ret;
-//}
-//
-//int randVal(int)
-//{
-//    return rand();
-//}
-//
-//
-//void * thread1(void * arg)
-//{
-//    const int COUNT = int(arg);
-//    for(int j = 0;j < COUNT;++j)
-//    for(int i = 0;i < COUNT;){
-//#ifdef WWH
-//        if(que.push(randVal(i)) < 0){
-//#else
-//        if(!que.Push(randVal(i))){
-//#endif
-//            sleep(0);
-//        }else
-//            ++i;
-//    }
-//    sleep(-1);
-//    return 0;
-//}
-//
-//void * thread2(void * arg)
-//{
-//    const int COUNT = int(arg);
-//    int c = 0;
-//    for(int j = 0;j < COUNT;++j)
-//    for(__Type s;;){
-//        if(c >= COUNT)
-//            exit(0);
-//#ifdef WWH
-//        if(que.empty()){
-//            sleep(0);
-//        }else{
-//            s = que.front();
-//            que.pop();
-//#else
-//        if(!que.Pop(s)){
-//            sleep(0);
-//        }else{
-//#endif
-//            ++c;
-//            if(!(c & 1023))
-//                cout<<s<<endl;
-//        }
-//    }
-//    return 0;
-//}
 
 #endif
 

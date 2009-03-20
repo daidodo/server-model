@@ -1,6 +1,4 @@
-#include <errno.h>          //errno
 #include <exception>        //std::exception
-#include <common/Logger.h>
 #include "Threads.h"
 
 NS_SERVER_BEGIN

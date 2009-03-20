@@ -4,7 +4,7 @@
 
 NS_SERVER_BEGIN
 
-void CCmdHandler::process(const __CmdTriple & cmdTriple)
+void CCmdHandler::process(const __Job & cmdTriple)
 {   //MAKE SURE THERE IS ONLY ONE WAY OUT
     LOCAL_LOGGER(logger,"CCmdHandler::process");
     QCmdBase * pCmd = cmdTriple.first;
