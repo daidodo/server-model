@@ -144,7 +144,7 @@ U32 CEpollServer::flushEventList()
 {
     U32 ret = 0;
     for(int i = 0;i < EVENT_QUE_SZ_;++i){
-        if(!eventFdQue_[i].PushAll(eventList_[i])){
+        if(!eventFdQue_[i].PushAll(eventList_[i],500)){
             SCOPE_LOGGER(logger,"CEpollServer::flushEventList");
             ERROR("push all to eventFdQue_["<<i<<"] failed, close all sockets");
             __FdEventList & evList = eventList_[i];
