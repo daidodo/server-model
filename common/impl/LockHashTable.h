@@ -30,6 +30,10 @@ public:
         KeyOfValue,EqualKey,Hash,Alloc>         read_pointer;
     typedef __hash_table_write_pointer<Value,LockT,
         KeyOfValue,EqualKey,Hash,Alloc>         write_pointer;
+    typedef __hash_table_read_elem_array<Value,LockT,
+        KeyOfValue,EqualKey,Hash,Alloc>         read_elem_array;
+    typedef __hash_table_write_elem_array<Value,LockT,
+        KeyOfValue,EqualKey,Hash,Alloc>         write_elem_array;
     typedef Value                               value_type;
     typedef LockT                               lock_type;
     typedef KeyOfValue                          extract_key;
@@ -88,22 +92,20 @@ public:
         return ret;
     }
     bool Insert(const_reference v,read_pointer & xp){
+        if(xp)
+            xp.release();
         key_type k = extract_key()(v);
         size_type buck_pos = hasher()(k) % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(xp)
-            xp.release();
         bool ret = false;
         writeLock(lock);
-        __NodePtr p = findInBucket(k,buck_pos);
-        if(p){  //already exists
+        xp.pv_ = findInBucket(k,buck_pos);
+        if(xp.pv_){  //already exists
             xp.pl_ = lock;
-            xp.pv_ = &p->data_;
             write2read(lock);
-        }else if((p = getNode(v))){
-            insertInBucket(p,buck_pos);
+        }else if((xp.pv_ = getNode(v))){
+            insertInBucket(xp.pv_,buck_pos);
             xp.pl_ = lock;
-            xp.pv_ = &p->data_;
             write2read(lock);
             ret = true;
         }else
@@ -111,21 +113,19 @@ public:
         return ret; //user will unlock lock when call xp.release() or destroy xp
     }
     bool Insert(const_reference v,write_pointer & xp){
+        if(xp)
+            xp.release();
         key_type k = extract_key()(v);
         size_type buck_pos = hasher()(k) % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(xp)
-            xp.release();
         bool ret = false;
         writeLock(lock);
-        __NodePtr p = findInBucket(k,buck_pos);
-        if(p){  //already exists
+        xp.pv_ = findInBucket(k,buck_pos);
+        if(xp.pv_){  //already exists
             xp.pl_ = lock;
-            xp.pv_ = &p->data_;
-        }else if((p = getNode(v))){
-            insertInBucket(p,buck_pos);
+        }else if((xp.pv_ = getNode(v))){
+            insertInBucket(xp.pv_,buck_pos);
             xp.pl_ = lock;
-            xp.pv_ = &p->data_;
             ret = true;
         }else
             unlock(lock);
@@ -142,32 +142,30 @@ public:
         return ret;
     }
     bool Find(const key_type & k,read_pointer & xp) const{
-        size_type buck_pos = hasher()(k) % bucket_.size();
-        __LockPtr lock = locker(buck_pos);
         if(xp)
             xp.release();
+        size_type buck_pos = hasher()(k) % bucket_.size();
+        __LockPtr lock = locker(buck_pos);
         bool ret = false;
         readLock(lock);
-        __NodePtr p = findInBucket(k,buck_pos);
-        if(p){  //found
+        xp.pv_ = findInBucket(k,buck_pos);
+        if(xp.pv_){  //found
             xp.pl_ = lock;
-            xp.pv_ = &p->data_;
             ret = true;
         }else
             unlock(lock);
         return ret; //user will unlock lock when call xp.release() or destroy xp
     }
     bool Find(const key_type & k,write_pointer & xp){
-        size_type buck_pos = hasher()(k) % bucket_.size();
-        __LockPtr lock = locker(buck_pos);
         if(xp)
             xp.release();
+        size_type buck_pos = hasher()(k) % bucket_.size();
+        __LockPtr lock = locker(buck_pos);
         bool ret = false;
         writeLock(lock);
-        __NodePtr p = findInBucket(k,buck_pos);
-        if(p){  //found
+        xp.pv_ = findInBucket(k,buck_pos);
+        if(xp.pv_){  //found
             xp.pl_ = lock;
-            xp.pv_ = &p->data_;
             ret = true;
         }else
             unlock(lock);
@@ -205,33 +203,32 @@ public:
     //遍历容器
     //Iterate返回链表是否有元素
     //wh为桶位置
-    bool Iterate(size_type wh,read_pointer & xp) const{
+    //ar得到加锁的元素数组，可使用ar[i],ar.size(),ar.empty()等访问所有元素
+    bool Iterate(size_type wh,read_elem_array & ar) const{
+        ar.release();
         size_type buck_pos = wh % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(xp)
-            xp.release();
         bool ret = false;
         readLock(lock);
-        __NodePtr p =  bucket_[buck_pos];
-        if(p){  //not empty
-            xp.pl_ = lock;
-            xp.pv_ = &p->data_;
+        for(__NodePtr p = bucket_[buck_pos];p;p = p->next_)
+            ar.ar_.push_back(p);
+        if(!ar.empty()){  //not empty
+            ar.pl_ = lock;
             ret = true;
         }else
             unlock(lock);
         return ret; //user will unlock lock when call xp.release() or destroy xp
     }
-    bool Iterate(size_type wh,write_pointer & xp){
+    bool Iterate(size_type wh,write_elem_array & ar){
+        ar.release();
         size_type buck_pos = wh % bucket_.size();
         __LockPtr lock = locker(buck_pos);
-        if(xp)
-            xp.release();
         bool ret = false;
         writeLock(lock);
-        __NodePtr p =  bucket_[buck_pos];
-        if(p){  //not empty
-            xp.pl_ = lock;
-            xp.pv_ = &p->data_;
+        for(__NodePtr p = bucket_[buck_pos];p;p = p->next_)
+            ar.ar_.push_back(p);
+        if(!ar.empty()){  //not empty
+            ar.pl_ = lock;
             ret = true;
         }else
             unlock(lock);
