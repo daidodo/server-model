@@ -1,4 +1,5 @@
 #include <common/Logger.h>
+#include <common/IterAdapter.h>
 #include <common/Tools.h>
 #include "TcpServer.h"
 
