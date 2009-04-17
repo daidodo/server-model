@@ -80,6 +80,8 @@ private:
 public:
     typedef typename __HashTable::read_pointer      read_pointer;
     typedef typename __HashTable::write_pointer     write_pointer;
+    typedef typename __HashTable::read_elem_array   read_elem_array;
+    typedef typename __HashTable::write_elem_array  write_elem_array;
     typedef typename __HashTable::lock_type         lock_type;
     typedef typename __HashTable::key_equal         key_equal;
     typedef typename __HashTable::extract_key       extract_key;
@@ -132,11 +134,11 @@ public:
     //遍历容器
     //Iterate返回链表是否有元素
     //wh为桶位置
-    bool Iterate(size_type wh,read_pointer & xp) const{
-        return ht_.Iterate(wh,xp);
+    bool Iterate(size_type wh,read_elem_array & ar) const{
+        return ht_.Iterate(wh,ar);
     }
-    bool Iterate(size_type wh,write_pointer & xp){
-        return ht_.Iterate(wh,xp);
+    bool Iterate(size_type wh,write_elem_array & ar){
+        return ht_.Iterate(wh,ar);
     }
     //Erase返回移除的节点个数
     size_type Erase(const key_type & k){

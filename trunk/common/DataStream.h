@@ -245,7 +245,7 @@ class COutByteStream : public NS_IMPL::CDataStreamBase
     size_t              cur_;
     bool                need_reverse_;  //是否需要改变结果的byte order
 public:
-    explicit COutByteStream(size_t sz = 100,bool netByteOrder = DEF_NET_BYTEORDER)
+    explicit COutByteStream(size_t sz = 128,bool netByteOrder = DEF_NET_BYTEORDER)
         : data_(sz)
         , cur_(0)
         , need_reverse_(NeedReverse(netByteOrder))
