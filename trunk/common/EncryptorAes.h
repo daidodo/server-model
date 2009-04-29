@@ -10,6 +10,7 @@
 
 #include <string>
 #include <vector>
+#include <cstring>              //memset
 #include <openssl/aes.h>
 #include <openssl/md5.h>
 #include <common/impl/Alloc.h>

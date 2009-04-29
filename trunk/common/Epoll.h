@@ -2,6 +2,7 @@
 #define DOZERG_EPOLL_H_20080507
 
 #include <sys/epoll.h>
+#include <cstring>          //memset
 #include <vector>
 #include <set>
 #include <common/FdMap.h>   //CFdMap
@@ -88,7 +89,7 @@ public:
     //flags将被加上EPOLLET
     bool AddFd(int fd,int flags,U32 curtime){
         __Event ev;
-        bzero(&ev,sizeof ev);
+        memset(&ev,0,sizeof ev);
         ev.events = flags | EPOLLET;
         ev.data.fd =fd;
         if(epoll_ctl(epollfd_,EPOLL_CTL_ADD,fd,&ev) < 0)
@@ -112,7 +113,7 @@ public:
     //flags将被加上EPOLLET
     bool ModifyFd(int fd,int flags){
         __Event ev;
-        bzero(&ev,sizeof ev);
+        memset(&ev,0,sizeof ev);
         ev.events = flags | EPOLLET;
         ev.data.fd =fd;
         return (epoll_ctl(epollfd_,EPOLL_CTL_MOD,fd,&ev) == 0);

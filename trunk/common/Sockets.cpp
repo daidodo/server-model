@@ -4,6 +4,7 @@
 #include <netdb.h>          //getaddrinfo,freeaddrinfo,gai_strerror
 #include <fcntl.h>          //fcntl
 #include <unistd.h>
+#include <cstring>          //memset
 #include "Sockets.h"
 
 NS_SERVER_BEGIN
@@ -45,7 +46,7 @@ __DZ_STRING CSockAddr::ToString() const
 bool CSockAddr::SetAddr(__DZ_STRING ip,__DZ_STRING port)
 {
     __AI hints;
-    bzero(&hints,sizeof hints);
+    memset(&hints,0,sizeof hints);
     hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
 #ifdef AI_NUMERICSERV
     hints.ai_flags |= AI_NUMERICSERV;

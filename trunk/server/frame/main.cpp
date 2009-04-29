@@ -1,5 +1,5 @@
 //for test
-#define __DZ_TEST   0
+#define __DZ_TEST   1
 
 #include "main.h"
 
@@ -30,8 +30,8 @@ int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
     INIT_LOGGER(0);
-    CSemaphore sem(-1);
-    cout<<SEM_VALUE_MAX<<endl;
+    U32 now = time(0);
+    cout<<Tools::TimeString(now)<<endl;
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;

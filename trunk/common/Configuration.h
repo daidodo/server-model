@@ -16,6 +16,7 @@
 #include <limits>           //std::numeric_limits
 #include <string>
 #include <fstream>          //std::ifstream
+#include <cstdlib>          //atoi
 #include <common/Tools.h>   //Tools::Trim
 
 /*

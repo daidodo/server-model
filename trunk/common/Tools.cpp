@@ -1,6 +1,7 @@
 #include <sstream>          //std::ostringstream
 #include <cctype>           //std::isspace
 #include <algorithm>        //std::min
+#include <cstring>
 #include <cassert>
 #include <arpa/inet.h>      //struct in_addr,htonl,inet_ntop,AF_INET,ntohl
 #include <sys/time.h>
@@ -337,10 +338,15 @@ namespace Tools{
 
     __DZ_STRING ErrorMsg(int error_no)
     {
+        __DZ_OSTRINGSTREAM os;
+        os<<" errno="<<error_no<<" - ";
+#if defined __USE_XOPEN2K || defined __USE_MISC
         const int MAX_BUF = 256;
         char buf[MAX_BUF];
-        __DZ_OSTRINGSTREAM os;
-        os<<" errno="<<error_no<<" - "<<strerror_r(error_no,buf,MAX_BUF);
+        os<<strerror_r(error_no,buf,MAX_BUF);
+#else
+        os<<strerror(error_no);
+#endif
         return os.str();
     }
 
