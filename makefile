@@ -36,9 +36,9 @@ LVERSION       :=-DPROGRAM_VERSION_LOW=1$(TIME)-1000000
 PROGRAMVERSION :=$(SERVERDIR)ProgramVersion
 
 CC             :=$(CXX)
-INCLUDE        :=-I./ -I/usr/local/mysql/include/
+INCLUDE        :=-I./ -I/usr/local/ssl/include/ -I/usr/local/mysql/include/
 CXXFLAGS       :=-Wall -g $(INCLUDE) -D_REENTRANT $(LOG) $(LOGSYS) $(DEBUG) $(RELEASE) $(EPOLL) $(EXTERN_FLAGS)
-LIB            :=-L/usr/local/mysql/lib -L/usr/lib -L/usr/local/lib -L./lib -lstdc++ -lpthread -lrt $(MYSQL) $(LOG4CLIB) $(ZIP) $(CRYPTO) $(EXTERN__LIB)
+LIB            :=-L /usr/local/ssl/lib/ -L/usr/local/mysql/lib -L/usr/lib -L/usr/local/lib -L./lib -lstdc++ -lpthread -lrt $(MYSQL) $(LOG4CLIB) $(ZIP) $(CRYPTO) $(EXTERN__LIB)
 CFLAGS         :=$(CXXFLAGS)
 
 ####以下是一些有用的函数

@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <new>
+#include <cstring>          //memcpy
 #include "logsys_writer.h"
 
 IMPL_BEGIN
