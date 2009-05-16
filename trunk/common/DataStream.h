@@ -61,6 +61,9 @@ public:
     CInByteStream(const __DZ_VECTOR(signed char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d,netByteOrder);
     }
+    CInByteStream(const __DZ_STRING & d,bool netByteOrder = DEF_NET_BYTEORDER){
+        SetSource(d,netByteOrder);
+    }
     void SetSource(const char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){
         data_ = d;
         len_ = l;
@@ -82,6 +85,9 @@ public:
     }
     void SetSource(const __DZ_VECTOR(signed char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource((const char *)&d[0],d.size(),netByteOrder);
+    }
+    void SetSource(const __DZ_STRING & d,bool netByteOrder = DEF_NET_BYTEORDER){
+        SetSource(d.c_str(),d.size(),netByteOrder);
     }
     //设置字节序类型
     void OrderType(EOrderType ot){need_reverse_ = NeedReverse(ot);}

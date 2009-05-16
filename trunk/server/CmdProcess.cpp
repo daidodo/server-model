@@ -11,7 +11,7 @@ void CCmdHandler::process(const __Job & cmdTriple)
     const int & fd = cmdTriple.second;
     __SockPtr pSock;
     fdSockMap_.GetSock(fd,pSock);
-    if(!pSock || pSock != cmdTriple.third){
+    if(cmdTriple.third && (!pSock || pSock != cmdTriple.third)){
         WARN("before process (command=@"<<pCmd<<",fd="<<fd<<"), old socket="
             <<Tools::ToStringPtr(cmdTriple.third)<<" is replaced by new socket="
             <<Tools::ToStringPtr(pSock)<<", abandon it");
@@ -28,7 +28,7 @@ void CCmdHandler::process(const __Job & cmdTriple)
                 ERROR("unknown command type="<<pCmd->CmdType()<<" from "
                     <<Tools::ToStringPtr(pSock)<<" cmd="<<Tools::ToStringPtr(pCmd));
         }
-        if(!respdata.empty()){
+        if(cmdTriple.third && !respdata.empty()){
             fdSockMap_.GetSock(fd,pSock);   //在processCmd时,fd的pSock可能被替换了
             if(!pSock || pSock != cmdTriple.third){
                 ERROR("after process (command=@"<<pCmd<<Tools::ToStringPtr(pCmd)<<",fd="

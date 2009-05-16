@@ -30,6 +30,11 @@
         SafeCopy
         Construct
         Destroy
+        DestroyArray
+        New
+        NewA
+        Delete
+        DeleteA
         SetMaxFileDescriptor
         GetMaxFileDescriptor
         GetProcessorCount
@@ -108,7 +113,11 @@ namespace Tools
             ret = 5 * ret + *s;
         return ret;
     }
-    template<class Key>struct HashFn{};
+    template<class Key>struct HashFn{
+        size_t operator()(const Key & v) const{
+            return v.HashFn();
+        }
+    };
 #define TEMPLATE_INSTANCE_FOR_TYPE(TYPE,HASH)   template<>struct HashFn<TYPE>{  \
     size_t operator()(TYPE v) const{return (HASH);}}
     TEMPLATE_INSTANCE_FOR_TYPE(char *,__stl_hash_string(v));
@@ -376,6 +385,41 @@ namespace Tools
             a.deallocate(p,sz);
             p = 0;
         }
+    }
+
+    //封装new和delete，方便使用allocator
+    template<class T>
+    T * New(){
+        T * ret = __DZ_ALLOC<T>().allocate(1);
+        return new (ret) T;
+    }
+
+    template<class T1,class T2>
+    T1 * New(const T2 & v){
+        T1 * ret = __DZ_ALLOC<T1>().allocate(1);
+        return new (ret) T1(v);
+    }
+
+    template<class T,class A>
+    T * NewA(A a){
+        T * ret = a.allocate(1);
+        return new (ret) T;
+    }
+
+    template<class T1,class T2,class A>
+    T1 * NewA(const T2 & v,A a){
+        T1 * ret = a.allocate(1);
+        return new (ret) T1(v);
+    }
+
+    template<class T>
+    void Delete(T *& p){
+        Destroy(p,__DZ_ALLOC<T>());
+    }
+
+    template<class T,class A>
+    void DeleteA(T *& p,A a){
+        Destroy(p,a);
     }
 
     //设置进程允许打开的最大文件数

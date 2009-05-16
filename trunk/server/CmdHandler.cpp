@@ -25,6 +25,7 @@ CCmdHandler::~CCmdHandler()
         
 void CCmdHandler::Init(const __Config & config)
 {
+    LOCAL_LOGGER(logger,"CCmdHandler::Init");
     if(stats_){
         CCommandStats::SetCmdStats(&stats_->cmdStats_);
         CCommandStats::TimeStats(config.GetInt("server.stats.cmd.time.on"));
@@ -87,5 +88,16 @@ void CCmdHandler::readyForSend(const RCmdBase & cmd,__Buf & respdata)
     }//encode
     respdata.insert(respdata.end(),data.begin(),data.end());
 }
+
+void CCmdHandler::readyForSend(const UdpRCmdBase & cmd,__Buf & respdata)
+{
+    COutByteStream ds;
+    cmd.Encode(ds);
+    __Buf data;
+    ds.ExportData(data);
+    respdata.insert(respdata.end(),data.begin(),data.end());
+}
+
+//business
 
 NS_SERVER_END

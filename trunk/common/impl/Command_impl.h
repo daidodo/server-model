@@ -6,12 +6,12 @@
 NS_IMPL_BEGIN
 
 template<class T>
-void deleteCmd(T * p)
-{
+void deleteCmd(T * p){
     Tools::Destroy(p,__DZ_ALLOC<T>());
 }
 
-NS_IMPL_END
+//just for convenience use in ICommand::CommandName
+#define __CMD_CASE(CMD_NAME)  case CMD_NAME:return #CMD_NAME
 
 //just for convenience use in CreateCommand and ReleaseCommand
 #define __CREATE_COMMAND(CMD_CLASS) \
@@ -23,6 +23,9 @@ NS_IMPL_END
     DEBUG("release command "<<#CMD_CLASS<<"=@"<<pCmd<<Tools::ToStringPtr(pCmd));    \
     NS_IMPL::deleteCmd(dynamic_cast<CMD_CLASS *>(pCmd))
 
+#define __CREATE_CMD_CASE(CMD_ID,CMD_CLASS) case CMD_ID:{__CREATE_COMMAND(CMD_CLASS);break;}
+#define __DELETE_CMD_CASE(CMD_ID,CMD_CLASS) case CMD_ID:{__DELETE_COMMAND(CMD_CLASS);break;}
 
+NS_IMPL_END
 
 #endif

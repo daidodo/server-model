@@ -48,7 +48,6 @@ void CStatsServer::ShowConfig(std::ofstream & file) const
 
 int CStatsServer::doIt()
 {
-    writeHead();
     for(;;){
         sleep(serverStatusTimeInterval_);
         writeStats();
@@ -56,38 +55,6 @@ int CStatsServer::doIt()
     LOCAL_LOGGER(logger,"CStatsServer::doIt");
     FATAL_COUT("thread quit");
     return 0;
-}
-
-void CStatsServer::writeHead() const
-{
-    assert(acceptServer_ && (epollServer_ || pollServer_) && tcpServer_ && cmdHandler_);
-    LOCAL_LOGGER(logger,"CStatsServer::writeHead");
-    std::ofstream outf(serverStatusFile_.c_str());
-    if(!outf.is_open()){
-        ERROR("cannot open server status file="<<serverStatusFile_);
-        return;
-    }
-    outf<<"Time"
-        //stats
-        <<"\t"<<"New/Read/Write"
-        <<"\t"<<"Error/Timeout"
-        <<"\t"<<"PeerClose/RecvErr"
-        <<"\t"<<"HeadErr/BodyErr"
-        <<"\t"<<"SendCmd/SendErr/SendUnfinish"
-        <<"\t"<<"Online"
-        //queue
-        <<"\t"<<"addingFdQue_.Size()"
-        <<"\t"<<"removeFdQue_.Size()";
-    for(int i = 0;i < EVENT_QUE_SZ_;++i)
-        outf<<"\t"<<"eventFdQue_["<<i<<"].Size()";
-    outf<<"\t"<<"queryCmdQue_.Size()"
-        //thread
-        <<"\t"<<"tcpServer_.ActiveCount()"
-        <<"\t"<<"cmdHandler_.ActiveCount()"
-        //business
-        //command stats
-        <<"\t"<<"CommandStats(Name,Succ,Fail,TimeUs,AveTimeUs)"
-        <<std::endl;
 }
 
 void CStatsServer::writeStats()
@@ -99,49 +66,54 @@ void CStatsServer::writeStats()
         ERROR("cannot open server status file="<<serverStatusFile_);
         return;
     }
-    outf<<Tools::TimeString(time(0));
-    //stats
+    outf<<"Time : "<<Tools::TimeString(time(0));
+    //status
     U32 v[7] = {0};
     acceptServer_->stats_->Get(v[0]);
     if(epollServer_)
         epollServer_->stats_->Get(v[1],v[2],v[3],v[4]);
     else if(pollServer_)
         pollServer_->stats_->Get(v[1],v[2],v[3],v[4]);
-    outf<<"\t"<<v[0]<<"/"<<v[1]<<"/"<<v[2];     // New/Read/Write
-    outf<<"\t"<<v[3]<<"/"<<v[4];                // Error/Timeout
+    outf<<"\n  New/Read/Write : "
+        <<v[0]<<"/"<<v[1]<<"/"<<v[2];
+    outf<<"\n  Error/Timeout : "
+        <<v[3]<<"/"<<v[4];
     tcpServer_->stats_->Get(v[0],v[1],v[2],v[3],v[4],v[5],v[6]);
-    outf<<"\t"<<v[0]<<"/"<<v[1];                // PeerClose/RecvErr
-    outf<<"\t"<<v[2]<<"/"<<v[3];                // HeadErr/BodyErr
-    outf<<"\t"<<v[4]<<"/"<<v[5]<<"/"<<v[6];     // SendCmd/SendErr/SendUnfinish
-    outf<<"\t"<<fdSockMap_.Size();
-    //queue
-    outf<<"\t"<<addingFdQue_.Size()<<"/"<<addingFdQue_.ResetTopSize();
-    outf<<"\t"<<removeFdQue_.Size()<<"/"<<removeFdQue_.ResetTopSize();
+    outf<<"\n  PeerClose/RecvErr : "
+        <<v[0]<<"/"<<v[1];
+    outf<<"\n  HeadErr/BodyErr : "
+        <<v[2]<<"/"<<v[3];
+    outf<<"\n  SendCmd/SendErr/SendUnfinish : "
+        <<v[4]<<"/"<<v[5]<<"/"<<v[6];
+    outf<<"\n  Online : "<<fdSockMap_.Size();
+    //queues
+    outf<<"\n  addingFdQue_.Size : "
+        <<addingFdQue_.Size()<<"/"<<addingFdQue_.ResetTopSize();
+    outf<<"\n  removeFdQue_.Size : "
+        <<removeFdQue_.Size()<<"/"<<removeFdQue_.ResetTopSize();
     for(int i = 0;i < EVENT_QUE_SZ_;++i)
-        outf<<"\t"<<eventFdQue_[i].Size()<<"/"<<eventFdQue_[i].ResetTopSize();
-    outf<<"\t"<<queryCmdQue_.Size()<<"/"<<queryCmdQue_.ResetTopSize();
-    //thread
-    outf<<"\t"<<tcpServer_->ActiveCount()<<"/"<<tcpServer_->ResetActiveMax();
-    outf<<"\t"<<cmdHandler_->ActiveCount()<<"/"<<cmdHandler_->ThreadCount();
+        outf<<"\n  eventFdQue_["<<i<<"].Size : "
+            <<eventFdQue_[i].Size()<<"/"<<eventFdQue_[i].ResetTopSize();
+    outf<<"\n  queryCmdQue_.Size : "
+        <<queryCmdQue_.Size()<<"/"<<queryCmdQue_.ResetTopSize();
+    //threads
+    outf<<"\n  tcpServer_.ActiveCount : "
+        <<tcpServer_->ActiveCount()<<"/"<<tcpServer_->ResetActiveMax();
+    outf<<"\n  cmdHandler_.ActiveCount : "
+        <<cmdHandler_->ActiveCount()<<"/"<<cmdHandler_->ThreadCount();
     //business
 
-    //command stats
+    //commands
     if(cmdHandler_->stats_){
-        typedef __CmdStats::container_type      __Cont;
-        typedef __Cont::mapped_type::third_type __Time;
+        typedef __CmdStats::container_type __Cont;
         __CmdStats & cmdStats = cmdHandler_->stats_->cmdStats_;
         __Cont tmp;
         cmdStats.Lock();
         cmdStats.swap(tmp);
         cmdStats.Unlock();
-        for(__Cont::iterator it = tmp.begin();it != tmp.end();++it){
-            outf<<"\t"<<QCmdBase::CommandName(it->first)<<","<<it->second.first
-                <<","<<it->second.second<<","<<it->second.third<<",";
-            __Time ave = it->second.first + it->second.second;
-            if(ave)
-                ave = it->second.third / ave;
-            outf<<ave;
-        }
+        for(__Cont::iterator it = tmp.begin();it != tmp.end();++it)
+            outf<<"\n  "<<QCmdBase::CommandName(it->first)<<" : "
+                <<it->second.ToString();
     }
     outf<<std::endl;
 }

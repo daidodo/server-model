@@ -30,7 +30,7 @@ template<class Value,class LockT>
 class __hash_table_pointer_base
 {
     typedef __hash_table_pointer_base<Value,LockT>  __Myt;
-    typedef __hashT_node_impl<Value>                __NodePtr;
+    typedef __hashT_node_impl<Value> *              __NodePtr;
     typedef void (__Myt::*__SafeBool)();
 protected:
     typedef LockT *             __LockPtr;
@@ -62,7 +62,7 @@ class __hash_table_read_pointer : public __hash_table_pointer_base<Value,LockT>
 public:
     typedef const Value * pointer;
     typedef const Value & reference;
-    pointer operator ->() const{return &operator ->();}
+    pointer operator ->() const{return &operator *();}
     reference operator *() const{return __MyBase::pv_->data_;}
 };
 

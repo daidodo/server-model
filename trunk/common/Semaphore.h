@@ -12,6 +12,8 @@
 #include <stdexcept>        //std::runtime_error
 #include <common/Tools.h>   //Tools::ErrorMsg
 
+NS_SERVER_BEGIN
+
 class CSemaphore
 {
     CSemaphore(const CSemaphore &);
@@ -51,6 +53,8 @@ public:
 private:
     mutable sem_t sem_;
 };
+
+NS_SERVER_END
 
 #endif
 

@@ -30,7 +30,11 @@ int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
     INIT_LOGGER(0);
-    U32 now = time(0);
+    U32 now = 0;
+    if(argc < 2)
+        now = time(0);
+    else
+        now = atoi(argv[1]);
     cout<<Tools::TimeString(now)<<endl;
 #else
     //默认服务器配置文件

@@ -38,7 +38,6 @@ public:
 protected:
 	int doIt();
 private:
-    void writeHead() const;
     void writeStats();
 };
 

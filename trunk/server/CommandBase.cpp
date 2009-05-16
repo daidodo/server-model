@@ -1,12 +1,90 @@
 #include <sstream>
+#include <common/Logger.h>
 #include <common/EncryptorAes.h>
-#include "CommandBase.h"
+#include <common/impl/Command_impl.h>
+#include "Command.h"
 
 NS_SERVER_BEGIN
 
+//struct ICommand
+__DZ_STRING ICommand::CommandName(int cmdtype)
+{
+    switch(cmdtype){
+        //ADD NEW COMMAND HERE
+        __CMD_CASE(CMD_QUERY);
+		__CMD_CASE(CMD_RESP);
+        default:{
+            __DZ_OSTRINGSTREAM oss;
+            oss<<"INVALID_ID_"<<cmdtype;
+            return oss.str();
+        }
+    }
+}
+
 //struct QCmdBase
+QCmdBase * QCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
+{
+    LOCAL_LOGGER(logger,"QCmdBase::CreateCommand");
+    DEBUG("create command from data="<<Tools::DumpHex(data));
+    __DZ_VECTOR(char) decryptData;
+    CInByteStream ds(data);
+    {    //decrypt data if neccessary
+        CEncryptorAes aes;
+        aes.SetKey(&data[0],ENCRYPT_KEY_LEN);
+        int n = aes.Decrypt(data,HEAD_LEN,decryptData);
+        if(n < 0){
+            ERROR("decrypt cmd data="<<Tools::DumpHex(data)<<" return "<<n);
+            return 0;
+        }
+        DEBUG("decryptData="<<Tools::DumpHex(decryptData));
+        ds.SetSource(decryptData);
+    }
+    //decode cmd
+    __CmdType type = 0;
+    if(!(ds>>Manip::offset_value(CMD_TYPE_OFFSET,type)))
+        return 0;
+    QCmdBase * ret = 0;
+    switch(U32(type)){
+        //ADD NEW COMMAND HERE
+        __CREATE_CMD_CASE(CMD_QUERY,CQueryCmd);
+         default:{
+            ERROR("create unknown tcp command type="<<U32(type));
+        }
+    }
+    if(ret){
+        if(ret->Decode(ds)){
+            if(used)
+                *used = ds.CurPos();
+        }else{
+            ERROR("decode cmd error, release it");
+            ReleaseCommand(ret);
+        }
+    }
+    return ret;
+}
+
+void QCmdBase::ReleaseCommand(QCmdBase *& pCmd)
+{
+    LOCAL_LOGGER(logger,"QCmdBase::ReleaseCommand");
+    if(!pCmd)
+        return;
+    U32 cmdtype = pCmd->CmdType();
+    switch(cmdtype){
+        //ADD NEW COMMAND HERE
+        __DELETE_CMD_CASE(CMD_QUERY,CQueryCmd);
+        default:
+            ERROR("release unknown tcp command type="<<cmdtype
+                <<" address="<<pCmd);
+    }
+    pCmd = 0;
+}
+
 QCmdBase::QCmdBase()
-    : useHttp_(false)
+    : version_(0)
+    , cmdtype_(0)
+    , seq_(0)
+    , length_(0)
+    , useHttp_(false)
 {}
 
 bool QCmdBase::Decode(CInByteStream & ds)
@@ -23,13 +101,29 @@ __DZ_STRING QCmdBase::ToStringHelp() const
 {
     __DZ_OSTRINGSTREAM oss;
     oss<<(useHttp_ ? "HTTP" : "")
-        <<"(version_="<<version_
+        <<"(version_="<<std::oct<<version_
         <<","<<CommandName(cmdtype_)
         <<",seq_="<<seq_
         <<",length_="<<length_
         <<")";
     return oss.str();
 }
+
+QCmdBase::QCmdBase(U32 cmdtype)
+    : version_(CMD_VERSION)
+    , cmdtype_(cmdtype)
+    , seq_(0)
+    , length_(0)
+    , useHttp_(false)
+{}
+
+QCmdBase::QCmdBase(U32 cmdtype,const QCmdBase & qhead)
+    : version_(qhead.version_)
+    , cmdtype_(cmdtype)
+    , seq_(qhead.seq_)
+    , length_(0)
+    , useHttp_(qhead.useHttp_)
+{}
 
 bool QCmdBase::DecodeParam(CInByteStream & ds)
 {
@@ -38,19 +132,11 @@ bool QCmdBase::DecodeParam(CInByteStream & ds)
 
 //struct RCmdBase
 RCmdBase::RCmdBase(U32 cmdtype)
-    : version_(CMD_VERSION)
-    , cmdtype_(cmdtype)
-    , seq_(0)
-    , length_(0)
-    , useHttp_(false)
+    : QCmdBase(cmdtype)
 {}
 
 RCmdBase::RCmdBase(U32 cmdtype,const QCmdBase & qhead)
-    : version_(qhead.version_)
-    , cmdtype_(cmdtype)
-    , seq_(qhead.seq_)
-    , length_(0)
-    , useHttp_(qhead.useHttp_)
+    : QCmdBase(cmdtype,qhead)
 {}
 
 void RCmdBase::Encode(COutByteStream & ds) const
@@ -79,24 +165,55 @@ __DZ_STRING RCmdBase::ToString() const
     return __DZ_STRING("(") + RCmdBase::ToStringHelp() + ToStringHelp() + __DZ_STRING(")");
 }
 
-__DZ_STRING RCmdBase::ToStringHelp() const
-{
-    __DZ_OSTRINGSTREAM oss;
-    oss<<(useHttp_ ? "HTTP" : "")
-        <<"(version_="<<version_
-        <<","<<CommandName(cmdtype_)
-        <<",seq_="<<seq_
-        <<",length_="<<length_
-        <<")";
-    return oss.str();
-}
-
 void RCmdBase::EncodeParam(COutByteStream & ds) const
 {
     ds<<version_<<cmdtype_<<seq_<<length_;
 }
 
 //struct UdpQCmdBase
+UdpQCmdBase * UdpQCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
+{
+    LOCAL_LOGGER(logger,"UdpQCmdBase::CreateCommand");
+    CInByteStream ds(data);
+    __CmdType type = 0;
+    if(!(ds>>Manip::offset_value(CMD_TYPE_OFFSET,type)))
+        return 0;
+    UdpQCmdBase * ret = 0;
+    switch(U32(type)){
+        //ADD NEW COMMAND HERE
+
+        default:{
+            ERROR("create unknown udp command type="<<U32(type));
+        }
+    }
+    if(ret){
+        if(ret->Decode(ds)){
+            if(used)
+                *used = ds.CurPos();
+        }else{
+            ERROR("decode cmd error, release it");
+            ReleaseCommand(ret);
+        }
+    }
+    return ret;
+}
+
+void UdpQCmdBase::ReleaseCommand(UdpQCmdBase *& pCmd)
+{
+    LOCAL_LOGGER(logger,"QCmdBase::ReleaseCommand");
+    if(!pCmd)
+        return;
+    U32 cmdtype = pCmd->CmdType();
+    switch(cmdtype){
+        //ADD NEW COMMAND HERE
+
+        default:
+            ERROR("release unknown udp command type="<<cmdtype
+                <<" address="<<pCmd);
+    }
+    pCmd = 0;
+}
+
 bool UdpQCmdBase::Decode(CInByteStream & ds)
 {
     return UdpQCmdBase::DecodeParam(ds) && DecodeParam(ds);
