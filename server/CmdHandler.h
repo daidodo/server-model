@@ -11,6 +11,7 @@ class CCmdHandler:public CThreadManager<CMainServer::__QueryCmdQue>
 {
 //typedefs:
     typedef CThreadManager<CMainServer::__QueryCmdQue>   __MyBase;
+    typedef __MyBase::__Queue           __CmdQue;
     typedef CMainServer::__Config       __Config;
     typedef CMainServer::__CmdSock      __CmdSock;
     typedef __CmdSock::buffer_type      __Buf;
@@ -47,6 +48,7 @@ protected:
 	void doIt(__Job & job);
 private:
     void readyForSend(const RCmdBase & cmd,__Buf & respdata);
+    void readyForSend(const UdpRCmdBase & cmd,__Buf & respdata);
     //以下函数在"CmdProcess.cpp"内定义
     void process(const __Job & cmdTriple);
     //ADD NEW COMMAND PROCESS HERE

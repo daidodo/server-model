@@ -17,13 +17,30 @@
 NS_SERVER_BEGIN
 
 //用于Command处理结果统计的类和定义
-typedef CLockMap<U32,Tools::CTriple<size_t,size_t,U64> > __CmdStats; //ID -> (succ,fail,timeUs)
+struct CCmdStatsItems
+{
+    size_t  succ_;
+    size_t  fail_;
+    S64     totalTimeUs_;
+    S64     minTimeUs_;
+    S64     maxTimeUs_;
+    CCmdStatsItems()
+        : succ_(0)
+        , fail_(0)
+        , totalTimeUs_(0)
+        , minTimeUs_(-1)
+        , maxTimeUs_(0)
+    {}
+    __DZ_STRING ToString() const;
+};
+
+typedef CLockMap<U32,CCmdStatsItems> __CmdStats; //ID -> (succ,fail,timeUs)
 
 class CCommandStats
 {
     static __CmdStats * stats_;
     static bool         timeStats_;
-    U64         timeUs_;
+    S64         timeUs_;
     const U32   id_;
     bool        succ_;
 public:
@@ -33,18 +50,11 @@ public:
     explicit CCommandStats(int id,bool succ = false)
         : timeUs_(stats_ && timeStats_ ? Tools::GetTimeUs() : 0)
         , id_(id)
-        , succ_(succ){}
+        , succ_(succ)
+    {}
+    ~CCommandStats();
     void Succ(bool succ = true){succ_ = succ;}
-    ~CCommandStats(){
-        typedef __CmdStats::guard_type guard_type;
-        if(stats_){
-            if(timeStats_)
-                timeUs_ = Tools::GetTimeUs() - timeUs_;
-            guard_type g(stats_->GetLock());
-            succ_ ? ++(*stats_)[id_].first : ++(*stats_)[id_].second;
-            (*stats_)[id_].third += timeUs_;
-        }
-    }
+
 };
 
 //business

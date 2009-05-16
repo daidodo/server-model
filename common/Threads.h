@@ -78,12 +78,12 @@ private:
 template<class Que>
 class CThreadManager
 {
-    typedef Que                     __Queue;
     typedef CLockInt<int,CSpinLock> __ThreadCount;
     typedef CActive<__ThreadCount>  __Active;
     typedef CSpinLock               __Lock;
     typedef CGuard<__Lock>          __Guard;
 protected:
+    typedef Que                             __Queue;
     typedef typename __Queue::value_type    __Job;
 private:
     static const int SCHEDULE_INTERVAL_DEFAULT = 1; //s, 默认调度间隔

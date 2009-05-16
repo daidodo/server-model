@@ -5,6 +5,7 @@
 #include <fcntl.h>          //fcntl
 #include <unistd.h>
 #include <cstring>          //memset
+#include <cassert>          //assert
 #include "Sockets.h"
 
 NS_SERVER_BEGIN
@@ -239,6 +240,15 @@ void CSocket::Close()
     }
 }
 
+ssize_t CSocket::RecvData(char * buf,size_t sz,bool block)
+{
+    assert(buf);
+    if(!CSocket::IsValid())
+        return -1;
+    ssize_t ret = recv(CSocket::FD(),buf,sz,(block ? MSG_WAITALL : 0));
+    return ret;
+}
+
 ssize_t CSocket::RecvData(__DZ_VECTOR(char) & buf,size_t sz,bool block)
 {
     if(!CSocket::IsValid())
@@ -253,13 +263,28 @@ ssize_t CSocket::RecvData(__DZ_VECTOR(char) & buf,size_t sz,bool block)
     return ret;
 }
 
-bool CSocket::SendData(const __DZ_VECTOR(char) & buf,U32 timeoutMs)
+ssize_t CSocket::RecvData(__DZ_STRING & buf,size_t sz,bool block)
 {
+    if(!CSocket::IsValid())
+        return -1;
+    size_t oldsz = buf.size();
+    buf.resize(oldsz + sz);
+    ssize_t ret = recv(CSocket::FD(),&buf[oldsz],sz,(block ? MSG_WAITALL : 0));
+    if(ret <= 0)
+        buf.resize(oldsz);
+    else if(size_t(ret) < sz)
+        buf.resize(oldsz + ret);
+    return ret;
+}
+
+bool CSocket::SendData(const char * buf,size_t size,U32 timeoutMs)
+{
+    assert(buf);
     if(!CSocket::IsValid())
         return false;
     if(!timeoutMs)
-        return send(CSocket::FD(),&buf[0],buf.size(),MSG_NOSIGNAL) == int(buf.size());
-    for(size_t sz = 0,total = buf.size();sz < total;){
+        return send(CSocket::FD(),&buf[0],size,MSG_NOSIGNAL) == int(size);
+    for(size_t sz = 0,total = size;sz < total;){
         int n = send(CSocket::FD(),&buf[sz],total - sz,MSG_NOSIGNAL);
         if(n >= 0)
             sz += n;
@@ -336,6 +361,19 @@ bool CTcpConnSocket::Connect(const CSockAddr & addr)
         return true;
     }
     CSocket::Close();
+    peerAddr_ = addr;
+    return false;
+}
+
+bool CTcpConnSocket::Reconnect()
+{
+    if(!peerAddr_.IsValid())
+        return false;
+    if(IsValid())
+        CSocket::Close();
+    if(CSocket::getSock(peerAddr_.familyType(),CSocket::TCP) &&
+        CSocket::connectAddr(peerAddr_))
+        return true;
     return false;
 }
 

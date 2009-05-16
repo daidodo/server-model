@@ -93,6 +93,10 @@ NS_SERVER_END
 #   define ASSERT(expr,msg) if(!(expr)){ERROR(msg<<" - "<<#expr);__COUT(msg<<" - "<<#expr);abort();}
 #endif
 
+#define TRACE_COUT(msg) {LOGGER_TRACE(logger,msg);__COUT(msg);}
+#define DEBUG_COUT(msg) {LOGGER_DEBUG(logger,msg);__COUT(msg);}
+#define INFO_COUT(msg)  {LOGGER_INFO(logger,msg);__COUT(msg);}
+#define WARN_COUT(msg)  {LOGGER_WARN(logger,msg);__COUT(msg);}
 #define ERROR_COUT(msg) {LOGGER_ERROR(logger,msg);__COUT(msg);}
 #define FATAL_COUT(msg) {LOGGER_FATAL(logger,msg);__COUT(msg);abort();}
 

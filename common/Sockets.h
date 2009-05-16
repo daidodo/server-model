@@ -95,10 +95,18 @@ public:
     size_t GetSendSize() const;
     size_t GetRecvSize() const;
     void Close();
+    ssize_t RecvData(char * buf,size_t sz,bool block = false);
     ssize_t RecvData(__DZ_VECTOR(char) & buf,size_t sz,bool block = false);
+    ssize_t RecvData(__DZ_STRING & buf,size_t sz,bool block = false);
     //在指定的时间timeoutMs内发送数据buf,必须是非阻塞模式
     //返回是否发送完成
-    bool SendData(const __DZ_VECTOR(char) & buf,U32 timeoutMs);
+    bool SendData(const char * buf,size_t sz,U32 timeoutMs);
+    bool SendData(const __DZ_VECTOR(char) & buf,U32 timeoutMs){
+        return SendData(&buf[0],buf.size(),timeoutMs);
+    }
+    bool SendData(const __DZ_STRING & buf,U32 timeoutMs){
+        return SendData(&buf[0],buf.length(),timeoutMs);
+    }
     //发送数据buf,直接调用send
     //返回：+n,实际发送的字节数；0,需要重试；-n，出错
     ssize_t SendData(const __DZ_VECTOR(char) & buf);
@@ -117,6 +125,7 @@ public:
     __DZ_STRING ToString() const;
     const CSockAddr & PeerAddr() const{return peerAddr_;}
     bool Connect(const CSockAddr & addr);
+    bool Reconnect();   //close and connect again
 };
 
 class CListenSocket : public CSocket
