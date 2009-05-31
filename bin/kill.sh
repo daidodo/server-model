@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 PWD=`pwd`
 BIN=Server.out
 CMD=${PWD}/${BIN}
 
-PS_RECORD=`ps -ef | grep -v grep | grep "${BIN}"`
+PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`
 PS_PID=`echo "${PS_RECORD}" | gawk '{print $2}'`
 
 if [ "${PS_RECORD}" = "" ]; then
@@ -14,7 +14,7 @@ else
     
     sleep 1
 
-    PS_CHECK=`ps -ef | grep -v grep | grep "${BIN}"`
+    PS_CHECK=`ps -ef | grep -v grep | grep "${CMD}"`
     if [ "${PS_CHECK}" = "" ]; then
         echo "# ${BIN} stopped"
         echo "${PS_RECORD}"

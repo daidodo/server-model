@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/bin/sh
 
 PWD=`pwd`
 BIN=Server.out
 CMD=${PWD}/${BIN}
-PS_RECORD=`ps -ef | grep -v grep | grep "${BIN}"`
+PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`
 
 if [ "${PS_RECORD}" != "" ]; then
     echo "# ${BIN} is RUNNING"
@@ -23,7 +23,7 @@ else
 
     sleep 1
 
-    PS_CHECK=`ps -ef | grep -v grep | grep "${BIN}"`
+    PS_CHECK=`ps -ef | grep -v grep | grep "${CMD}"`
     if [ "${PS_CHECK}" = "" ]; then
         echo "# starting ${BIN} FAILED"
         exit -1

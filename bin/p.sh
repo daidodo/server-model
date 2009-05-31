@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 PWD=`pwd`
 BIN=Server.out
 CMD=${PWD}/${BIN}
 
-PS_RECORD=`ps -ef | grep -v grep | grep "${BIN}"`
+PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`
 
 if [ "$PS_RECORD" = "" ]; then
     echo "# ${BIN} is NOT running"
