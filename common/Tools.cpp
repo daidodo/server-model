@@ -137,7 +137,7 @@ namespace Tools{
     __DZ_STRING UnHex(const char * v,size_t sz)
     {
         typedef const char * __Ptr;
-        assert(v && sz);
+        assert(v);
         __DZ_STRING ret;
         ret.reserve(sz >> 1);
         int r = -1;
