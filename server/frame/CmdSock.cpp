@@ -6,8 +6,6 @@
 
 NS_SERVER_BEGIN
 
-U32 CCmdSock::MaxCmdLength = 1024;
-
 CCmdSock * CCmdSock::GetObject()
 {
     CCmdSock * ret = allocator_type().allocate(1);
@@ -167,14 +165,14 @@ bool CCmdSock::validateCmdHead(int cmdtype)
             <<", data buffer="<<Tools::DumpVal(recv_data_));
         return false;
     }else if(cmdtype != -1 && int(head.CmdType()) != cmdtype){
-        WARN("expect cmdtype="<<ICommand::CommandName(cmdtype)<<" but recved command head="
+        WARN("expect cmdtype="<<ICommand::CommandName(cmdtype)<<" but recved cmd head="
             <<head.ToString()<<", data buffer="<<Tools::DumpVal(recv_data_));
         return false;
     }
     recv_left_ = head.CmdBodyLength();
-    if(recv_left_ > MaxCmdLength){
+    if(recv_left_ > QCmdBase::MaxCmdLength){
         WARN("cmd body len="<<recv_left_<<" is invalid for MaxCmdLength="
-            <<MaxCmdLength);
+            <<QCmdBase::MaxCmdLength);
         return false;
     }
     return true;

@@ -54,7 +54,8 @@ void CMainServer::Init(const char * serverconf)
         FATAL_COUT("read config file="<<configFile_<<" error");
     }
     showConfigFile_ = config.GetString("show.config.file.name","show_config.txt");
-    __CmdSock::MaxCmdLength = config.GetInt("tcp.cmd.max.length",1024,64);
+    QCmdBase::MaxCmdLength = config.GetInt("tcp.cmd.max.length",1024,64);
+    UdpQCmdBase::MaxCmdLength = config.GetInt("udp.cmd.max.length",1024,64);
     useEpoll_ = config.GetInt("use.epoll.server");
     serverStatsOn_ = config.GetInt("server.stats.on");
     //thread statck size
@@ -98,7 +99,8 @@ void CMainServer::Reconfig()
     if(!config.Load(configFile_.c_str())){
         cerr<<"read config file="<<configFile_<<" error";
     }else{
-        __CmdSock::MaxCmdLength = config.GetInt("tcp.cmd.max.length",1024,64);
+        QCmdBase::MaxCmdLength = config.GetInt("tcp.cmd.max.length",1024,64);
+        UdpQCmdBase::MaxCmdLength = config.GetInt("udp.cmd.max.length",1024,64);
         acceptServer_->Reconfig(config);
         if(epollServer_)
             epollServer_->Reconfig(config);
@@ -124,7 +126,8 @@ void CMainServer::ShowConfig(__DZ_STRING verInfo) const
         <<"MainServer :\n"
         <<"  configFile_ = "<<configFile_<<endl
         <<"  showConfigFile_ = "<<showConfigFile_<<endl
-        <<"  MaxCmdLength = "<<__CmdSock::MaxCmdLength<<endl
+        <<"  TcpMaxCmdLength = "<<QCmdBase::MaxCmdLength<<endl
+        <<"  UdpMaxCmdLength = "<<UdpQCmdBase::MaxCmdLength<<endl
         <<"  useEpoll_ = "<<useEpoll_<<endl
         <<"  serverStatsOn_ = "<<serverStatsOn_<<endl
         //thread statck size

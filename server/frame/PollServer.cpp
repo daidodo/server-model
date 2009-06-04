@@ -141,7 +141,7 @@ U32 CPollServer::handleErrorFd()
         for(;i != errFdVec_.end();++i,++sock_i){
             const int & fd = *i;
             const __SockPtr & old = *sock_i;
-            WARN("poll_[fd="<<fd<<"].sock="<<Tools::ToStringPtr(old)
+            DEBUG("poll_[fd="<<fd<<"].sock="<<Tools::ToStringPtr(old)
                 <<" error, remove it");
         }
         ret = errFdVec_.size();

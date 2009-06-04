@@ -25,7 +25,7 @@ void CCmdHandler::process(const __Job & cmdTriple)
                 processCmd(dynamic_cast<CQueryCmd &>(*pCmd),respdata,stats);
                 break;}
             default:
-                ERROR("unknown command type="<<pCmd->CmdType()<<" from "
+                ERROR("unknown tcp command type="<<pCmd->CmdType()<<" from "
                     <<Tools::ToStringPtr(pSock)<<" cmd="<<Tools::ToStringPtr(pCmd));
         }
         if(cmdTriple.third && !respdata.empty()){

@@ -131,7 +131,7 @@ U32 CEpollServer::handleErrorFd()
             const int & fd = *i;
             const __SockPtr & old = *sock_i;
             epoll_.RemoveFd(fd);
-            WARN("epoll_[fd="<<fd<<"].sock="<<Tools::ToStringPtr(old)
+            DEBUG("epoll_[fd="<<fd<<"].sock="<<Tools::ToStringPtr(old)
                 <<" error, remove it");
         }
         ret = errFdVec_.size();

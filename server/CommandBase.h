@@ -16,8 +16,6 @@ struct ICommand
     virtual ~ICommand(){}
 };
 
-class RCmdBase;
-
 //TCP Query Cmd base
 class QCmdBase : public ICommand
 {
@@ -33,13 +31,14 @@ public:
     static const size_t HEAD_LEN = 12;          //bytes, MUST be consist with the QCmdBase definition
     static const size_t CMD_TYPE_OFFSET = 2;    //bytes, MUST be consist with the QCmdBase definition
     static const size_t ENCRYPT_KEY_LEN = 8;    //bytes, MUST be consist with the Document
-    static const size_t LEN_OFFSET = 8;        //bytes, MUST be consist with the RCmdBase definition
+    static const size_t LEN_OFFSET = 8;         //bytes, MUST be consist with the QCmdBase definition
+    static U32 MaxCmdLength;                    //bytes, Max Length of TCP commands
     static QCmdBase * CreateCommand(const __DZ_VECTOR(char) & data,size_t * used = 0);
     static void ReleaseCommand(QCmdBase *& cmd);
-    QCmdBase();
+    explicit QCmdBase(U32 cmdtype = 0);
     U32 CmdType() const{return U32(cmdtype_);}
     U32 CmdBodyLength() const{return length_;}
-    virtual __DZ_STRING ToString() const;
+    __DZ_STRING ToString() const;
     //virtual functions
     __DZ_STRING ToStringHelp() const;
     bool DecodeParam(CInByteStream & ds);
@@ -47,8 +46,7 @@ public:
     void UseHttp(bool http){useHttp_ = http;}
     bool UseHttp() const{return useHttp_;}
 protected:
-    explicit QCmdBase(U32 cmdtype); //give chance for derived class to init
-    QCmdBase(U32 cmdtype,const QCmdBase & qhead);
+    QCmdBase(U32 cmdtype,const QCmdBase & qhead);   //give chances for derived class to init
 private:
     bool Decode(CInByteStream & ds);
 };
@@ -60,49 +58,46 @@ struct RCmdBase : public QCmdBase
     RCmdBase(U32 cmdtype,const QCmdBase & qhead);
     U32 Version() const{return version_;}
     void Encode(COutByteStream & ds) const;
-    __DZ_STRING ToString() const;
     //virtual functions
     bool DecodeParam(CInByteStream & ds){return true;}
     void EncodeParam(COutByteStream & ds) const;
 };
 
-class UdpRCmdBase;
-
 //UDP Query Cmd base
 class UdpQCmdBase : public ICommand
 {
-    friend class UdpRCmdBase;
+protected:
     typedef U16 __CmdType;
     U16         version_;
     __CmdType   cmdtype_;
     U32         seq_;
 public:
-    static const size_t CMD_TYPE_OFFSET = 2;   //bytes, MUST be consist with the UdpQCmdBase definition
+    static const size_t HEAD_LEN = 8;          //bytes, MUST be consist with the UdpQCmdBase definition
+    static const size_t CMD_TYPE_OFFSET = 2;    //bytes, MUST be consist with the UdpQCmdBase definition
+    static const size_t ENCRYPT_KEY_LEN = 8;    //bytes, MUST be consist with the Document
+    static U32 MaxCmdLength;                    //bytes, Max Length of UDP commands
     static UdpQCmdBase * CreateCommand(const __DZ_VECTOR(char) & data,size_t * used = 0);
     static void ReleaseCommand(UdpQCmdBase *& cmd);
+    explicit UdpQCmdBase(U32 cmdtype = 0);
     U32 CmdType() const{return U32(cmdtype_);}
     __DZ_STRING ToString() const;
     //virtual functions
     __DZ_STRING ToStringHelp() const;
     bool DecodeParam(CInByteStream & ds);
     void EncodeParam(COutByteStream & ds) const{}
+protected:
+    UdpQCmdBase(U32 cmdtype,const UdpQCmdBase & qhead); //give chances for derived class to init
 private:
     bool Decode(CInByteStream & ds);
 };
 
-class UdpRCmdBase : public ICommand
+//UDP Response Cmd base
+struct UdpRCmdBase : public UdpQCmdBase
 {
-    U16 version_;
-    U16 cmdtype_;
-    U32 seq_;
-public:
     explicit UdpRCmdBase(U32 cmdtype);
     UdpRCmdBase(U32 cmdtype,const UdpQCmdBase & qhead);
-    U32 CmdType() const{return cmdtype_;}
     void Encode(COutByteStream & ds) const;
-    __DZ_STRING ToString() const;
     //virtual functions
-    __DZ_STRING ToStringHelp() const;
     bool DecodeParam(CInByteStream & ds){return true;}
     void EncodeParam(COutByteStream & ds) const;
 };
