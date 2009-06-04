@@ -65,7 +65,6 @@ public:
     static const int STATUS_HTTP = 2;
     static const int STATUS_HTTP_HEAD = 3;
     static const int STATUS_HTTP_BODY = 4;
-    static U32 MaxCmdLength;
     static __Myt * GetObject();
     static void PutObject(__Myt *& p);
     CCmdSock();

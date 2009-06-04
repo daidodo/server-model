@@ -22,13 +22,17 @@ __DZ_STRING ICommand::CommandName(int cmdtype)
 }
 
 //struct QCmdBase
+U32 QCmdBase::MaxCmdLength = 1024;
+
 QCmdBase * QCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
 {
     LOCAL_LOGGER(logger,"QCmdBase::CreateCommand");
     DEBUG("create command from data="<<Tools::DumpHex(data));
-    __DZ_VECTOR(char) decryptData;
     CInByteStream ds(data);
-    {    //decrypt data if neccessary
+    U16 ver = 0;
+    ds>>Manip::offset_value(0,ver);
+	__DZ_VECTOR(char) decryptData;
+    if(ver > 100){    //decrypt data if neccessary
         CEncryptorAes aes;
         aes.SetKey(&data[0],ENCRYPT_KEY_LEN);
         int n = aes.Decrypt(data,HEAD_LEN,decryptData);
@@ -79,9 +83,9 @@ void QCmdBase::ReleaseCommand(QCmdBase *& pCmd)
     pCmd = 0;
 }
 
-QCmdBase::QCmdBase()
-    : version_(0)
-    , cmdtype_(0)
+QCmdBase::QCmdBase(U32 cmdtype)
+    : version_(CMD_VERSION)
+    , cmdtype_(cmdtype)
     , seq_(0)
     , length_(0)
     , useHttp_(false)
@@ -101,21 +105,13 @@ __DZ_STRING QCmdBase::ToStringHelp() const
 {
     __DZ_OSTRINGSTREAM oss;
     oss<<(useHttp_ ? "HTTP" : "")
-        <<"(version_="<<std::oct<<version_
+        <<"(version_="<<std::dec<<version_
         <<","<<CommandName(cmdtype_)
         <<",seq_="<<seq_
         <<",length_="<<length_
         <<")";
     return oss.str();
 }
-
-QCmdBase::QCmdBase(U32 cmdtype)
-    : version_(CMD_VERSION)
-    , cmdtype_(cmdtype)
-    , seq_(0)
-    , length_(0)
-    , useHttp_(false)
-{}
 
 QCmdBase::QCmdBase(U32 cmdtype,const QCmdBase & qhead)
     : version_(qhead.version_)
@@ -127,7 +123,9 @@ QCmdBase::QCmdBase(U32 cmdtype,const QCmdBase & qhead)
 
 bool QCmdBase::DecodeParam(CInByteStream & ds)
 {
-    return (ds>>version_>>cmdtype_>>seq_>>length_);
+    return ((ds>>version_>>cmdtype_>>seq_>>length_)
+	    && version_ <= CMD_VERSION
+		&& length_ <= MaxCmdLength);
 }
 
 //struct RCmdBase
@@ -160,21 +158,30 @@ void RCmdBase::Encode(COutByteStream & ds) const
     ds<<Manip::offset_value(start + LEN_OFFSET,U32(len - HEAD_LEN));
 }
 
-__DZ_STRING RCmdBase::ToString() const
-{
-    return __DZ_STRING("(") + RCmdBase::ToStringHelp() + ToStringHelp() + __DZ_STRING(")");
-}
-
 void RCmdBase::EncodeParam(COutByteStream & ds) const
 {
     ds<<version_<<cmdtype_<<seq_<<length_;
 }
 
 //struct UdpQCmdBase
+U32 UdpQCmdBase::MaxCmdLength = 1024;
+
 UdpQCmdBase * UdpQCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
 {
     LOCAL_LOGGER(logger,"UdpQCmdBase::CreateCommand");
+    __DZ_VECTOR(char) decryptData;
     CInByteStream ds(data);
+    if(0){    //decrypt data if neccessary
+        CEncryptorAes aes;
+        aes.SetKey(&data[0],ENCRYPT_KEY_LEN);
+        int n = aes.Decrypt(data,HEAD_LEN,decryptData);
+        if(n < 0){
+            ERROR("decrypt cmd data="<<Tools::DumpHex(data)<<" return "<<n);
+            return 0;
+        }
+        DEBUG("decryptData="<<Tools::DumpHex(decryptData));
+        ds.SetSource(decryptData);
+    }
     __CmdType type = 0;
     if(!(ds>>Manip::offset_value(CMD_TYPE_OFFSET,type)))
         return 0;
@@ -214,6 +221,12 @@ void UdpQCmdBase::ReleaseCommand(UdpQCmdBase *& pCmd)
     pCmd = 0;
 }
 
+UdpQCmdBase::UdpQCmdBase(U32 cmdtype)
+    : version_(CMD_VERSION)
+    , cmdtype_(cmdtype)
+    , seq_(0)
+{}
+
 bool UdpQCmdBase::Decode(CInByteStream & ds)
 {
     return UdpQCmdBase::DecodeParam(ds) && DecodeParam(ds);
@@ -234,43 +247,43 @@ __DZ_STRING UdpQCmdBase::ToStringHelp() const
     return oss.str();
 }
 
+UdpQCmdBase::UdpQCmdBase(U32 cmdtype,const UdpQCmdBase & qhead)
+    : version_(qhead.version_)
+    , cmdtype_(cmdtype)
+    , seq_(time(0))
+{}
+
 bool UdpQCmdBase::DecodeParam(CInByteStream & ds)
 {
-    return (ds>>version_>>cmdtype_>>seq_);
+    return ((ds>>version_>>cmdtype_>>seq_)
+	    && version_ <= CMD_VERSION);
 }
 
 //struct UdpRCmdBase
 UdpRCmdBase::UdpRCmdBase(U32 cmdtype)
-    : version_(CMD_VERSION)
-    , cmdtype_(cmdtype)
-    , seq_(0)
+    : UdpQCmdBase(cmdtype)
 {}
 
 UdpRCmdBase::UdpRCmdBase(U32 cmdtype,const UdpQCmdBase & qhead)
-    : version_(qhead.version_)
-    , cmdtype_(cmdtype)
-    , seq_(qhead.seq_)
+    : UdpQCmdBase(cmdtype,qhead)
 {}
 
 void UdpRCmdBase::Encode(COutByteStream & ds) const
 {
-    UdpRCmdBase::EncodeParam(ds);
-    EncodeParam(ds);
-}
-
-__DZ_STRING UdpRCmdBase::ToString() const
-{
-    return __DZ_STRING("(") + UdpRCmdBase::ToStringHelp() + ToStringHelp() + __DZ_STRING(")");
-}
-
-__DZ_STRING UdpRCmdBase::ToStringHelp() const
-{
-    __DZ_OSTRINGSTREAM oss;
-    oss<<"(version_="<<version_
-        <<","<<CommandName(cmdtype_)
-        <<",seq_="<<seq_
-        <<")";
-    return oss.str();
+    if(0){  //encrypt data if neccessary
+        COutByteStream dss;
+        UdpRCmdBase::EncodeParam(dss);
+        EncodeParam(dss);
+        __DZ_VECTOR(char) data,encryptData;
+        dss.ExportData(data);
+        CEncryptorAes aes;
+        aes.SetKey(&data[0],UdpQCmdBase::ENCRYPT_KEY_LEN);
+        aes.Encrypt(data,UdpQCmdBase::HEAD_LEN,encryptData);
+        ds<<Manip::raw(&encryptData[0],encryptData.size());
+    }else{
+        UdpRCmdBase::EncodeParam(ds);
+        EncodeParam(ds);
+    }
 }
 
 void UdpRCmdBase::EncodeParam(COutByteStream & ds) const

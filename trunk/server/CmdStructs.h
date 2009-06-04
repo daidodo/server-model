@@ -54,7 +54,6 @@ public:
     {}
     ~CCommandStats();
     void Succ(bool succ = true){succ_ = succ;}
-
 };
 
 //business

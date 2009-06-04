@@ -7,8 +7,8 @@
 //#   include <string>
 //#   include <ctime>
 //#   include <common/Logger.h>
-#   include <common/Threads.h>
-//#   include <common/Tools.h>
+//#   include <common/Threads.h>
+#   include <common/Tools.h>
 //#   include <common/DataStream.h>
 //#   include <common/LockInt.h>
 //#   include <common/LockQueue.h>
@@ -16,11 +16,11 @@
 //#   include <common/Epoll.h>
 //#   include <common/Poll.h>
 //#   include <common/FdMap.h>
-#   include <common/Mutex.h>
+//#   include <common/Mutex.h>
 //#   include <server/frame/CmdSock.h>
 //#   include <common/List.h>
 //#   include <common/Tree.h>
-#   include <common/Semaphore.h>
+//#   include <common/Semaphore.h>
 
 using namespace NS_SERVER;
 
@@ -30,12 +30,8 @@ int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
     INIT_LOGGER(0);
-    U32 now = 0;
-    if(argc < 2)
-        now = time(0);
-    else
-        now = atoi(argv[1]);
-    cout<<Tools::TimeString(now)<<endl;
+    __DZ_STRING unhex = Tools::UnHex("AB CD AA D 22 D AD EA A");
+    cout<<Tools::Dump(unhex)<<endl;
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;

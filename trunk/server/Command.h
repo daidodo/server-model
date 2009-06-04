@@ -7,9 +7,11 @@
 
 NS_SERVER_BEGIN
 
-//command type definition
+//command ID definition
 const U32 CMD_QUERY = 161;
 const U32 CMD_RESP  = 162;
+
+//命令结构定义
 
 //Query
 struct CQueryCmd : public QCmdBase
