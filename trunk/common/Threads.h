@@ -62,7 +62,7 @@ public:
     typedef CThreads::__Active      __Active;
     explicit CThreadPool(size_t thread_count,size_t stack_sz = 16 << 10);
     virtual ~CThreadPool(){}
-    virtual int StartThreads(__DZ_STRING name);
+    virtual int StartThreads(__DZ_STRING name,bool repeat = true);
     virtual void WaitAll();
     size_t ThreadCount() const{return threads_.ThreadCount();}
     size_t ActiveCount() const{return threads_.ActiveCount();}

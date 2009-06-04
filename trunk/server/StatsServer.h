@@ -15,7 +15,8 @@ class CStatsServer : public CThreadPool
     typedef CMainServer::__FdSockMap    __FdSockMap;
     typedef CMainServer::__QueryCmdQue  __QueryCmdQue;
     //members:
-    __DZ_STRING             serverStatusFile_;          //服务器统计文件名
+    __DZ_STRING             serverStatusFile_;          //服务器统计文件名,不能重新配置
+    __DZ_STRING             serverStatusTimestamp_;     //服务器统计文件名的时间戳格式,不能重新配置
     int                     serverStatusTimeInterval_;  //s,服务器统计间隔
     __FdSockMap &           fdSockMap_;
     __FdEventQue &          addingFdQue_;
