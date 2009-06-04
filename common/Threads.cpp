@@ -89,9 +89,9 @@ CThreadPool::CThreadPool(size_t thread_count,size_t stack_sz)
     : threads_(threadProc,thread_count,stack_sz)
 {}
 
-int CThreadPool::StartThreads(__DZ_STRING name)
+int CThreadPool::StartThreads(__DZ_STRING name,bool repeat)
 {
-    return threads_.StartThreads(name,this,true);
+    return threads_.StartThreads(name,this,repeat);
 }
 
 void CThreadPool::WaitAll()
