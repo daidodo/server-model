@@ -5,7 +5,7 @@ BIN=Server.out
 CMD=${PWD}/${BIN}
 
 PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`
-PS_PID=`echo "${PS_RECORD}" | gawk '{print $2}'`
+PS_PID=`echo "${PS_RECORD}" | awk '{print $2}'`
 
 if [ "${PS_RECORD}" = "" ]; then
     echo "# ${BIN} is NOT running"
