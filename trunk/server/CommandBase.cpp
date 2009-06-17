@@ -124,7 +124,7 @@ QCmdBase::QCmdBase(U32 cmdtype,const QCmdBase & qhead)
 bool QCmdBase::DecodeParam(CInByteStream & ds)
 {
     return ((ds>>version_>>cmdtype_>>seq_>>length_)
-	    && version_ <= CMD_VERSION
+	    && version_ >= CMD_VERSION
 		&& length_ <= MaxCmdLength);
 }
 
