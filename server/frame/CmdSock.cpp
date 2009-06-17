@@ -161,7 +161,7 @@ bool CCmdSock::validateCmdHead(int cmdtype)
     CInByteStream ds(recv_data_);
     QCmdBase head;
     if(!head.DecodeParam(ds)){
-        WARN("data format error, command head="<<head.ToString()
+        WARN("data format error, command head="<<head.ToStringHelp()
             <<", data buffer="<<Tools::DumpVal(recv_data_));
         return false;
     }else if(cmdtype != -1 && int(head.CmdType()) != cmdtype){
