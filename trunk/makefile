@@ -73,6 +73,8 @@ TESTDEP:=$(TESTOBJ:.o=.d)
 SERVERDEP:=$(SERVEROBJ:.o=.d)
 COMMONDEP:=$(COMMONOBJ:.o=.d)
 
+HEADERSRC := $(foreach dir,$(COMMONDIR),$(wildcard $(dir)*.h)) $(foreach dir,$(SERVERDIR),$(wildcard $(dir)*.h))
+
 CXXFLAGS+=-MD
 CFLAGS+=-MD
 
@@ -125,7 +127,10 @@ clean : cleandist cleanbin
 
 love: cleanobj cleanbin all
 
-.PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleanbin cleandist clean love  
+lines:
+	@echo $(SERVERSRC) $(COMMONSRC) $(HEADERSRC) | xargs wc -l
+
+.PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleanbin cleandist clean love lines
 
 ifneq (${MAKECMDGOALS},force)
 ifneq (${MAKECMDGOALS},cleanobj)
@@ -133,6 +138,7 @@ ifneq (${MAKECMDGOALS},cleandep)
 ifneq (${MAKECMDGOALS},cleandist)
 ifneq (${MAKECMDGOALS},cleanbin)
 ifneq (${MAKECMDGOALS},clean)
+ifneq (${MAKECMDGOALS},lines)
 sinclude $(SERVERDEP) $(COMMONDEP) $(TESTDEP)
 endif
 endif
@@ -140,5 +146,5 @@ endif
 endif
 endif
 endif
-
+endif
 
