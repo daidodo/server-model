@@ -117,7 +117,7 @@ class CCondition
     CCondition(const CCondition &);
     CCondition & operator =(const CCondition &);
 protected:
-    mutable pthread_cond_t  cond_;
+    mutable pthread_cond_t cond_;
 public:
     CCondition(){
         pthread_cond_init(&cond_,0);
