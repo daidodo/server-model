@@ -50,6 +50,7 @@
 #include <string>
 #include <vector>
 #include <utility>      //std::pair,std::make_pair
+#include <endian.h>     //BYTE_ORDER,LITTLE_ENDIAN
 #include <common/impl/Tools_impl.h>
 #include <common/impl/Alloc.h>
 
