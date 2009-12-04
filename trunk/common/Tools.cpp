@@ -8,7 +8,6 @@
 #include <sys/resource.h>   //struct rlimit,getrlimit,RLIMIT_NOFILE,RLIM_INFINITY,setrlimit
 #include <sys/types.h>
 #include <sys/sysctl.h>
-#include <endian.h>         //BYTE_ORDER,LITTLE_ENDIAN
 #include "Tools.h"
 
 NS_SERVER_BEGIN
