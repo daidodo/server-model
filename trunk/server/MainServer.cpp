@@ -70,7 +70,7 @@ void CMainServer::Init(const char * serverconf)
     //business
 
     //service
-    eventFdQue_ = new __FdEventQue[tcpServerStackSz_];
+    eventFdQue_ = new __FdEventQue[tcpServerThreadCount_];
     acceptServer_ = new CAcceptServer(*this);
     if(useEpoll_)
         epollServer_ = new CEpollServer(*this);
