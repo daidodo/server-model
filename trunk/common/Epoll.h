@@ -24,7 +24,7 @@ public:
 private:
     class __EventHelper{
         const __Event & ev_;
-        U32 &           fdtime_;    //ms
+        U32 &           fdtime_;    //s
         U32             timeout_;   //s
     public:
         __EventHelper(const __Event & ev,U32 & ft,U32 tt)
