@@ -38,13 +38,13 @@ public:
     explicit QCmdBase(U32 cmdtype = 0);
     U32 CmdType() const{return U32(cmdtype_);}
     U32 CmdBodyLength() const{return length_;}
+    bool UseHttp() const{return useHttp_;}
+    void UseHttp(bool http){useHttp_ = http;}
     __DZ_STRING ToString() const;
     //virtual functions
     __DZ_STRING ToStringHelp() const;
     bool DecodeParam(CInByteStream & ds);
     void EncodeParam(COutByteStream & ds) const{}
-    void UseHttp(bool http){useHttp_ = http;}
-    bool UseHttp() const{return useHttp_;}
 protected:
     QCmdBase(U32 cmdtype,const QCmdBase & qhead);   //give chances for derived class to init
 private:
