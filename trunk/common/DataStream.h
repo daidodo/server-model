@@ -4,14 +4,18 @@
 /*
     封装数据流的读取和写入
     注意测试operator !(),在错误状态下,所有读写数据操作都会无效
+    类型:
         CInByteStream       以字节为单位的输入流
         COutByteStream      以字节为单位的输出流
+    操作符:
         array               输入/输出数组
         raw                 输入/输出数组数据
         range               输入/输出范围
         set_order           设置输入/输出流的字节序
         seek                设置输入/输出流的偏移
+        skip                跳过/预留指定字节数据
         offset_value        输入/输出指定位置的数据
+        insert              在指定位置插入数据
     History
         20070926    给CInByteStream加入status_状态,防止因非法数据引起内存访问越界
         20071228    修正CInByteStream::LeftSize在len < cur_时返回很大size_t的问题;并把2个ensure里的减法改成加法
@@ -428,7 +432,7 @@ private:
 
 //manipulators' functions:
 namespace Manip{
-    //write array( = length + raw array)
+    //read/write array( = length + raw array)
     template<class T>
     inline NS_IMPL::CManipulatorArray<T> array(T * c,size_t sz,size_t * real_sz = 0){
         return NS_IMPL::CManipulatorArray<T>(c,sz,real_sz);
