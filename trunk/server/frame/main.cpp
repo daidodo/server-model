@@ -22,8 +22,6 @@
 //#   include <common/Tree.h>
 //#   include <common/Semaphore.h>
 
-using namespace NS_SERVER;
-
 #endif
 
 int main(int argc,const char ** argv)
