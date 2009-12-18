@@ -30,7 +30,7 @@ class CSharedPtr
     typedef CLockInt<int,LockT>                 __LockInt;
     typedef typename Tools::CTypeSelector
         <__LockInt,int,bLock>::RType            __Int;
-    typedef NS_IMPL::_ref_imp<T,__Int>                   __ref_type;
+    typedef NS_IMPL::_ref_imp<T,__Int>          __ref_type;
     typedef typename __ref_type::__ref_alloc    __ref_alloc;
 public:
     typedef T   value_type;
