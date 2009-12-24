@@ -1,5 +1,5 @@
 //for test
-#define __DZ_TEST   0
+#define __DZ_TEST   1
 
 #include "main.h"
 
@@ -8,8 +8,8 @@
 //#   include <ctime>
 //#   include <common/Logger.h>
 //#   include <common/Threads.h>
-#   include <common/Tools.h>
-//#   include <common/DataStream.h>
+//#   include <common/Tools.h>
+#   include <common/DataStream.h>
 //#   include <common/LockInt.h>
 //#   include <common/LockQueue.h>
 //#   include <common/RingBuffer.h>
@@ -22,14 +22,35 @@
 //#   include <common/Tree.h>
 //#   include <common/Semaphore.h>
 
+static void test()
+{
+    __DZ_STRING buf("这是一段中文的法定发得分啊都是阿德说法阿德福阿德说法");
+
+    CInBitStream bs(buf);
+    bs.SetSource(buf);
+    char a = 0;
+    //cout<<bs.ToString()<<endl;
+    bs>>a;
+    cout<<int(a)<<endl;
+
+    int i = 0,b = 4;
+    while(bs){
+        cout<<bs.ToString()<<endl;
+        bs>>Manip::bits(b,i);
+        cout<<b<<"\t"<<i<<endl;
+        b += 11;
+    }
+
+    cout<<bs.ToString()<<endl;
+}
+
 #endif
 
 int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
     INIT_LOGGER(0);
-    __DZ_STRING unhex = Tools::UnHex("AB CD AA D 22 D AD EA A");
-    cout<<Tools::Dump(unhex)<<endl;
+    test();
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;

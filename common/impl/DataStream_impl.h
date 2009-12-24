@@ -161,6 +161,27 @@ public:
     size_t Off() const{return off_;}
 };
 
+template<typename T>
+class CManipulatorBits
+{
+    int len_;
+    T & val_;
+public:
+    CManipulatorBits(int bits,T & val)
+        : len_(bits)
+        , val_(val)
+    {}
+    T & Value() const{return val_;}
+    int Bits() const{return len_;}
+};
+
+template<typename Integer>
+struct CIntegerTraits
+{
+    static const int MAX_BITS = sizeof(Integer) * 8;
+};
+
+
 NS_IMPL_END
 
 #endif
