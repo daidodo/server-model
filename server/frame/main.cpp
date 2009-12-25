@@ -22,26 +22,36 @@
 //#   include <common/Tree.h>
 //#   include <common/Semaphore.h>
 
-static void test()
+static void test1()
 {
     __DZ_STRING buf("这是一段中文的法定发得分啊都是阿德说法阿德福阿德说法");
 
     CInBitStream bs(buf);
     bs.SetSource(buf);
     char a = 0;
-    //cout<<bs.ToString()<<endl;
-    bs>>a;
-    cout<<int(a)<<endl;
-
-    int i = 0,b = 4;
-    while(bs){
-        cout<<bs.ToString()<<endl;
-        bs>>Manip::bits(b,i);
-        cout<<b<<"\t"<<i<<endl;
-        b += 11;
-    }
-
+    if(bs>>a)
+        cout<<int(a)<<endl;
     cout<<bs.ToString()<<endl;
+
+    short i = 0,b = 1;
+    while(bs>>Manip::bits(b,i)){
+        cout<<b<<"\t"<<i<<endl;
+        cout<<bs.ToString()<<endl;
+        b += 7;
+    }
+    cout<<b<<endl;
+}
+
+static void test2()
+{
+    int a = 'a';
+    COutBitStream bs;
+
+    for(int i = 0;i < 5;++i){
+        bs<<Manip::bits(i,a);
+        cout<<i<<endl
+            <<bs.ToString()<<endl;
+    }
 }
 
 #endif
@@ -50,7 +60,7 @@ int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
     INIT_LOGGER(0);
-    test();
+    test2();
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;
