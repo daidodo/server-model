@@ -7,6 +7,8 @@
     类型:
         CInByteStream       以字节为单位的输入流
         COutByteStream      以字节为单位的输出流
+        CInBitStream        以比特位为单位的输入流
+        COutBitStream       以比特位为单位的输出流
     操作符:
         array               输入/输出数组
         raw                 输入/输出数组数据
@@ -33,6 +35,7 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <algorithm>    //std::reverse
 #include <common/impl/DataStream_impl.h>
 #include <common/Tools.h>
 
@@ -42,7 +45,6 @@ class CInByteStream : public NS_IMPL::CDataStreamBase
 {
     typedef CInByteStream __Myt;
 protected:
-    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
     const char *    data_;
     size_t          len_;
     size_t          bytePos_;
@@ -252,7 +254,7 @@ private:
 class COutByteStream : public NS_IMPL::CDataStreamBase
 {
     typedef COutByteStream __Myt;
-    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
+protected:
     __DZ_VECTOR(char)   data_;
     size_t              bytePos_;
     bool                need_reverse_;  //是否需要改变结果的byte order
@@ -280,8 +282,9 @@ public:
             case Cur:
                 if(off > 0)
                     ensure(off);
-                else
+                else{
                     assert(size_t(-off) < bytePos_);
+                }
                 bytePos_ += off;
                 break;
             default:
@@ -425,6 +428,7 @@ private:
         }else
             return *this;
     }
+protected:
     void ensure(size_t len){
         size_t curLen = data_.size();
         if(curLen < len + bytePos_)
@@ -500,14 +504,12 @@ public:
     __Myt & operator >>(const NS_IMPL::CManipulatorBits<Integer> & m){
 //*
         const int MAX_BITS = NS_IMPL::CIntegerTraits<Integer>::MAX_BITS;
-        int bits = m.Bits();
-        if(ensureBits(bits)){
-            Integer & v = m.Value();
-            v = 0;
-            for(int lsh = 0;bits > 0 && lsh < MAX_BITS;lsh = m.Bits() - bits){
-                Integer c = bitsVal(bits) & 0xFF;
-                v += c << lsh;
-            }
+        const int BITS = m.Bits();
+        if(ensureBits(BITS)){
+            Integer & v = (m.Value() = 0);
+            int bits = BITS,lsh = 0;
+            for(Integer c;bits > 0 && lsh < MAX_BITS;lsh = BITS - bits)
+                v += ((c = bitsVal(bits) & 0xFF) <<= lsh);
             if(bits)
                 SeekBits(bits,Cur);
         }
@@ -559,13 +561,110 @@ private:
         int left = 8 - bitPos_;
         if(left > bits)
             left = bits;
-        char mask = (char(1) << left) - 1;
-        mask &= data_[bytePos_] >> bitPos_;
-        bitPos_ += left;
-        if(bitPos_ >= 8)
-            bitPos_ -= 8,++bytePos_;
+        char ret = (data_[bytePos_] >> bitPos_) & ((1 << left) - 1);
+        if((bitPos_ += left) >= 8)
+            ++bytePos_,bitPos_ -= 8;
         bits -= left;
-        return mask;
+        return ret;
+    }
+};
+
+class COutBitStream : public COutByteStream
+{
+    typedef COutByteStream __MyBase;
+    typedef COutBitStream __Myt;
+    int bitPos_;
+public:
+    explicit COutBitStream(size_t sz = 128,bool netByteOrder = DEF_NET_BYTEORDER)
+        : __MyBase(sz,netByteOrder)
+        , bitPos_(7)
+    {}
+    //按照dir指定的方向设置比特位指针偏移
+    //返回比特位最后的绝对偏移
+    //注意：如果比特位变小，相当于抹掉了原先的数据；如果比特位变大了，相当于留出指定的空位
+    size_t SeekBits(ssize_t off,ESeekDir dir){
+        int bits = off % 8;
+        off = (off + 7) / 8;
+        switch(dir){
+            case Begin:
+                assert(off >= 0);
+                if(size_t(off) > bytePos_)
+                    ensure(size_t(off) - bytePos_);
+                bytePos_ = off;
+                bitPos_ = (8 - bits) % 8;
+                break;
+            case End:
+            case Cur:
+                if(off > 0)
+                    ensure(off);
+                else{
+                    assert(size_t(-off) < bytePos_);
+                }
+                bytePos_ += off;
+                bitPos_ -= bits;
+                if(bitPos_ < 0)
+                    bitPos_ += 8;
+                break;
+            default:
+                assert(0);
+        }
+        return bytePos_ * 8 - bitPos_;
+    }
+    //write bytes
+    template<class T>
+    __Myt & operator <<(const T & c){
+        assert(!bitPos_);
+        __MyBase::operator <<(c);
+        return *this;
+    }
+    //write bits
+    template<typename Integer>
+    __Myt & operator <<(const NS_IMPL::CManipulatorBits<Integer> & m){
+        const int MAX_BITS = NS_IMPL::CIntegerTraits<Integer>::MAX_BITS;
+        const int BITS = m.Bits();
+        ensureBits(BITS);
+        int bits = BITS;
+        if(BITS > MAX_BITS){
+            SeekBits(BITS - MAX_BITS,Cur);
+            bits = MAX_BITS;
+        }
+        while(bits > 0)
+            bitsVal(m.Value(),bits);
+
+        return *this;
+    }
+    __DZ_STRING ToString() const{
+        const char DIGIT[] = "01";
+        __DZ_STRING ret;
+        for(size_t i = 0;i < bytePos_;++i){
+            for(int j = 7;j >= 0;--j)
+                ret.push_back(DIGIT[(data_[i] >> j) & 1]);
+            ret.push_back(' ');
+        }
+        for(int i = 7;bitPos_ && i >= bitPos_;--i)
+            ret.push_back(DIGIT[(data_[bytePos_] >> i) & 1]);
+        return ret;
+    }
+private:
+    void ensureBits(int bits){
+        __MyBase::ensure((bits - bitPos_ + 7) / 8);
+    }
+    template<typename Integer>
+    void bitsVal(const Integer & v,int & bits){
+        if(!bitPos_){
+            bitPos_ = 8;
+            ++bytePos_;
+        }
+        int left = bitPos_;
+        if(left > bits)
+            left = bits;
+
+        char mask = (1 << left) - 1;
+        data_[bytePos_] &= ~mask;
+        mask &= (v >> (bits - left));
+        data_[bytePos_] += mask;
+        bitPos_ -= left;
+        bits -= left;
     }
 };
 
@@ -629,6 +728,10 @@ namespace Manip{
     template<typename T>
     inline NS_IMPL::CManipulatorBits<T> bits(size_t bits,T & val){
         return NS_IMPL::CManipulatorBits<T>(bits,val);
+    }
+    template<class T>
+    inline NS_IMPL::CManipulatorBits<const T> bits(size_t bits,const T & val){
+        return NS_IMPL::CManipulatorBits<const T>(bits,val);
     }
 
 }//namespace Manip

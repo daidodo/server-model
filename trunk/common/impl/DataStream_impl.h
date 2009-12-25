@@ -11,6 +11,7 @@ class CDataStreamBase
     typedef CDataStreamBase __Myt;
     typedef void (__Myt::*__SafeBool)();
 public:
+    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
     enum EByteOrder{
         BigEndian,
         LittleEndian
@@ -176,11 +177,24 @@ public:
 };
 
 template<typename Integer>
-struct CIntegerTraits
-{
-    static const int MAX_BITS = sizeof(Integer) * 8;
-};
+struct CIntegerTraits{};
 
+#define __INTEGER_TRAITS_FOR_PODS(TYPE) template<>struct CIntegerTraits<TYPE>{  \
+    static const int MAX_BITS = sizeof(TYPE) * 8;}
+
+__INTEGER_TRAITS_FOR_PODS(char);
+__INTEGER_TRAITS_FOR_PODS(signed char);
+__INTEGER_TRAITS_FOR_PODS(unsigned char);
+__INTEGER_TRAITS_FOR_PODS(short);
+__INTEGER_TRAITS_FOR_PODS(unsigned short);
+__INTEGER_TRAITS_FOR_PODS(int);
+__INTEGER_TRAITS_FOR_PODS(unsigned int);
+__INTEGER_TRAITS_FOR_PODS(long);
+__INTEGER_TRAITS_FOR_PODS(unsigned long);
+__INTEGER_TRAITS_FOR_PODS(long long);
+__INTEGER_TRAITS_FOR_PODS(unsigned long long);
+
+#undef __INTEGER_TRAITS_FOR_PODS
 
 NS_IMPL_END
 
