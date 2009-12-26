@@ -3,23 +3,15 @@
 
 #include <netinet/in.h>         //ntohl
 #include <common/impl/Config.h>
+#include <common/impl/Template.h>
 
 NS_IMPL_BEGIN
 
-class CDataStreamBase
+class CDataStreamStatus
 {
-    typedef CDataStreamBase __Myt;
+    typedef CDataStreamStatus __Myt;
     typedef void (__Myt::*__SafeBool)();
 public:
-    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
-    enum EByteOrder{
-        BigEndian,
-        LittleEndian
-    };
-    enum EOrderType{
-        NetOrder,
-        HostOrder
-    };
     enum ESeekDir{
         Begin,
         End,
@@ -31,44 +23,36 @@ public:
     int Status() const{return status_;}
     void ResetStatus(){Status(0);}
 protected:
-    CDataStreamBase():status_(0){}
-    virtual ~CDataStreamBase(){}
-    bool NeedReverse(bool netOrder) const{
+    CDataStreamStatus():status_(0){}
+    bool needReverse(bool netOrder) const{
         return (netOrder && ntohl(1) != 1);
-    }
-    bool NeedReverse(EOrderType ot) const{
-        return NeedReverse(ot == NetOrder);
     }
 private:
     int status_;
 };
 
-//manipulators
-template<class T>
-struct __ManipTypeTraits{static const bool CanMemcpy = false;};
-template<>
-struct __ManipTypeTraits<char>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<signed char>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<unsigned char>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<short>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<unsigned short>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<int>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<unsigned int>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<long>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<unsigned long>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<long long>{static const bool CanMemcpy = true;};
-template<>
-struct __ManipTypeTraits<unsigned long long>{static const bool CanMemcpy = true;};
+//游标类
+//Integer是表示游标数值的类型
+//Bits表示使用多少位表示比特游标
+//注意：sizeof(Integer) * 8 > Bits
+template<typename Integer,int Bits>
+class CStreamIndex
+{
+    //generate compile error if (sizeof(Integer) * 8 <= Bits)
+    typedef typename NS_IMPL::CAssert<
+        (Bits >= 0 && (sizeof(Integer) * 8) > Bits)>::Result __Assert;
+public:
+    explicit CStreamIndex(const Integer & index)
+        : index_(index)
+    {}
+    CStreamIndex(size_t high,int low)
+        : index_((high << Bits) + low)
+    {}
+private:
+    Integer index_;
+};
 
+//manipulators
 template<typename T>
 class CManipulatorArray
 {
@@ -175,26 +159,6 @@ public:
     T & Value() const{return val_;}
     int Bits() const{return len_;}
 };
-
-template<typename Integer>
-struct CIntegerTraits{};
-
-#define __INTEGER_TRAITS_FOR_PODS(TYPE) template<>struct CIntegerTraits<TYPE>{  \
-    static const int MAX_BITS = sizeof(TYPE) * 8;}
-
-__INTEGER_TRAITS_FOR_PODS(char);
-__INTEGER_TRAITS_FOR_PODS(signed char);
-__INTEGER_TRAITS_FOR_PODS(unsigned char);
-__INTEGER_TRAITS_FOR_PODS(short);
-__INTEGER_TRAITS_FOR_PODS(unsigned short);
-__INTEGER_TRAITS_FOR_PODS(int);
-__INTEGER_TRAITS_FOR_PODS(unsigned int);
-__INTEGER_TRAITS_FOR_PODS(long);
-__INTEGER_TRAITS_FOR_PODS(unsigned long);
-__INTEGER_TRAITS_FOR_PODS(long long);
-__INTEGER_TRAITS_FOR_PODS(unsigned long long);
-
-#undef __INTEGER_TRAITS_FOR_PODS
 
 NS_IMPL_END
 
