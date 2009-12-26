@@ -44,8 +44,10 @@ static void test1()
 
 static void test2()
 {
+    COutByteStream ds(0);
+    ds<<3;
     int a = 'a';
-    COutBitStream bs;
+    COutBitStream bs(0);
 
     for(int i = 0;i < 5;++i){
         bs<<Manip::bits(i,a);

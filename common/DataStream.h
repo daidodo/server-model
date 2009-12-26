@@ -41,12 +41,14 @@
 
 NS_SERVER_BEGIN
 
-class CInByteStream : public NS_IMPL::CDataStreamBase
+class CInByteStream : public NS_IMPL::CDataStreamStatus
 {
     typedef CInByteStream __Myt;
+    typedef CStreamIndex<size_t,0>  __Index;
 protected:
     const char *    data_;
     size_t          len_;
+
     size_t          bytePos_;
     bool            need_reverse_;  //是否需要改变字节序
     CInByteStream(){}
@@ -104,13 +106,15 @@ public:
     size_t Seek(ssize_t off,ESeekDir dir){
         switch(dir){
             case Begin:
+                assert(off >= 0);
                 bytePos_ = off;
                 break;
             case End:
-                assert(size_t(off) <= len_);
-                bytePos_ = len_ - off;
+                assert(off <= 0 && size_t(-off) <= len_);
+                bytePos_ = len_ + off;
                 break;
             case Cur:
+                assert(off >= 0 || size_t(-off) <= bytePos_);
                 bytePos_ += off;
                 break;
             default:
@@ -463,23 +467,22 @@ public:
     //按照dir指定的方向设置比特位指针偏移
     //返回比特位指针最后的绝对偏移
     size_t SeekBits(ssize_t off,ESeekDir dir){
-        ssize_t bits = off % 8;
-        off /= 8;
         switch(dir){
             case Begin:
-                bytePos_ = off;
-                bitPos_ = bits;
+                assert(off >= 0);
+                bytePos_ = off / 8;
+                bitPos_ = off & 7;
                 break;
             case End:
-                assert(size_t(off) + (bits > 0) <= len_);
-                bytePos_ = len_ - off;
-                bitPos_ -= bits;
-                if(bitPos_ < 0){
-                    bitPos_ += 8;
-                    --bytePos_;
-                }
+                assert(off <= 0);
+                off = -off;
+                assert(size_t(off) / 8 <= len_);
+                bytePos_ = len_ * 8 - off;
+                bitPos_ = bytePos_ & 7;
+                bytePos_ /= 8;
                 break;
             case Cur:
+                assert(off >= 0);
                 bytePos_ += off;
                 bitPos_ += bits;
                 if(bitPos_ >= 8){
@@ -571,33 +574,33 @@ private:
 
 class COutBitStream : public COutByteStream
 {
-    typedef COutByteStream __MyBase;
-    typedef COutBitStream __Myt;
-    int bitPos_;
+    typedef COutByteStream  __MyBase;
+    typedef COutBitStream   __Myt;
+    int bitPos_;    //the real bit position is (7 - bitPos_)
 public:
     explicit COutBitStream(size_t sz = 128,bool netByteOrder = DEF_NET_BYTEORDER)
         : __MyBase(sz,netByteOrder)
-        , bitPos_(7)
+        , bitPos_(0)
     {}
     //按照dir指定的方向设置比特位指针偏移
     //返回比特位最后的绝对偏移
-    //注意：如果比特位变小，相当于抹掉了原先的数据；如果比特位变大了，相当于留出指定的空位
+    //注意：如果比特位变小，相当于放弃了原先的数据；如果比特位变大了，相当于留出指定的空位
     size_t SeekBits(ssize_t off,ESeekDir dir){
-        int bits = off % 8;
-        off = (off + 7) / 8;
         switch(dir){
-            case Begin:
+            case Begin:{
                 assert(off >= 0);
-                if(size_t(off) > bytePos_)
-                    ensure(size_t(off) - bytePos_);
-                bytePos_ = off;
-                bitPos_ = (8 - bits) % 8;
-                break;
+                int bits = off & 7;
+                size_t bytes = (off + 7) / 8;
+                if(size_t(bytes) > bytePos_)
+                    __MyBase::ensure(bytes - bytePos_);
+                bytePos_ = bytes;
+                bitPos_ = bits;
+                break;}
             case End:
             case Cur:
-                if(off > 0)
-                    ensure(off);
-                else{
+                if(off > 0){
+                    ensureBits(off);
+                }else{
                     assert(size_t(-off) < bytePos_);
                 }
                 bytePos_ += off;
@@ -630,7 +633,6 @@ public:
         }
         while(bits > 0)
             bitsVal(m.Value(),bits);
-
         return *this;
     }
     __DZ_STRING ToString() const{
@@ -647,23 +649,19 @@ public:
     }
 private:
     void ensureBits(int bits){
-        __MyBase::ensure((bits - bitPos_ + 7) / 8);
+        __MyBase::ensure((bits + bitPos_ + 7) / 8);
     }
     template<typename Integer>
     void bitsVal(const Integer & v,int & bits){
-        if(!bitPos_){
-            bitPos_ = 8;
-            ++bytePos_;
-        }
-        int left = bitPos_;
+        int left = 8 - bitPos_;
+        data_[bytePos_] &= ~((1 << left) - 1);
         if(left > bits)
             left = bits;
-
         char mask = (1 << left) - 1;
-        data_[bytePos_] &= ~mask;
-        mask &= (v >> (bits - left));
+        mask &= char(v >> (bits - left));
         data_[bytePos_] += mask;
-        bitPos_ -= left;
+        if((bitPos_ += left) >= 8)
+            ++bytePos_,bitPos_ -= 8;
         bits -= left;
     }
 };
