@@ -1,5 +1,5 @@
 //for test
-#define __DZ_TEST   1
+#define __DZ_TEST   0
 
 #include "main.h"
 
@@ -8,8 +8,8 @@
 //#   include <ctime>
 //#   include <common/Logger.h>
 //#   include <common/Threads.h>
-//#   include <common/Tools.h>
-#   include <common/DataStream.h>
+#   include <common/Tools.h>
+//#   include <common/DataStream.h>
 //#   include <common/LockInt.h>
 //#   include <common/LockQueue.h>
 //#   include <common/RingBuffer.h>
@@ -22,47 +22,14 @@
 //#   include <common/Tree.h>
 //#   include <common/Semaphore.h>
 
-static void test1()
-{
-    __DZ_STRING buf("这是一段中文的法定发得分啊都是阿德说法阿德福阿德说法");
-
-    CInBitStream bs(buf);
-    bs.SetSource(buf);
-    char a = 0;
-    if(bs>>a)
-        cout<<int(a)<<endl;
-    cout<<bs.ToString()<<endl;
-
-    short i = 0,b = 1;
-    while(bs>>Manip::bits(b,i)){
-        cout<<b<<"\t"<<i<<endl;
-        cout<<bs.ToString()<<endl;
-        b += 7;
-    }
-    cout<<b<<endl;
-}
-
-static void test2()
-{
-    COutByteStream ds(0);
-    ds<<3;
-    int a = 'a';
-    COutBitStream bs(0);
-
-    for(int i = 0;i < 5;++i){
-        bs<<Manip::bits(i,a);
-        cout<<i<<endl
-            <<bs.ToString()<<endl;
-    }
-}
-
 #endif
 
 int main(int argc,const char ** argv)
 {
 #if __DZ_TEST
     INIT_LOGGER(0);
-    test2();
+    __DZ_STRING unhex = Tools::UnHex("AB CD AA D 22 D AD EA A");
+    cout<<Tools::Dump(unhex)<<endl;
 #else
     //默认服务器配置文件
     const char * serverconf = DEFAULT_CONF_FILE;
