@@ -224,7 +224,15 @@ struct CSpinLock : public CMutex
 #endif
 
 //adapters for lock types
-template<class T>struct CLockAdapter{};
+template<class T>struct CLockAdapter
+{
+    typedef T           lock_type;
+    void Unlock(const lock_type & m) const{}
+    void ReadLock(const lock_type & m) const{}
+    void WriteLock(lock_type & m) const{}
+    void ReadToWrite(lock_type &) const{}
+    void WriteToRead(const lock_type &) const{}
+};
 
 template<>struct CLockAdapter<CMutex>
 {
