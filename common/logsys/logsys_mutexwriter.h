@@ -11,7 +11,8 @@ IMPL_BEGIN
 //尽量选择高效的互斥方式
 class CMutexWriter : public CWriteBuffer
 {
-    typedef NS_SERVER::CMutex               lock_type;
+    //typedef NS_SERVER::CMutex               lock_type;
+    typedef int lock_type;  // 单进程单线程程序不需要加锁
     typedef NS_SERVER::CGuard<lock_type>    guard_type;
     lock_type       mutex_;
     size_t          total_; //累计已写入的字节数

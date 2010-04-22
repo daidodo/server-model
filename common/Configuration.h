@@ -24,6 +24,7 @@
 [SPACE] # comments [ENDLINE]
 [SPACE] expression [SPACE] = [SPACE] results [SPACE] [# comments] [ENDLINE]
 [SPACE] expression [SPACE] = [SPACE] [# comments] [ENDLINE]
+[SPACE] expression [SPACE] results [SPACE] [# comments]
 [SPACE] expression [SPACE] [# comments] [ENDLINE]
 //*/
 
@@ -55,6 +56,10 @@ public:
             if(line.empty())
                 continue;
             __DZ_STRING::size_type i = line.find_first_of("=");
+            if(i == __DZ_STRING::npos){
+                line = Tools::Trim(line);
+                i = line.find_first_of(" ");
+            }
             content_[Tools::Trim(line.substr(0,i))] = Tools::Trim(line.substr(i + 1));
         }
         return true;

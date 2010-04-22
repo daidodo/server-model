@@ -10,6 +10,8 @@ class CDataStreamBase
 {
     typedef CDataStreamBase __Myt;
     typedef void (__Myt::*__SafeBool)();
+protected:
+    typedef U16 __Length;   // type of length field (string length, array length, etc.)
 public:
     enum EByteOrder{
         BigEndian,

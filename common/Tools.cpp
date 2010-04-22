@@ -133,6 +133,32 @@ namespace Tools{
         return ret;
     }
 
+    __DZ_STRING DumpFormat(const char * v,size_t sz)
+    {
+        if(!v || !sz)
+            return "";
+        const int LINE_WIDTH[] = {4,8,16};
+        const size_t CHARS_PER_LINE = 16;
+        __DZ_OSTRINGSTREAM oss;
+        oss.fill('0');
+        oss<<std::hex;
+        int lw = LINE_WIDTH[0];
+        if((sz >> 16))
+            lw = LINE_WIDTH[1];
+        for(size_t ln = 0;ln < sz;ln += CHARS_PER_LINE){
+            oss<<std::setw(lw)<<ln<<"h: ";
+            const size_t left = std::min(CHARS_PER_LINE,sz - ln);
+            oss<<DumpHex(v + ln,left,' ',false);
+            for(size_t i = left;i < CHARS_PER_LINE;++i)
+                oss<<"   ";
+            oss<<"; ";
+            for(size_t i = 0;i < left;++i)
+                oss<<((v[ln + i] > 31 && v[ln + i] < 127) ? v[ln + i] : '.');
+            oss<<std::endl;
+        }
+        return oss.str();
+    }
+
     __DZ_STRING UnHex(const char * v,size_t sz)
     {
         typedef const char * __Ptr;

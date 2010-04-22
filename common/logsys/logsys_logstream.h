@@ -14,9 +14,11 @@ class CLogStream
 {
     CSingleWriter & writer_;
     __DZ_STRING     msg_;
+    bool focus_;
 public:
-    CLogStream()
+    explicit CLogStream(bool focus)
         : writer_(CSingleWriter::Instance())
+        , focus_(focus)
     {}
     ~CLogStream(){FlushStream();}
     template<class T>
@@ -33,6 +35,7 @@ public:
         }
     }
     int Level() const{return writer_.Level();}
+    bool Focus() const{return focus_;}
 protected:
     const char * timeFormat() const{return writer_.TimeFormat();}
 };

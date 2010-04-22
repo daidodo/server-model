@@ -142,7 +142,7 @@ public:
     __Myt & operator >>(unsigned long long & c) {return readPod(c);}
     //read std::string
     __Myt & operator >>(__DZ_STRING & c){
-        U32 sz;
+        __Length sz;
         operator >>(sz);
         if(ensure(sz)){
             c.assign(data_ + cur_ ,data_ + cur_ + sz);
@@ -153,14 +153,14 @@ public:
     //read array( = length + raw array)
     template<class T>
     __Myt & operator >>(T * c){
-        U32 sz;
+        __Length sz;
         operator >>(sz);
         return readRaw(c,sz);
     }
     //read array( = length + raw array) through CManipulatorArray
     template<class T>
     __Myt & operator >>(const NS_IMPL::CManipulatorArray<T> & m){
-        U32 sz;
+        __Length sz;
         operator >>(sz);
         if(sz > m.Size1()){
             Status(1);
@@ -232,7 +232,7 @@ private:
     }
     template<typename T>
     __Myt & readArray(T * c){
-        U32 sz;
+        __Length sz;
         operator >>(sz);
         return readRaw(c,sz);
     }
@@ -416,7 +416,7 @@ private:
     }
     template<typename T>
     __Myt & writeArray(const T * c,size_t sz){
-        operator <<(U32(sz));
+        operator <<(__Length(sz));
         if(sz){
             assert(c);
             return writeRaw(c,sz);

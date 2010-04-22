@@ -18,8 +18,8 @@ class CGlobalLogger : public DZLOG_IMPL::CLogFormat
 {
     NS_SERVER::CMutex mutex_;
 public:
-    explicit CGlobalLogger(const char * head = "")
-        : CLogFormat(head)
+    explicit CGlobalLogger(const char * head = "",bool focus = false)
+        : CLogFormat(head,focus)
     {}
     void Lock(){mutex_.Lock();}
     void Unlock(){mutex_.Unlock();}
@@ -27,8 +27,8 @@ public:
 
 struct CLocalLogger : public DZLOG_IMPL::CLogFormat
 {
-    explicit CLocalLogger(const char * head = "")
-        : CLogFormat(head)
+    explicit CLocalLogger(const char * head = "",bool focus = false)
+        : CLogFormat(head,focus)
     {}
     void Lock(){}   //为了使用上一致
     void Unlock(){}
@@ -36,8 +36,8 @@ struct CLocalLogger : public DZLOG_IMPL::CLogFormat
 
 struct CScopeLogger : public DZLOG_IMPL::CLogFormat
 {
-    explicit CScopeLogger(const char * head = "")
-        : CLogFormat(head)
+    explicit CScopeLogger(const char * head = "",bool focus = false)
+        : CLogFormat(head,focus)
     {}
     void Lock(){}   //为了使用上一致
     void Unlock(){}

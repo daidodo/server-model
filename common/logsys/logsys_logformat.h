@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream>
 #include <time.h>
-#include <pthread.h>
+//#include <pthread.h>
 #include <common/Tools.h>
 #include "logsys_logstream.h"
 
@@ -16,15 +16,20 @@ IMPL_BEGIN
 //级别暂时分:TRACE,DEBUG,INFO,WARN,ERROR,FATAL,OFF
 class CLogFormat : public CLogStream
 {
-    const __DZ_STRING head_;
+    const char * head_;
 public:
-    explicit CLogFormat(const char * h):head_(h ? h : ""){}
-    __DZ_STRING HeadInfo(int level) const{
-        __DZ_OSTRINGSTREAM oss;
-        oss<<NS_SERVER::Tools::TimeString(time(0),CLogStream::timeFormat())
-            <<"["<<pthread_self()<<"]"
-            <<levelName(level)<<" "<<head_<<" - ";
-        return oss.str();
+    explicit CLogFormat(const char * h,bool focus)
+        : CLogStream(focus)
+        , head_(h)
+    {}
+    CLogFormat & HeadInfo(int level){
+        *this<<NS_SERVER::Tools::TimeString(time(0),CLogStream::timeFormat())
+            //<<"["<<pthread_self()<<"]"
+            <<"["<<levelName(level)<<"] ";
+        if(head_)
+            *this<<head_;
+        *this<<" - ";
+        return *this;
     }
 private:
     const char * levelName(int lv) const{
