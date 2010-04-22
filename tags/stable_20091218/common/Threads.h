@@ -13,6 +13,7 @@
 #include <pthread.h>
 #include <string>
 #include <vector>
+#include <cassert>
 #include <common/Logger.h>
 #include <common/LockInt.h> //CLockIntMax
 

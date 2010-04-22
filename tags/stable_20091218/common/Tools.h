@@ -51,6 +51,7 @@
 #include <vector>
 #include <utility>      //std::pair,std::make_pair
 #include <endian.h>     //BYTE_ORDER,LITTLE_ENDIAN
+#include <iomanip>      //std::setw,std::setfill
 #include <common/impl/Tools_impl.h>
 #include <common/impl/Alloc.h>
 
@@ -237,6 +238,25 @@ namespace Tools
 
     inline __DZ_STRING Dump(__DZ_STRING str,size_t show_sz = size_t(-1),bool hasLen = true){
         return Dump(str.c_str(),str.length(),show_sz,hasLen);
+    }
+
+    //打印出数据的16进制和内容的对比结果
+    __DZ_STRING DumpFormat(const char * v,size_t sz);
+
+    inline __DZ_STRING DumpFormat(const U8 * v,size_t sz){
+        return DumpFormat((const char *)v,sz);
+    }
+
+    inline __DZ_STRING DumpFormat(const S8 * v,size_t sz){
+        return DumpFormat((const char *)v,sz);
+    }
+
+    inline __DZ_STRING DumpFormat(const __DZ_VECTOR(char) & v){
+        return DumpFormat(&v[0],v.size());
+    }
+
+    inline __DZ_STRING DumpFormat(const __DZ_STRING & v){
+        return DumpFormat(&v[0],v.size());
     }
 
     //得到16进制字符a表示的10进制数值，错误时返回-1
