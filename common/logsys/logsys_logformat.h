@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream>
 #include <time.h>
-#include <pthread.h>
+#include <pthread.h>            //pthread_self
 #include <common/Tools.h>
 #include "logsys_logstream.h"
 
