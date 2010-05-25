@@ -55,8 +55,7 @@ public:
         }else{
             assert(0 && "unknown log level");
         }
-        if(item.level_ != "OFF")
-            CMutexWriter::configMWriter(item);
+        CMutexWriter::configMWriter(item);
     }
     const char * TimeFormat() const{return time_format_.c_str();}
     int Level() const{return level_;}
