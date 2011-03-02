@@ -23,7 +23,7 @@
         20071228    修正CInByteStream::LeftSize在len < bytePos_时返回很大size_t的问题;并把2个ensure里的减法改成加法
         20080204    去掉CInByteStream::DumpLeft,加入ToString,输出对象内部状态
         20081008    将CInDataStream和COutDataStream更名为CInByteStream和COutByteStream
-        20081016    调整类结构，引入CDataStreamBase作为所有数据流基类
+        20081016    调整类结构，引入CDataStreamStatus作为所有数据流基类
                     重写CInByteStream和COutByteStream，加入更多类型支持
                     引入manipulator，并实现多种输入输出方式
         20081106    增加Manip::insert
@@ -255,7 +255,7 @@ private:
     }
 };
 
-class COutByteStream : public NS_IMPL::CDataStreamBase
+class COutByteStream : public NS_IMPL::CDataStreamStatus
 {
     typedef COutByteStream __Myt;
 protected:
@@ -687,23 +687,23 @@ namespace Manip{
     }
 
     //set byte order type(NetOrder or HostOrder)
-    inline NS_IMPL::CManipulatorSetOrder set_order(NS_IMPL::CDataStreamBase::EOrderType order){
+    inline NS_IMPL::CManipulatorSetOrder set_order(NS_IMPL::CDataStreamStatus::EOrderType order){
         return NS_IMPL::CManipulatorSetOrder(order);
     }
 
     inline NS_IMPL::CManipulatorSetOrder set_order(bool netByteOrder){
         return NS_IMPL::CManipulatorSetOrder(
-            netByteOrder ? NS_IMPL::CDataStreamBase::NetOrder : NS_IMPL::CDataStreamBase::HostOrder);
+            netByteOrder ? NS_IMPL::CDataStreamStatus::NetOrder : NS_IMPL::CDataStreamStatus::HostOrder);
     }
 
     //set read/write position
-    inline NS_IMPL::CManipulatorSeek seek(ssize_t off,NS_IMPL::CDataStreamBase::ESeekDir dir = NS_IMPL::CDataStreamBase::Begin){
+    inline NS_IMPL::CManipulatorSeek seek(ssize_t off,NS_IMPL::CDataStreamStatus::ESeekDir dir = NS_IMPL::CDataStreamStatus::Begin){
         return NS_IMPL::CManipulatorSeek(off,dir);
     }
 
     //skip/reserve certain bytes
     inline NS_IMPL::CManipulatorSeek skip(ssize_t off){
-        return NS_IMPL::CManipulatorSeek(off,NS_IMPL::CDataStreamBase::Cur);
+        return NS_IMPL::CManipulatorSeek(off,NS_IMPL::CDataStreamStatus::Cur);
     }
 
     //read/write value from offset position

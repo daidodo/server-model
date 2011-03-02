@@ -10,8 +10,8 @@ struct CTypeTraits{
 };
 
 #define __INTEGER_TRAITS_FOR_PODS(TYPE) template<>struct CTypeTraits<TYPE>{  \
-    static const bool CAN_MEMCPY = true;
-    static const int MAX_BITS = sizeof(TYPE) * 8;
+    static const bool CAN_MEMCPY = true;    \
+    static const int MAX_BITS = sizeof(TYPE) * 8;   \
 }
 
 __INTEGER_TRAITS_FOR_PODS(char);
