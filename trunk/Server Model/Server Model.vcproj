@@ -347,6 +347,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\common\impl\Template.h"
+					>
+				</File>
+				<File
 					RelativePath="..\common\impl\Tools_impl.h"
 					>
 				</File>

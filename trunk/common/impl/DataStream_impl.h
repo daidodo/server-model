@@ -99,23 +99,23 @@ public:
 
 class CManipulatorSetOrder
 {
-    CDataStreamBase::EOrderType order_;
+    CDataStreamStatus::EOrderType order_;
 public:
-    explicit CManipulatorSetOrder(CDataStreamBase::EOrderType od):order_(od){}
-    CDataStreamBase::EOrderType Order() const{return order_;}
+    explicit CManipulatorSetOrder(CDataStreamStatus::EOrderType od):order_(od){}
+    CDataStreamStatus::EOrderType Order() const{return order_;}
 };
 
 class CManipulatorSeek
 {
     ssize_t                     off_;
-    CDataStreamBase::ESeekDir   dir_;
+    CDataStreamStatus::ESeekDir   dir_;
 public:
-    explicit CManipulatorSeek(ssize_t off,CDataStreamBase::ESeekDir dir)
+    explicit CManipulatorSeek(ssize_t off,CDataStreamStatus::ESeekDir dir)
         : off_(off)
         , dir_(dir)
     {}
     ssize_t Off() const{return off_;}
-    CDataStreamBase::ESeekDir Dir() const{return dir_;}
+    CDataStreamStatus::ESeekDir Dir() const{return dir_;}
 };
 
 template<class T>
