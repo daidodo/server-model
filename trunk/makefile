@@ -18,8 +18,8 @@ LOG            :=-DLOGGER
 LOGSYS         :=-DLOGSYS
 #LOG4CLIB       :=-llog4cplus
     #------debug mode or not(-DNDEBUG)
-RELEASE        :=-DNDEBUG -O2
-#DEBUG           := -g
+#RELEASE        :=-DNDEBUG -O2
+DEBUG           := -g
     #------use zlib or not
 #ZIP           :=-lz
     #------use openssl(-lcrypto) or not
