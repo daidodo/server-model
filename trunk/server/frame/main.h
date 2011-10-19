@@ -5,7 +5,6 @@
 #include <signal.h>
 #include <common/Tools.h>
 #include <common/Logger.h>
-#include <server/frame/ProgramVersion.h>
 #include <server/MainServer.h>
 
 using namespace std;
@@ -55,12 +54,11 @@ static void printUsage()
 static __DZ_STRING versionInfo()
 {
     __DZ_OSTRINGSTREAM oss;
-    oss<<programName<<" version "<<CProgramVersion::High()
-        <<"."<<CProgramVersion::Low();
+    oss<<programName<<" built in "<<__DATE__<<" "<<__TIME__;
 #ifdef NDEBUG
-    oss<<" release";
+    oss<<", release version";
 #else
-    oss<<" debug";
+    oss<<", debug version";
 #endif
     return oss.str();
 }

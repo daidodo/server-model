@@ -3,15 +3,24 @@
 
 #include <netinet/in.h>         //ntohl
 #include <common/impl/Config.h>
-#include <common/impl/Template.h>
 
 NS_IMPL_BEGIN
 
-class CDataStreamStatus
+class CDataStreamBase
 {
-    typedef CDataStreamStatus __Myt;
+    typedef CDataStreamBase __Myt;
     typedef void (__Myt::*__SafeBool)();
+protected:
+    typedef U16 __Length;   // type of length field (string length, array length, etc.)
 public:
+    enum EByteOrder{
+        BigEndian,
+        LittleEndian
+    };
+    enum EOrderType{
+        NetOrder,
+        HostOrder
+    };
     enum ESeekDir{
         Begin,
         End,
@@ -23,36 +32,44 @@ public:
     int Status() const{return status_;}
     void ResetStatus(){Status(0);}
 protected:
-    CDataStreamStatus():status_(0){}
-    bool needReverse(bool netOrder) const{
+    CDataStreamBase():status_(0){}
+    virtual ~CDataStreamBase(){}
+    bool NeedReverse(bool netOrder) const{
         return (netOrder && ntohl(1) != 1);
+    }
+    bool NeedReverse(EOrderType ot) const{
+        return NeedReverse(ot == NetOrder);
     }
 private:
     int status_;
 };
 
-//游标类
-//Integer是表示游标数值的类型
-//Bits表示使用多少位表示比特游标
-//注意：sizeof(Integer) * 8 > Bits
-template<typename Integer,int Bits>
-class CStreamIndex
-{
-    //generate compile error if (sizeof(Integer) * 8 <= Bits)
-    typedef typename NS_IMPL::CAssert<
-        (Bits >= 0 && (sizeof(Integer) * 8) > Bits)>::Result __Assert;
-public:
-    explicit CStreamIndex(const Integer & index)
-        : index_(index)
-    {}
-    CStreamIndex(size_t high,int low)
-        : index_((high << Bits) + low)
-    {}
-private:
-    Integer index_;
-};
-
 //manipulators
+template<class T>
+struct __ManipTypeTraits{static const bool CanMemcpy = false;};
+template<>
+struct __ManipTypeTraits<char>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<signed char>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<unsigned char>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<short>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<unsigned short>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<int>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<unsigned int>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<long>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<unsigned long>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<long long>{static const bool CanMemcpy = true;};
+template<>
+struct __ManipTypeTraits<unsigned long long>{static const bool CanMemcpy = true;};
+
 template<typename T>
 class CManipulatorArray
 {
@@ -99,23 +116,23 @@ public:
 
 class CManipulatorSetOrder
 {
-    CDataStreamStatus::EOrderType order_;
+    CDataStreamBase::EOrderType order_;
 public:
-    explicit CManipulatorSetOrder(CDataStreamStatus::EOrderType od):order_(od){}
-    CDataStreamStatus::EOrderType Order() const{return order_;}
+    explicit CManipulatorSetOrder(CDataStreamBase::EOrderType od):order_(od){}
+    CDataStreamBase::EOrderType Order() const{return order_;}
 };
 
 class CManipulatorSeek
 {
     ssize_t                     off_;
-    CDataStreamStatus::ESeekDir   dir_;
+    CDataStreamBase::ESeekDir   dir_;
 public:
-    explicit CManipulatorSeek(ssize_t off,CDataStreamStatus::ESeekDir dir)
+    explicit CManipulatorSeek(ssize_t off,CDataStreamBase::ESeekDir dir)
         : off_(off)
         , dir_(dir)
     {}
     ssize_t Off() const{return off_;}
-    CDataStreamStatus::ESeekDir Dir() const{return dir_;}
+    CDataStreamBase::ESeekDir Dir() const{return dir_;}
 };
 
 template<class T>
@@ -144,20 +161,6 @@ public:
     {}
     const T & Value() const{return val_;}
     size_t Off() const{return off_;}
-};
-
-template<typename T>
-class CManipulatorBits
-{
-    int len_;
-    T & val_;
-public:
-    CManipulatorBits(int bits,T & val)
-        : len_(bits)
-        , val_(val)
-    {}
-    T & Value() const{return val_;}
-    int Bits() const{return len_;}
 };
 
 NS_IMPL_END

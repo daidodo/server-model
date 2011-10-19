@@ -18,8 +18,8 @@ LOG            :=-DLOGGER
 LOGSYS         :=-DLOGSYS
 #LOG4CLIB       :=-llog4cplus
     #------debug mode or not(-DNDEBUG)
-#RELEASE        :=-DNDEBUG -O2
-DEBUG           :=
+RELEASE        :=-DNDEBUG -O2
+#DEBUG           := -g
     #------use zlib or not
 #ZIP           :=-lz
     #------use openssl(-lcrypto) or not
@@ -28,16 +28,10 @@ CRYPTO         :=-lcrypto
 #MYSQL          :=-lmysqlclient_r -lz
     #------use epoll(-DUSEEPOLL) or poll
 EPOLL          :=-DUSEEPOLL
-  #program versions
-DATE           :=$(shell date +"%Y%m%d")
-TIME           :=$(shell date +"%H%M%S")
-HVERSION       :=-DPROGRAM_VERSION_HIGH=$(DATE)
-LVERSION       :=-DPROGRAM_VERSION_LOW=1$(TIME)-1000000
-PROGRAMVERSION :=$(SERVERDIR)ProgramVersion
 
 CC             :=$(CXX)
 INCLUDE        :=-I./ -I/usr/local/ssl/include/ -I/usr/local/mysql/include/
-CXXFLAGS       :=-Wall -g $(INCLUDE) -D_REENTRANT $(LOG) $(LOGSYS) $(DEBUG) $(RELEASE) $(EPOLL) $(EXTERN_FLAGS)
+CXXFLAGS       :=-Wall $(DEBUG) $(RELEASE) -D_REENTRANT $(LOG) $(LOGSYS) $(EPOLL) $(EXTERN_FLAGS) $(INCLUDE)
 LIB            :=-L/usr/local/ssl/lib/ -L/usr/local/mysql/lib -L/usr/lib -L/usr/local/lib -L./lib -lstdc++ -lpthread -lrt $(MYSQL) $(LOG4CLIB) $(ZIP) $(CRYPTO) $(EXTERN__LIB)
 CFLAGS         :=$(CXXFLAGS)
 
@@ -78,27 +72,16 @@ HEADERSRC := $(foreach dir,$(COMMONDIR),$(wildcard $(dir)*.h)) $(foreach dir,$(S
 CXXFLAGS+=-MD
 CFLAGS+=-MD
 
-ULTIMATE_TARGET:=$(SERVER_TARGET).$(DATE).$(TIME)
 TEST_TARGET_LIST:=$(join $(TESTDIR),$(TEST_TARGET))
 
 all: $(BINDIR)$(SERVER_TARGET)
 
-link: all
-	@echo $(SERVER_TARGET) -\> $(ULTIMATE_TARGET)
-	@mv $(BINDIR)$(SERVER_TARGET) $(BINDIR)$(ULTIMATE_TARGET)
-	@ln -sf $(ULTIMATE_TARGET) $(BINDIR)$(SERVER_TARGET)
-
 $(BINDIR)$(SERVER_TARGET) : $(COMMONOBJ) $(SERVEROBJ)
-	$(CXX) $^ $(CXXFLAGS) -o $@ $(LIB)
+	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIB)
 
 test: $(TEST_TARGET_LIST)
 
 $(foreach target,$(TEST_TARGET_LIST),$(eval $(call BUILD_TEST,$(target))))
-
-$(PROGRAMVERSION).o : force
-	$(CXX) $(CXXFLAGS) -c -o $@ $*.cpp $(HVERSION) $(LVERSION)
-
-force : ;
 
 commonobj : $(COMMONOBJ)
 
@@ -130,9 +113,8 @@ love: cleanobj cleanbin all
 lines:
 	@echo $(SERVERSRC) $(COMMONSRC) $(HEADERSRC) | xargs wc -l
 
-.PHONY : all link test force commonobj serverobj testobj cleanobj cleandep cleanbin cleandist clean love lines
+.PHONY : all test commonobj serverobj testobj cleanobj cleandep cleanbin cleandist clean love lines
 
-ifneq (${MAKECMDGOALS},force)
 ifneq (${MAKECMDGOALS},cleanobj)
 ifneq (${MAKECMDGOALS},cleandep)
 ifneq (${MAKECMDGOALS},cleandist)
@@ -140,7 +122,6 @@ ifneq (${MAKECMDGOALS},cleanbin)
 ifneq (${MAKECMDGOALS},clean)
 ifneq (${MAKECMDGOALS},lines)
 sinclude $(SERVERDEP) $(COMMONDEP) $(TESTDEP)
-endif
 endif
 endif
 endif

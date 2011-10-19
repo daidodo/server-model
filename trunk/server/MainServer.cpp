@@ -1,7 +1,6 @@
 #include <iostream>
 #include <fstream>
 #include <common/Logger.h>
-#include <server/frame/ProgramVersion.h>
 #include <server/frame/AcceptServer.h>
 #include <server/frame/EpollServer.h>
 #include <server/frame/PollServer.h>
@@ -40,13 +39,6 @@ void CMainServer::Init(const char * serverconf)
 {
     assert(!acceptServer_ && !epollServer_ && !pollServer_ && !tcpServer_ && !cmdHandler_ && !statsServer_);
     LOCAL_LOGGER(logger,"CMainServer::Init");
-    INFO("PROGRAM_VERSION_HIGH="<<CProgramVersion::High());
-    INFO("PROGRAM_VERSION_LOW="<<CProgramVersion::Low());
-#ifdef NDEBUG
-    INFO("PROGRAM_VERSION_RELEASE=true");
-#else
-    INFO("PROGRAM_VERSION_RELEASE=false");
-#endif
     ASSERT(serverconf,"serverconf is null");
     configFile_ = serverconf;
     __Config config;
