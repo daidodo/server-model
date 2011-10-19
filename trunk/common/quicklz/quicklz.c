@@ -543,9 +543,10 @@ unsigned int qlz_compress_core(const void *source, unsigned char *destination, u
 		}
 
 		if (src < last_byte - 2 && src > source_c + 3)
-		{		
+		{
 			hashtable[hash_func(fast_read(src, 4))][1] = src;
-			*(unsigned int*)&hashtable[hash_func(fast_read(src, 4))][0] = fast_read(src, 4);
+            const unsigned char ** tmp = &hashtable[hash_func(fast_read(src, 4))][0];
+			*reinterpret_cast<unsigned int*>(tmp) = fast_read(src, 4);
 		}
 		*dst = *src;
 		src++;
