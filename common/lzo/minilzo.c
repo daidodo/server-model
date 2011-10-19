@@ -2160,6 +2160,7 @@ LZOLIB_PUBLIC(lzo_hvoid_p, lzo_hmemset) (lzo_hvoid_p s, int c, lzo_hsize_t len)
 LZO_PUBLIC(int)
 _lzo_config_check(void)
 {
+    unsigned char * tmp;
     lzo_bool r = 1;
     union { unsigned char c[2*sizeof(lzo_xint)]; lzo_xint l[2]; } u;
 
@@ -2174,11 +2175,15 @@ _lzo_config_check(void)
 #endif
 #if defined(LZO_UNALIGNED_OK_2)
     u.l[0] = u.l[1] = 0;
-    r &= ((* (const lzo_ushortp) (const lzo_voidp) &u.c[1]) == 0);
+    //r &= ((* (const lzo_ushortp) (const lzo_voidp) &u.c[1]) == 0);
+    tmp = &u.c[1];
+    r &= ((* reinterpret_cast<const lzo_ushortp>(tmp)) == 0);
 #endif
 #if defined(LZO_UNALIGNED_OK_4)
     u.l[0] = u.l[1] = 0;
-    r &= ((* (const lzo_uint32p) (const lzo_voidp) &u.c[1]) == 0);
+    //r &= ((* (const lzo_uint32p) (const lzo_voidp) &u.c[1]) == 0);
+    tmp = &u.c[1];
+    r &= ((* reinterpret_cast<const lzo_uint32p>(tmp)) == 0);
 #endif
 #endif
 
