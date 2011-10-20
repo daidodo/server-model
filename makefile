@@ -17,9 +17,6 @@ LOG            :=-DLOGGER
     #------use logsys(LOGSYS=-DLOGSYS) or log4cpp(LOG4CLIB=-llog4cplus)
 LOGSYS         :=-DLOGSYS
 #LOG4CLIB       :=-llog4cplus
-    #------debug mode or not(-DNDEBUG)
-#RELEASE        :=-DNDEBUG -O2
-DEBUG           := -g
     #------use zlib or not
 #ZIP           :=-lz
     #------use openssl(-lcrypto) or not
@@ -28,6 +25,12 @@ CRYPTO         :=-lcrypto
 #MYSQL          :=-lmysqlclient_r -lz
     #------use epoll(-DUSEEPOLL) or poll
 EPOLL          :=-DUSEEPOLL
+
+ifneq ($(findstring release, $(MAKECMDGOALS)), release)
+    DEBUG := -g
+else
+    RELEASE := -DNDEBUG -O2
+endif
 
 CC             :=$(CXX)
 INCLUDE        :=-I./ -I/usr/local/ssl/include/ -I/usr/local/mysql/include/
@@ -113,7 +116,9 @@ love: cleanobj cleanbin all
 lines:
 	@echo $(SERVERSRC) $(COMMONSRC) $(HEADERSRC) | xargs wc -l
 
-.PHONY : all test commonobj serverobj testobj cleanobj cleandep cleanbin cleandist clean love lines
+release: all
+
+.PHONY : all test commonobj serverobj testobj cleanobj cleandep cleanbin cleandist clean love lines release
 
 ifneq (${MAKECMDGOALS},cleanobj)
 ifneq (${MAKECMDGOALS},cleandep)
