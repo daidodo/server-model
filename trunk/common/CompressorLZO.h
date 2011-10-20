@@ -8,14 +8,13 @@
 
 #include <vector>
 #include <common/Tools.h>
-#include <common/impl/Config.h>
 #include <common/lzo/minilzo.h>
 
 NS_SERVER_BEGIN
 
 class CCompressorLZO
 {
-    bool    byteOrder_; //byte order is little endian(true) or not(false)
+    bool    byteOrder_; //host byte order is little-endian(true) or big-endian(false)
     mutable __DZ_VECTOR(unsigned char)  workmem_;   //Memory required for the wrkmem parameter
 public:
     CCompressorLZO()

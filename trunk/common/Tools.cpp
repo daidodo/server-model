@@ -162,9 +162,9 @@ namespace Tools{
     {
         size_t i = 0;
         for(;i < str.length() && std::isspace(str[i]);++i);
-        size_t j = str.length() - 1;
-        for(;j > i && std::isspace(str[j]);--j);
-        return i <= j ? str.substr(i,j + 1 - i) : "";
+        size_t j = str.length();
+        for(;j > i + 1 && std::isspace(str[j - 1]);--j);
+        return i < j ? str.substr(i,j - i) : "";
     }
 
     size_t FindFirst(const char * str,size_t len,char ch,size_t off)

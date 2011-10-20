@@ -100,16 +100,16 @@ namespace Tools
     struct CTypeSelector<T1,T2,false>{
         typedef T2  RType;
     };
-    
+
     //hash函数集合
     inline size_t __stl_hash_string(const char * s){
-        size_t ret = 0; 
+        size_t ret = 0;
         for(;s && *s;++s)
             ret = 5 * ret + *s;
         return ret;
     }
     inline size_t __stl_hash_string(const char * s,size_t sz){
-        size_t ret = 0; 
+        size_t ret = 0;
         for(size_t i = 0;i < sz;++s,++i)
             ret = 5 * ret + *s;
         return ret;
@@ -136,6 +136,8 @@ namespace Tools
     TEMPLATE_INSTANCE_FOR_TYPE(unsigned int,size_t(v));
     TEMPLATE_INSTANCE_FOR_TYPE(signed long,size_t(v));
     TEMPLATE_INSTANCE_FOR_TYPE(unsigned long,size_t(v));
+    TEMPLATE_INSTANCE_FOR_TYPE(signed long long,size_t(v));
+    TEMPLATE_INSTANCE_FOR_TYPE(unsigned long long,size_t(v));
     TEMPLATE_INSTANCE_FOR_TYPE(__DZ_STRING,__stl_hash_string(v.c_str(),v.length()));
 #undef TEMPLATE_INSTANCE_FOR_TYPE
 
@@ -293,7 +295,7 @@ namespace Tools
         return (*p == 0);
 #endif
     }
-    
+
     //改变v的byte order.要求T是原始数据类型
     template<typename T>
     T SwapByteOrder(T v){
@@ -449,14 +451,11 @@ namespace Tools
     //调用对象指针p的ToString()函数时，进行安全检查
     template<class Ptr>
     __DZ_STRING ToStringPtr(const Ptr & p){
-        return (p ? p->ToString() : "0x0");
+        return (p ? p->ToString() : "NULL");
     }
 
     //得到错误码error_no对应的系统错误信息
     __DZ_STRING ErrorMsg(int error_no);
-
-    //求成员变量MEMBER在类TYPE中的偏移位置
-#define MEM_OFFSET(TYPE,MEMBER) ((size_t)&((TYPE *)0)->MEMBER)
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits
