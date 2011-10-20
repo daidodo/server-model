@@ -25,10 +25,9 @@ typedef int32_t         S32;
 typedef uint32_t        U32;
 typedef int64_t         S64;
 typedef uint64_t        U64;
-typedef unsigned int    UINT;
 
 #ifdef WIN32
-#   define __DISPLAY_CODE
+#   define __DISPLAY_CODE   //used for display code in VisualStudio only
 #endif
 
 //use poll or epoll

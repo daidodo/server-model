@@ -5,7 +5,7 @@
 #include <common/impl/Config.h>
 
 //allocator choice
-#ifndef __GNUC__ 
+#ifndef __GNUC__
 #   define __DZ_ALLOC   std::allocator
 #else
 #   ifndef NDEBUG

@@ -8,7 +8,6 @@
 
 #include <vector>
 #include <string>
-#include <common/impl/Alloc.h>
 #include <common/Tools.h>
 
 NS_EXTLIB_BEGIN
@@ -19,7 +18,7 @@ NS_SERVER_BEGIN
 
 class CCompressorZLib
 {
-    bool    byteOrder_; //byte order is little endian(true) or not(false)
+    bool    byteOrder_; //host byte order is little-endian(true) or big-endian(false)
     int     level_;     //compress level of zlib, default to -1 which means level 6
 public:
     CCompressorZLib(int level = -1)

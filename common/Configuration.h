@@ -43,13 +43,11 @@ public:
     bool Load(const char * file_name){
         if(!file_name)
             return false;
-        conf_file_ = file_name;
         std::ifstream inf(file_name);
         if(!inf.is_open())
             return false;
         Clear();
-        __DZ_STRING line;
-        while(!inf.eof()){
+        for(__DZ_STRING line;!inf.eof();){
             std::getline(inf,line);
             line = line.substr(0,line.find_first_of("#"));
             if(line.empty())
@@ -57,6 +55,7 @@ public:
             __DZ_STRING::size_type i = line.find_first_of("=");
             content_[Tools::Trim(line.substr(0,i))] = Tools::Trim(line.substr(i + 1));
         }
+        conf_file_ = file_name;
         return true;
     }
     //得到配置项的字符串值
