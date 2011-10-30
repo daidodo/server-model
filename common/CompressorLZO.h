@@ -7,6 +7,7 @@
 //*/
 
 #include <vector>
+#include <cstring>
 #include <common/Tools.h>
 #include <common/lzo/minilzo.h>
 

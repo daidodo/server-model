@@ -4,7 +4,6 @@ SERVERDIR      :=server/ server/frame/
 BINDIR         :=bin/
 SERVER_TARGET  :=Server.out
 TESTDIR        :=test/
-TEST_TARGET    :=test.out
 SRC_SUFFIX     :=cpp c
 
     #external
@@ -75,14 +74,14 @@ HEADERSRC := $(foreach dir,$(COMMONDIR),$(wildcard $(dir)*.h)) $(foreach dir,$(S
 CXXFLAGS+=-MD
 CFLAGS+=-MD
 
-TEST_TARGET_LIST:=$(join $(TESTDIR),$(TEST_TARGET))
+TEST_TARGET_LIST:=$(TESTSRC:.cpp=)
 
 all: $(BINDIR)$(SERVER_TARGET)
 
 $(BINDIR)$(SERVER_TARGET) : $(COMMONOBJ) $(SERVEROBJ)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIB)
 
-test: $(TEST_TARGET_LIST)
+test: $(TEST_TARGET_LIST) run_test
 
 $(foreach target,$(TEST_TARGET_LIST),$(eval $(call BUILD_TEST,$(target))))
 
@@ -115,6 +114,9 @@ love: cleanobj cleanbin all
 
 lines:
 	@echo $(SERVERSRC) $(COMMONSRC) $(HEADERSRC) | xargs wc -l
+
+run_test:
+	$(foreach target, $(TEST_TARGET_LIST), @$(target))
 
 release: all
 
