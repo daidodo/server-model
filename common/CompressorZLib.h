@@ -18,6 +18,9 @@ NS_SERVER_BEGIN
 
 class CCompressorZLib
 {
+    typedef NS_EXTERN_LIB::uLongf __ZSize;
+    typedef NS_EXTERN_LIB::Bytef  __ZChar;
+    typedef U32                   __Len;
     bool    byteOrder_; //host byte order is little-endian(true) or big-endian(false)
     int     level_;     //compress level of zlib, default to -1 which means level 6
 public:
@@ -63,17 +66,15 @@ public:
 private:
     template<class Buffer>
     int compressTemplate(const Buffer & input,Buffer & output) const{
-        typedef NS_EXTERN_LIB::uLongf __ZSize;
-        typedef NS_EXTERN_LIB::Bytef  __ZChar;
         __ZSize in_len = __ZSize(input.size());
         __ZSize out_len = NS_EXTERN_LIB::compressBound(in_len);
-        __ZSize lsz = transOrder(in_len);
-        output.resize(sizeof lsz + size_t(out_len));
-        memcpy(&output[0],&lsz,sizeof lsz);
-        int ret = NS_EXTERN_LIB::compress2((__ZChar *)&output[sizeof lsz],&out_len,
-            (const __ZChar *)&input[0],in_len,level_);
+        output.resize(sizeof(__Len) + size_t(out_len));
+        int ret = NS_EXTERN_LIB::compress2((__ZChar *)&output[sizeof(__Len)], &out_len, (const __ZChar *)&input[0], in_len, level_);
         if(Z_OK == ret){
-            output.resize(size_t(out_len));
+            output.resize(sizeof(__Len) + size_t(out_len));
+            __Len lsz = in_len;
+            lsz = transOrder(lsz);
+            memcpy(&output[0], &lsz, sizeof lsz);
             return 0;
         }else if(Z_MEM_ERROR == ret)
             return -1;
@@ -85,14 +86,11 @@ private:
     }
     template<class Buffer>
     int decompressTemplate(const Buffer & input,Buffer & output) const{
-        typedef NS_EXTERN_LIB::uLongf __ZSize;
-        typedef NS_EXTERN_LIB::Bytef  __ZChar;
         if(input.size() < sizeof(__ZSize))
             return -3;
-        __ZSize out_len = transOrder(*(__ZSize *)&input[0]);
+        __ZSize out_len = transOrder(*(__Len *)&input[0]);
         output.resize(size_t(out_len));
-        int ret = NS_EXTERN_LIB::uncompress((__ZChar *)&output[0],&out_len,
-            (const __ZChar *)&input[sizeof out_len],__ZSize(input.size() - sizeof(size_t)));
+        int ret = NS_EXTERN_LIB::uncompress((__ZChar *)&output[0], &out_len, (const __ZChar *)&input[sizeof(__Len)], __ZSize(input.size() - sizeof(__Len)));
         if(Z_OK == ret){
             output.resize(size_t(out_len));
             return 0;

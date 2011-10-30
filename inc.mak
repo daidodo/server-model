@@ -14,7 +14,7 @@ LOG            :=-DLOGGER
 LOGSYS         :=-DLOGSYS
 #LOG4CLIB       :=-llog4cplus
     #------use zlib or not
-#ZIP           :=-lz
+ZIP           :=-lz
     #------use openssl(-lcrypto) or not
 CRYPTO         :=-lcrypto
     #------use mysql(-lmysqlclient_r -lz) or not

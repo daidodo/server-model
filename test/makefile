@@ -9,7 +9,15 @@ sinclude $(BASEDIR)/inc.mak
 COMM_DIR := $(BASEDIR)/common
 LIBCOMM := $(COMM_DIR)/libcommon.a
 
-all: $(TARGET)
+all: comm $(TARGET)
+
+release: commrelease $(TARGET)
+
+comm:
+	$(MAKE) -C $(COMM_DIR) all
+
+commrelease:
+	$(MAKE) -C $(COMM_DIR) release
 
 %_test: %_test.o $(LIBCOMM)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIB)
@@ -21,12 +29,10 @@ clean:
 run:
 	@./run_test.sh $(TARGET)
 
-release: all
-
 ifneq (${MAKECMDGOALS},clean)
 ifneq (${MAKECMDGOALS},run)
 sinclude $(DEP)
 endif
 endif
 
-.PHONY: all clean
+.PHONY: all release comm commrelease clean

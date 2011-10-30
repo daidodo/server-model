@@ -22,30 +22,14 @@ public:
         0       success
         -1      decompress input format error
     //*/
-    int Compress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const{
-        return compressTemplate(input,output);
-    }
-    int Decompress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const{
-        return decompressTemplate(input,output);
-    }
-    int Compress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const{
-        return compressTemplate(input,output);
-    }
-    int Decompress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const{
-        return decompressTemplate(input,output);
-    }
-    int Compress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const{
-        return compressTemplate(input,output);
-    }
-    int Decompress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const{
-        return decompressTemplate(input,output);
-    }
-    int Compress(const __DZ_STRING & input,__DZ_STRING & output) const{
-        return compressTemplate(input,output);
-    }
-    int Decompress(const __DZ_STRING & input,__DZ_STRING & output) const{
-        return decompressTemplate(input,output);
-    }
+    int Compress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const;
+    int Decompress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const;
+    int Compress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const;
+    int Decompress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const;
+    int Compress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const;
+    int Decompress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const;
+    int Compress(const __DZ_STRING & input,__DZ_STRING & output) const;
+    int Decompress(const __DZ_STRING & input,__DZ_STRING & output) const;
 private:
     template<class Buffer>
     int compressTemplate(const Buffer & input,Buffer & output) const;
