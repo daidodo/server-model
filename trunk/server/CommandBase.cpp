@@ -35,7 +35,7 @@ QCmdBase * QCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
     if(ver > 100){    //decrypt data if neccessary
         CEncryptorAes aes;
         aes.SetKey(&data[0],ENCRYPT_KEY_LEN);
-        int n = aes.Decrypt(data,HEAD_LEN,decryptData);
+        int n = aes.Decrypt(data,decryptData,HEAD_LEN);
         if(n < 0){
             ERROR("decrypt cmd data="<<Tools::DumpHex(data)<<" return "<<n);
             return 0;
@@ -148,7 +148,7 @@ void RCmdBase::Encode(COutByteStream & ds) const
         dss.ExportData(data);
         CEncryptorAes aes;
         aes.SetKey(&data[0],QCmdBase::ENCRYPT_KEY_LEN);
-        aes.Encrypt(data,QCmdBase::HEAD_LEN,encryptData);
+        aes.Encrypt(data,encryptData,QCmdBase::HEAD_LEN);
         ds<<Manip::raw(&encryptData[0],encryptData.size());
     }else{
         RCmdBase::EncodeParam(ds);
@@ -174,7 +174,7 @@ UdpQCmdBase * UdpQCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t *
     if(0){    //decrypt data if neccessary
         CEncryptorAes aes;
         aes.SetKey(&data[0],ENCRYPT_KEY_LEN);
-        int n = aes.Decrypt(data,HEAD_LEN,decryptData);
+        int n = aes.Decrypt(data,decryptData,HEAD_LEN);
         if(n < 0){
             ERROR("decrypt cmd data="<<Tools::DumpHex(data)<<" return "<<n);
             return 0;
@@ -278,7 +278,7 @@ void UdpRCmdBase::Encode(COutByteStream & ds) const
         dss.ExportData(data);
         CEncryptorAes aes;
         aes.SetKey(&data[0],UdpQCmdBase::ENCRYPT_KEY_LEN);
-        aes.Encrypt(data,UdpQCmdBase::HEAD_LEN,encryptData);
+        aes.Encrypt(data,encryptData,UdpQCmdBase::HEAD_LEN);
         ds<<Manip::raw(&encryptData[0],encryptData.size());
     }else{
         UdpRCmdBase::EncodeParam(ds);

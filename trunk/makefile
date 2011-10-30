@@ -3,11 +3,9 @@ SERVERDIR := server
 TESTDIR := test
 
 all:
-	$(MAKE) -C $(COMMONDIR) all
 	$(MAKE) -C $(SERVERDIR) all
 
 release:
-	$(MAKE) -C $(COMMONDIR) release
 	$(MAKE) -C $(SERVERDIR) release
 
 clean:

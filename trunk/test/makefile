@@ -4,6 +4,7 @@ TARGET = $(OBJ:_test.o=_test)
 BASEDIR := ..
 SRC_DIR := .
 SRC_SUFFIX := cpp
+ZIP := -lz
 sinclude $(BASEDIR)/inc.mak
 
 COMM_DIR := $(BASEDIR)/common

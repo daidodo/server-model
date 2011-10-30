@@ -30,21 +30,21 @@ public:
     //key为用户知道的加密解密的密钥
     //keylen为key的长度
     //intensity为加密强度
-    void SetKey(__DZ_STRING key,EKeyIntensity intensity = L128){
-        SetKey((const U8 *)key.c_str(),key.length(),intensity);
+    void SetKey(__DZ_STRING key, EKeyIntensity intensity = L128){
+        SetKey((const unsigned char *)key.c_str(), key.length(), intensity);
     }
-    void SetKey(const char * key,size_t keylen,EKeyIntensity intensity = L128){
-        SetKey((const U8 *)key,keylen,intensity);
+    void SetKey(const char * key, size_t keylen, EKeyIntensity intensity = L128){
+        SetKey((const unsigned char *)key, keylen, intensity);
     }
-    void SetKey(const S8 * key,size_t keylen,EKeyIntensity intensity = L128){
-        SetKey((const U8 *)key,keylen,intensity);
+    void SetKey(const signed char * key, size_t keylen, EKeyIntensity intensity = L128){
+        SetKey((const signed char *)key, keylen, intensity);
     }
-    void SetKey(const U8 * key,size_t keylen,EKeyIntensity intensity = L128){
+    void SetKey(const unsigned char * key, size_t keylen, EKeyIntensity intensity = L128){
         keyInten_ = intensity;
-        memset(keystr_,0,KEY_LEN);
-        MD5(key,keylen,keystr_);
-        AES_set_encrypt_key(keystr_,keyInten_,&enKey_);
-        AES_set_decrypt_key(keystr_,keyInten_,&deKey_);
+        memset(keystr_, 0, KEY_LEN);
+        MD5(key, keylen, keystr_);
+        AES_set_encrypt_key(keystr_, keyInten_, &enKey_);
+        AES_set_decrypt_key(keystr_, keyInten_, &deKey_);
     }
     /*
     return value for Encrypt & Decrypt
@@ -52,57 +52,57 @@ public:
         -1      param error
         -2      decrypt data format error
     //*/
-    //加密/解密input中从from偏移开始的数据,结果放入output中
-    int Encrypt(const __DZ_VECTOR(char) & input,size_t from,__DZ_VECTOR(char) & output) const{
-        return encryptTemplate(input,from,output);
+    //加密/解密input中从from偏移开始的数据, 结果放入output中
+    int Encrypt(const __DZ_VECTOR(char) & input, __DZ_VECTOR(char) & output, size_t from = 0) const{
+        return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_VECTOR(char) & input,size_t from,__DZ_VECTOR(char) & output) const{
-        return decryptTemplate(input,from,output);
+    int Decrypt(const __DZ_VECTOR(char) & input, __DZ_VECTOR(char) & output, size_t from = 0) const{
+        return decryptTemplate(input, output, from);
     }
-    int Encrypt(const __DZ_VECTOR(signed char) & input,size_t from,__DZ_VECTOR(signed char) & output) const{
-        return encryptTemplate(input,from,output);
+    int Encrypt(const __DZ_VECTOR(signed char) & input, __DZ_VECTOR(signed char) & output, size_t from = 0) const{
+        return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_VECTOR(signed char) & input,size_t from,__DZ_VECTOR(signed char) & output) const{
-        return decryptTemplate(input,from,output);
+    int Decrypt(const __DZ_VECTOR(signed char) & input, __DZ_VECTOR(signed char) & output, size_t from = 0) const{
+        return decryptTemplate(input, output, from);
     }
-    int Encrypt(const __DZ_VECTOR(unsigned char) & input,size_t from,__DZ_VECTOR(unsigned char) & output) const{
-        return encryptTemplate(input,from,output);
+    int Encrypt(const __DZ_VECTOR(unsigned char) & input, __DZ_VECTOR(unsigned char) & output, size_t from = 0) const{
+        return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_VECTOR(unsigned char) & input,size_t from,__DZ_VECTOR(unsigned char) & output) const{
-        return decryptTemplate(input,from,output);
+    int Decrypt(const __DZ_VECTOR(unsigned char) & input, __DZ_VECTOR(unsigned char) & output, size_t from = 0) const{
+        return decryptTemplate(input, output, from);
     }
-    int Encrypt(const __DZ_STRING & input,size_t from,__DZ_STRING & output) const{
-        return encryptTemplate(input,from,output);
+    int Encrypt(const __DZ_STRING & input, __DZ_STRING & output, size_t from = 0) const{
+        return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_STRING & input,size_t from,__DZ_STRING & output) const{
-        return decryptTemplate(input,from,output);
+    int Decrypt(const __DZ_STRING & input, __DZ_STRING & output, size_t from = 0) const{
+        return decryptTemplate(input, output, from);
     }
 private:
     template<class Buffer>
-    int encryptTemplate(const Buffer & input,size_t from,Buffer & output) const{
+    int encryptTemplate(const Buffer & input, Buffer & output, size_t from) const{
         size_t inlen = input.size();
         if(inlen < from)
             return -1;
         inlen -= from;
         output.resize(from + (inlen / AES_BLOCK_SIZE + 1) * AES_BLOCK_SIZE);
-        std::copy(input.begin(),input.begin() + from,output.begin());
-        for(;inlen >= AES_BLOCK_SIZE;inlen -= AES_BLOCK_SIZE,from += AES_BLOCK_SIZE)
-            AES_encrypt((const U8 *)&input[from],(U8 *)&output[from],&enKey_);
+        std::copy(input.begin(), input.begin() + from, output.begin());
+        for(;inlen >= AES_BLOCK_SIZE;inlen -= AES_BLOCK_SIZE, from += AES_BLOCK_SIZE)
+            AES_encrypt((const U8 *)&input[from], (U8 *)&output[from], &enKey_);
         U8 tmp[AES_BLOCK_SIZE];
-        memset(tmp,AES_BLOCK_SIZE - inlen,AES_BLOCK_SIZE);
-        memcpy(tmp,&input[from],inlen);
-        AES_encrypt(tmp,(U8 *)&output[from],&enKey_);
+        memset(tmp, AES_BLOCK_SIZE - inlen, AES_BLOCK_SIZE);
+        memcpy(tmp, &input[from], inlen);
+        AES_encrypt(tmp, (U8 *)&output[from], &enKey_);
         return 0;
     }
     template<class Buffer>
-    int decryptTemplate(const Buffer & input,size_t from,Buffer & output) const{
+    int decryptTemplate(const Buffer & input, Buffer & output, size_t from) const{
         size_t inlen = input.size();
         if(inlen < from || (inlen - from) % AES_BLOCK_SIZE != 0)
             return -1;
         output.resize(inlen);
-        std::copy(input.begin(),input.begin() + from,output.begin());
-        for(inlen -= from;inlen;inlen -= AES_BLOCK_SIZE,from += AES_BLOCK_SIZE)
-            AES_decrypt((const U8 *)&input[from],(U8 *)&output[from],&deKey_);
+        std::copy(input.begin(), input.begin() + from, output.begin());
+        for(inlen -= from;inlen;inlen -= AES_BLOCK_SIZE, from += AES_BLOCK_SIZE)
+            AES_decrypt((const U8 *)&input[from], (U8 *)&output[from], &deKey_);
         inlen = *output.rbegin();
         if(inlen == 0 || inlen > AES_BLOCK_SIZE)
             return -2;

@@ -1,14 +1,8 @@
-#include <cassert>
-#include <string>
-#include <vector>
-#include <iostream>
+#include "comm.h"
 
 #include <common/CompressorLZO.h>
 #include <common/CompressorQuickLZ.h>
 #include <common/CompressorZLib.h>
-
-using namespace std;
-using namespace NS_SERVER;
 
 static __DZ_STRING text("1234567890abcdefghijklmnopeaibanadj;3apU(#JDFNPDdbdn(NNEndjafefJJENFbn apfa3 j[f asdfas]a\\3a0fa sdjfna3 nadka.fj3jadshadsfa");
 
