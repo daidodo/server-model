@@ -8,7 +8,7 @@ fi
 echo "----TEST begin----"
 for test in "$@" ; do
   if ! $test ; then
-    echo "----$test failed----"
+    echo "$test failed----"
     exit 1
   fi
 done

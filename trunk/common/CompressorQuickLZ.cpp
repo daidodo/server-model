@@ -13,6 +13,46 @@ CCompressorQuickLZ::CCompressorQuickLZ()
     : workmem_(SCRATCH_COMPRESS)
 {}
 
+int CCompressorQuickLZ::Compress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const
+{
+    return compressTemplate(input,output);
+}
+
+int CCompressorQuickLZ::Decompress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const
+{
+    return decompressTemplate(input,output);
+}
+
+int CCompressorQuickLZ::Compress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const
+{
+    return compressTemplate(input,output);
+}
+
+int CCompressorQuickLZ::Decompress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const
+{
+    return decompressTemplate(input,output);
+}
+
+int CCompressorQuickLZ::Compress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const
+{
+    return compressTemplate(input,output);
+}
+
+int CCompressorQuickLZ::Decompress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const
+{
+    return decompressTemplate(input,output);
+}
+
+int CCompressorQuickLZ::Compress(const __DZ_STRING & input,__DZ_STRING & output) const
+{
+    return compressTemplate(input,output);
+}
+
+int CCompressorQuickLZ::Decompress(const __DZ_STRING & input,__DZ_STRING & output) const
+{
+    return decompressTemplate(input,output);
+}
+
 template<class Buffer>
 int CCompressorQuickLZ::compressTemplate(const Buffer & input,Buffer & output) const
 {
