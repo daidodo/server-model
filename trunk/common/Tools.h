@@ -160,11 +160,11 @@ namespace Tools
     //hasLen表示是否有前面的数据长度"(3)"
     __DZ_STRING DumpHex(const char * v,size_t sz,char sep = ' ',bool hasLen = true);
 
-    inline __DZ_STRING DumpHex(const U8 * v,size_t sz,char sep = ' ',bool hasLen = true){
+    inline __DZ_STRING DumpHex(const signed char * v,size_t sz,char sep = ' ',bool hasLen = true){
         return DumpHex((const char *)v,sz,sep,hasLen);
     }
 
-    inline __DZ_STRING DumpHex(const S8 * v,size_t sz,char sep = ' ',bool hasLen = true){
+    inline __DZ_STRING DumpHex(const unsigned char * v,size_t sz,char sep = ' ',bool hasLen = true){
         return DumpHex((const char *)v,sz,sep,hasLen);
     }
 
@@ -182,11 +182,11 @@ namespace Tools
     //hasLen表示是否有前面的数据长度"(5)"
     __DZ_STRING DumpStr(const char * v,size_t sz,char replace = '.',bool hasLen = true);
 
-    inline __DZ_STRING DumpStr(const U8 * v,size_t sz,char replace = '.',bool hasLen = true){
+    inline __DZ_STRING DumpStr(const signed char * v,size_t sz,char replace = '.',bool hasLen = true){
         return DumpStr((const char *)v,sz,replace,hasLen);
     }
 
-    inline __DZ_STRING DumpStr(const S8 * v,size_t sz,char replace = '.',bool hasLen = true){
+    inline __DZ_STRING DumpStr(const unsigned char * v,size_t sz,char replace = '.',bool hasLen = true){
         return DumpStr((const char *)v,sz,replace,hasLen);
     }
 
@@ -204,11 +204,11 @@ namespace Tools
     //hasLen表示是否有前面的数据长度"(5)"
     __DZ_STRING DumpVal(const char * v,size_t sz,int base = 8,bool hasLen = true);
 
-    inline __DZ_STRING DumpVal(const U8 * v,size_t sz,char base = 8,bool hasLen = true){
+    inline __DZ_STRING DumpVal(const signed char * v,size_t sz,char base = 8,bool hasLen = true){
         return DumpVal((const char *)v,sz,base,hasLen);
     }
 
-    inline __DZ_STRING DumpVal(const S8 * v,size_t sz,char base = 8,bool hasLen = true){
+    inline __DZ_STRING DumpVal(const unsigned char * v,size_t sz,char base = 8,bool hasLen = true){
         return DumpVal((const char *)v,sz,base,hasLen);
     }
 
@@ -225,11 +225,11 @@ namespace Tools
     //hasLen表示是否有前面的数据长度
     __DZ_STRING Dump(const char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true);
 
-    inline __DZ_STRING Dump(const U8 * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
+    inline __DZ_STRING Dump(const signed char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
         return Dump((const char *)v,sz,show_sz,hasLen);
     }
 
-    inline __DZ_STRING Dump(const S8 * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
+    inline __DZ_STRING Dump(const unsigned char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
         return Dump((const char *)v,sz,show_sz,hasLen);
     }
 
