@@ -53,20 +53,20 @@ public:
             if(line.empty())
                 continue;
             __DZ_STRING::size_type i = line.find_first_of("=");
-            content_[Tools::Trim(line.substr(0, i))] = Tools::Trim(line.substr(i + 1));
+            content_[Tools::Trim(line.substr(0, i))] = Tools::Trim((__DZ_STRING::npos == i ? "" : line.substr(i + 1)));
         }
         conf_file_ = file_name;
         return true;
     }
     //得到配置项的字符串值
-    __DZ_STRING GetString(__DZ_STRING key, __DZ_STRING strdefault = "") const{
+    __DZ_STRING GetString(const __DZ_STRING & key, const __DZ_STRING & strdefault = "") const{
         container_type::const_iterator wh = content_.find(key);
         if(wh == content_.end())
             return strdefault;
         return wh->second;
     }
     //得到配置项的整数值
-    int GetInt(__DZ_STRING key, int ndefault = 0,
+    int GetInt(const __DZ_STRING & key, int ndefault = 0,
         int min = std::numeric_limits<int>::min(),
         int max = std::numeric_limits<int>::max()) const
     {

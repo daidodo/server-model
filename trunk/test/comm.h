@@ -4,6 +4,7 @@
 #include <cassert>
 #include <string>
 #include <vector>
+#include <sstream>
 #include <iostream>
 #include <common/Tools.h>
 
