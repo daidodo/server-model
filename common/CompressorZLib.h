@@ -39,33 +39,33 @@ public:
         -4      the input data was corrupted or incomplete
         -5      unkown error
     //*/
-    int Compress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const{
-        return compressTemplate(input,output);
+    int Compress(const __DZ_VECTOR(char) & input, __DZ_VECTOR(char) & output) const{
+        return compressTemplate(input, output);
     }
-    int Decompress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const{
-        return decompressTemplate(input,output);
+    int Decompress(const __DZ_VECTOR(char) & input, __DZ_VECTOR(char) & output) const{
+        return decompressTemplate(input, output);
     }
-    int Compress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const{
-        return compressTemplate(input,output);
+    int Compress(const __DZ_VECTOR(signed char) & input, __DZ_VECTOR(signed char) & output) const{
+        return compressTemplate(input, output);
     }
-    int Decompress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const{
-        return decompressTemplate(input,output);
+    int Decompress(const __DZ_VECTOR(signed char) & input, __DZ_VECTOR(signed char) & output) const{
+        return decompressTemplate(input, output);
     }
-    int Compress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const{
-        return compressTemplate(input,output);
+    int Compress(const __DZ_VECTOR(unsigned char) & input, __DZ_VECTOR(unsigned char) & output) const{
+        return compressTemplate(input, output);
     }
-    int Decompress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const{
-        return decompressTemplate(input,output);
+    int Decompress(const __DZ_VECTOR(unsigned char) & input, __DZ_VECTOR(unsigned char) & output) const{
+        return decompressTemplate(input, output);
     }
-    int Compress(const __DZ_STRING & input,__DZ_STRING & output) const{
-        return compressTemplate(input,output);
+    int Compress(const __DZ_STRING & input, __DZ_STRING & output) const{
+        return compressTemplate(input, output);
     }
-    int Decompress(const __DZ_STRING & input,__DZ_STRING & output) const{
-        return decompressTemplate(input,output);
+    int Decompress(const __DZ_STRING & input, __DZ_STRING & output) const{
+        return decompressTemplate(input, output);
     }
 private:
     template<class Buffer>
-    int compressTemplate(const Buffer & input,Buffer & output) const{
+    int compressTemplate(const Buffer & input, Buffer & output) const{
         __ZSize in_len = __ZSize(input.size());
         __ZSize out_len = NS_EXTERN_LIB::compressBound(in_len);
         output.resize(sizeof(__Len) + size_t(out_len));
@@ -85,7 +85,7 @@ private:
         return -5;
     }
     template<class Buffer>
-    int decompressTemplate(const Buffer & input,Buffer & output) const{
+    int decompressTemplate(const Buffer & input, Buffer & output) const{
         if(input.size() < sizeof(__ZSize))
             return -3;
         __ZSize out_len = transOrder(*(__Len *)&input[0]);
