@@ -3,7 +3,7 @@
 
 /*
     封装数据流的读取和写入
-    注意测试operator !(),在错误状态下,所有读写数据操作都会无效
+    注意测试operator !(), 在错误状态下, 所有读写数据操作都会无效
     类型:
         CInByteStream       以字节为单位的输入流
         COutByteStream      以字节为单位的输出流
@@ -17,9 +17,9 @@
         offset_value        输入/输出指定位置的数据
         insert              在指定位置插入数据
     History
-        20070926    给CInByteStream加入status_状态,防止因非法数据引起内存访问越界
+        20070926    给CInByteStream加入status_状态, 防止因非法数据引起内存访问越界
         20071228    修正CInByteStream::LeftSize在len < cur_时返回很大size_t的问题;并把2个ensure里的减法改成加法
-        20080204    去掉CInByteStream::DumpLeft,加入ToString,输出对象内部状态
+        20080204    去掉CInByteStream::DumpLeft, 加入ToString, 输出对象内部状态
         20081008    将CInDataStream和COutDataStream更名为CInByteStream和COutByteStream
         20081016    调整类结构，引入CDataStreamBase作为所有数据流基类
                     重写CInByteStream和COutByteStream，加入更多类型支持
@@ -27,7 +27,7 @@
         20081106    增加Manip::insert
     Manual:
         请参考"docs/DataStream-manual.txt"
-    
+
 //*/
 
 #include <cassert>
@@ -47,7 +47,7 @@ class CInByteStream : public NS_IMPL::CDataStreamBase
     size_t          cur_;
     bool            need_reverse_;  //是否需要改变字节序
 public:
-    CInByteStream(const char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){   //netByteOrder表示是否按网络字节序
+    CInByteStream(const char * d, size_t l,bool netByteOrder = DEF_NET_BYTEORDER){   //netByteOrder表示是否按网络字节序
         SetSource(d,l,netByteOrder);
     }
     CInByteStream(const unsigned char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){
