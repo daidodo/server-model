@@ -32,6 +32,7 @@
 
 #include <cassert>
 #include <string>
+#include <cstring>  //memcpy
 #include <vector>
 #include <common/impl/DataStream_impl.h>
 #include <common/Tools.h>
