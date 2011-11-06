@@ -35,6 +35,11 @@ int main()
             return 1;
         }
     }
+    int empty_1 = config.GetInt("");
+    if(1 != empty_1){
+        cerr<<"CConfiguration::GetInt('') returns "<<empty_1<<" is not 1\n";
+        return -1;
+    }
     cout<<"Configuration test succ\n";
     return 0;
 }

@@ -22,7 +22,7 @@ CCmdHandler::~CCmdHandler()
     if(stats_)
         delete stats_;
 }
-        
+
 void CCmdHandler::Init(const __Config & config)
 {
     LOCAL_LOGGER(logger,"CCmdHandler::Init");
