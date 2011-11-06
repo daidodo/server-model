@@ -7,7 +7,7 @@
         CFdMap      可继承,线程不安全
         CFdSockMap  以fd作为索引的socket对象针,
                     负责socket对象的关闭和释放
-                    如果未使用CSharedPtr，则要求模板参数Sock实现了PutObject静态函数
+                    如果未使用CSharedPtr，则要求模板参数Sock实现了PutObject静态函数，和Close()成员函数
                     线程安全
     History
         20080604    CFdSockMap增加对CSharedPtr的支持，主要是putSock的处理不同
@@ -41,8 +41,8 @@ struct CFdMap
     typedef T &         reference;
     typedef const T &   const_reference;
     explicit CFdMap(size_t sz = 100){map_.reserve(sz);}
-    size_t size() const{return map_.size();}
-    void reserve(size_t sz){map_.reserve(sz);}
+    size_t Size() const{return map_.size();}
+    void Reserve(size_t sz){map_.reserve(sz);}
     reference operator [](int fd){
         assert(fd >= 0);
         if(size_t(fd) >= map_.size())
@@ -148,6 +148,7 @@ public:
             }
         }
     }
+    //获取fd对应的socket对象
     __SockPtr GetSock(int fd) const{
         if(fd >= 0){
             guard_type g(lock_);
@@ -176,8 +177,8 @@ public:
             *dst_first = (fd >= 0 && fd < sz ? map_[fd] : 0);
         }
     }
-    //批量关闭连接
-    //如果未使用CSharedPtr，会释放连接对象
+    //关闭批量fd的连接
+    //如果未使用CSharedPtr，可能会释放连接对象
     //如果使用CSharedPtr，不释放连接对象
     template<class ForwardIter>
     void CloseSock(ForwardIter first, ForwardIter last){
@@ -209,7 +210,7 @@ public:
                 *dst_first = 0;
         }
     }
-    //获取在线连接数
+    //获取所有连接个数
     size_t Size() const{
         guard_type g(lock_);
         return sz_;
