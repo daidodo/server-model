@@ -78,7 +78,7 @@ template<
     template<bool B, class T>
     static void putSock(CSharedPtr<Sock, B, T> & p){
         if(p){
-            p->Close();
+            p->Close();     //----------
             p = 0;
         }
     }
@@ -87,7 +87,8 @@ public:
         : map_(sz)
         , sz_(0)
     {}
-    ~CFdSockMap(){
+    ~CFdSockMap(){Clear();}
+    void Clear(){
         for(typename __SockMap::iterator it = map_.begin();it != map_.end();++it)
             putSock(*it);
         sz_ = 0;
@@ -106,7 +107,7 @@ public:
                         if(del){
                             putSock(cur);
                         }else{
-                            cur->Close();
+                            cur->Close();   //--------
                             cur = 0;
                         }
                     }
@@ -133,7 +134,7 @@ public:
                 if(cur != p){
                     std::swap(cur, old);
                     if(old){
-                        old->Close();
+                        old->Close();   //----------
                         --sz_;
                     }
                     if(p){
@@ -178,8 +179,8 @@ public:
         }
     }
     //关闭批量fd的连接
-    //如果未使用CSharedPtr，可能会释放连接对象
-    //如果使用CSharedPtr，不释放连接对象
+    //如果是指针，会释放连接对象
+    //如果使用CSharedPtr，可能不释放连接对象
     template<class ForwardIter>
     void CloseSock(ForwardIter first, ForwardIter last){
         guard_type g(lock_);
@@ -202,10 +203,13 @@ public:
         for(;first != last;++first, ++dst_first){
             const int & fd = *first;
             if(fd >= 0 && fd < sz){
-                *dst_first = map_[fd];
-                if(map_[fd])
+                __SockPtr & cur = map_[fd];
+                *dst_first = cur;
+                if(cur){
+                    cur->Close();       //---------
+                    cur = 0;
                     --sz_;
-                putSock(map_[fd]);
+                }
             }else
                 *dst_first = 0;
         }
