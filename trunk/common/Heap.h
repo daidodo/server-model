@@ -18,10 +18,10 @@
 
 NS_SERVER_BEGIN
 
-template<class T,class Container = __DZ_VECTOR(T),class BinaryPredicate = std::less<T> >
+template<class T, class Container = __DZ_VECTOR(T), class BinaryPredicate = std::less<T> >
 class CHeap
 {
-    typedef CHeap<T,Container,BinaryPredicate>          __Myt;
+    typedef CHeap<T, Container, BinaryPredicate>        __Myt;
 public:
     typedef BinaryPredicate                             less_comp;
     typedef Container                                   container_type;
@@ -32,23 +32,23 @@ protected:
     typedef typename container_type::const_reference    const_reference;
 public:
     explicit CHeap(less_comp = less_comp()){}
-    explicit CHeap(const container_type & cont,less_comp = less_comp())
+    explicit CHeap(const container_type & cont, less_comp = less_comp())
         : cont_(cont)
     {
-        std::make_heap(cont_.begin(),cont_.end(),less_comp());
+        std::make_heap(cont_.begin(), cont_.end(), less_comp());
     }
     template<class InputIterator>
-    CHeap(InputIterator first,InputIterator last,less_comp = less_comp())
-        : cont_(first,last)
+    CHeap(InputIterator first, InputIterator last, less_comp = less_comp())
+        : cont_(first, last)
     {
-        std::make_heap(cont_.begin(),cont_.end(),less_comp());
+        std::make_heap(cont_.begin(), cont_.end(), less_comp());
     }
     template<class InputIterator>
-    CHeap(const container_type & cont,InputIterator first,InputIterator last,less_comp = less_comp())
+    CHeap(const container_type & cont, InputIterator first, InputIterator last, less_comp = less_comp())
         : cont_(cont)
     {
-        cont_.insert(cont_.end(),first,last);
-        std::make_heap(cont_.begin(),cont_.end(),less_comp());
+        cont_.insert(cont_.end(), first, last);
+        std::make_heap(cont_.begin(), cont_.end(), less_comp());
     }
     bool empty() const          {return cont_.empty();}
     size_type size() const      {return cont_.size();}
@@ -56,14 +56,14 @@ public:
     const_reference top() const {return cont_.front();}
     void push(const_reference value){
         cont_.push_back(value);
-        std::push_heap(cont_.begin(),cont_.end(),less_comp());
+        std::push_heap(cont_.begin(), cont_.end(), less_comp());
     }
     void pop(){
-        std::pop_heap(cont_.begin(),cont_.end(),less_comp());
+        std::pop_heap(cont_.begin(), cont_.end(), less_comp());
         cont_.pop_back();
     }
     void swap(__Myt & a) __DZ_NOTHROW{
-        std::swap(cont_,a.cont_);
+        std::swap(cont_, a.cont_);
     }
 private:
     container_type  cont_;
@@ -76,7 +76,7 @@ template<
     class BinaryPredicateEqual = std::equal_to<T>   //等于比较算符
 >class CFixedHeap
 {
-    typedef CFixedHeap<T,Container,BinaryPredicateLess,BinaryPredicateEqual> __Myt;
+    typedef CFixedHeap<T, Container, BinaryPredicateLess, BinaryPredicateEqual> __Myt;
 public:
     typedef BinaryPredicateLess                         less_comp;
     typedef BinaryPredicateEqual                        equal_comp;
@@ -87,19 +87,19 @@ protected:
     typedef typename container_type::reference          reference;
     typedef typename container_type::const_reference    const_reference;
 public:
-    explicit CFixedHeap(size_t max_size = 10,less_comp = less_comp(),equal_comp = equal_comp())
+    explicit CFixedHeap(size_t max_size = 10, less_comp = less_comp(), equal_comp = equal_comp())
         : max_size_(max_size)
     {}
-    CFixedHeap(size_t max_size,const container_type & cont,less_comp = less_comp(),equal_comp = equal_comp())
+    CFixedHeap(size_t max_size, const container_type & cont, less_comp = less_comp(), equal_comp = equal_comp())
         : max_size_(max_size)
     {
-        fromRange(cont_.begin(),cont_.end(),cont_.size());
+        fromRange(cont_.begin(), cont_.end(), cont_.size());
     }
     template<class InputIterator>
-    CFixedHeap(InputIterator first,InputIterator last,size_t max_size,less_comp = less_comp(),equal_comp = equal_comp())
+    CFixedHeap(InputIterator first, InputIterator last, size_t max_size, less_comp = less_comp(), equal_comp = equal_comp())
         : max_size_(max_size)
     {
-        fromRange(first,last,0);
+        fromRange(first, last, 0);
     }
     bool empty() const          {return cont_.empty();}
     size_type size() const      {return cont_.size();}
@@ -110,14 +110,14 @@ public:
     void push(const_reference value){
         if(size() < max_size_){
             cont_.push_back(value);
-            std::push_heap(cont_.begin(),cont_.end(),less_comp());
-        }else if(max_size_ > 0 && less_comp()(top(),value)){
+            std::push_heap(cont_.begin(), cont_.end(), less_comp());
+        }else if(max_size_ > 0 && less_comp()(value, top())){
             top() = value;
-            std::make_heap(cont_.begin(),cont_.end(),less_comp());
+            std::make_heap(cont_.begin(), cont_.end(), less_comp());
         }
     }
     void pop(){
-        std::pop_heap(cont_.begin(),cont_.end(),less_comp());
+        std::pop_heap(cont_.begin(), cont_.end(), less_comp());
         cont_.pop_back();
     }
     //保证value不重复
@@ -125,22 +125,22 @@ public:
         typedef typename container_type::const_iterator __Iter;
         equal_comp eq;
         __Iter i = cont_.begin();
-        for(;i != cont_.end() && !eq(value,*i);++i);
+        for(;i != cont_.end() && !eq(value, *i);++i);
         if(i != cont_.end())
-            std::make_heap(cont_.begin(),cont_.end(),less_comp());
+            std::make_heap(cont_.begin(), cont_.end(), less_comp());
         else
             push(value);
     }
     void swap(__Myt & a) __DZ_NOTHROW{
-        std::swap(max_size_,a.max_size_);
-        std::swap(cont_,a.cont_);
+        std::swap(max_size_, a.max_size_);
+        std::swap(cont_, a.cont_);
     }
 private:
     template<class InputIterator>
-    void fromRange(InputIterator first,InputIterator last,size_t sz){
+    void fromRange(InputIterator first, InputIterator last, size_t sz){
         if(sz && sz <= max_size_){
-            cont_.assign(first,last);
-            std::make_heap(cont_.first(),cont_.last(),less_comp());
+            cont_.assign(first, last);
+            std::make_heap(cont_.first(), cont_.last(), less_comp());
         }else{
             for(;first != last;++first)
                 push(*first);
@@ -154,12 +154,12 @@ private:
 NS_SERVER_END
 
 namespace std{
-    template<class T,class C,class P>
-    inline void swap(NS_SERVER::CHeap<T,C,P> & a,NS_SERVER::CHeap<T,C,P> & b){
+    template<class T, class C, class P>
+    inline void swap(NS_SERVER::CHeap<T, C, P> & a, NS_SERVER::CHeap<T, C, P> & b){
         a.swap(b);
     }
-    template<class T,class C,class P1,class P2>
-    inline void swap(NS_SERVER::CFixedHeap<T,C,P1,P2> & a,NS_SERVER::CFixedHeap<T,C,P1,P2> & b){
+    template<class T, class C, class P1, class P2>
+    inline void swap(NS_SERVER::CFixedHeap<T, C, P1, P2> & a, NS_SERVER::CFixedHeap<T, C, P1, P2> & b){
         a.swap(b);
     }
 }//namespace std
