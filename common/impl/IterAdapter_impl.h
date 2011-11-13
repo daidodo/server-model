@@ -7,10 +7,10 @@
 
 NS_IMPL_BEGIN
 
-template<class ConstIter,class Extractor>
+template<class ConstIter, class Extractor>
 class CConstIterAdapter
 {
-    typedef CConstIterAdapter<ConstIter,Extractor>  __Myt;
+    typedef CConstIterAdapter<ConstIter, Extractor>  __Myt;
     typedef std::iterator_traits<ConstIter>         __Traits;
 public:
     typedef ConstIter                               target_type;
@@ -20,7 +20,7 @@ public:
     typedef const value_type *                      pointer;
     typedef const value_type &                      reference;
     typedef typename __Traits::difference_type      difference_type;
-    CConstIterAdapter(target_type it,const extract_type & ext)
+    CConstIterAdapter(target_type it, const extract_type & ext)
         : iter_(it)
         , ext_(ext)
     {}
@@ -39,8 +39,6 @@ public:
     __Myt & operator -=(difference_type off){return operator +=(-off);}
     __Myt operator -(difference_type off) const{return __Myt(*this).operator -=(off);}
     difference_type operator -(const __Myt & other) const{return iter_ - other.iter_;}
-    template<class It>
-    difference_type operator -(const It & iter) const{return iter_ - iter;}
     reference operator [](difference_type off) const{return *operator +(off);}
     __Myt & operator ++(){
         ++iter_;
@@ -66,42 +64,16 @@ public:
     bool operator <=(const __Myt & other) const{return !operator >(other);}
     bool operator >(const __Myt & other) const{return other.operator <(*this);}
     bool operator >=(const __Myt & other) const{return !operator <(other);}
-    template<class It>
-    bool operator ==(const It & iter) const{return iter_ == iter;}
-    template<class It>
-    bool operator !=(const It & iter) const{return !operator ==(iter);}
-    template<class It>
-    bool operator <(const It & iter) const{return iter_ < iter;}
-    template<class It>
-    bool operator <=(const It & iter) const{return !operator >(iter);}
-    template<class It>
-    bool operator >(const It & iter) const{return iter < iter_;}
-    template<class It>
-    bool operator >=(const It & iter) const{return !operator <(iter_);}
-    template<class It>
-    friend bool operator ==(const It & iter,const __Myt & a){return a.operator ==(iter);}
-    template<class It>
-    friend bool operator !=(const It & iter,const __Myt & a){return !a.operator ==(iter);}
-    template<class It>
-    friend bool operator <(const It & iter,const __Myt & a){return a.operator >(iter);}
-    template<class It>
-    friend bool operator <=(const It & iter,const __Myt & a){return !a.operator <(iter);}
-    template<class It>
-    friend bool operator >(const It & iter,const __Myt & a){return a.operator <(iter);}
-    template<class It>
-    friend bool operator >=(const It & iter,const __Myt & a){return !a.operator >(iter);}
-    template<class It>
-    friend difference_type operator -(const It & iter,const __Myt & a){return iter - a.iter_;}
 protected:
     target_type     iter_;
     extract_type    ext_;
 };
 
-template<class Iter,class Extractor>
-class CIterAdapter : public CConstIterAdapter<Iter,Extractor>
+template<class Iter, class Extractor>
+class CIterAdapter : public CConstIterAdapter<Iter, Extractor>
 {
-    typedef CIterAdapter<Iter,Extractor>        __Myt;
-    typedef CConstIterAdapter<Iter,Extractor>   __MyBase;
+    typedef CIterAdapter<Iter, Extractor>        __Myt;
+    typedef CConstIterAdapter<Iter, Extractor>   __MyBase;
 public:
     typedef typename __MyBase::target_type          target_type;
     typedef typename __MyBase::extract_type         extract_type;
@@ -110,19 +82,19 @@ public:
     typedef value_type *                            pointer;
     typedef value_type &                            reference;
     typedef typename __MyBase::difference_type      difference_type;
-    CIterAdapter(target_type it,const extract_type & ext)
-        : __MyBase(it,ext)
+    CIterAdapter(target_type it, const extract_type & ext)
+        : __MyBase(it, ext)
     {}
     reference operator *(){return __MyBase::ext_(*__MyBase::iter_);}
     pointer operator ->(){return &(operator *());}
 };
 
-template<class Iter,class T,class Func>
+template<class Iter, class T, class Func>
 class CIterAdapterFunctor
-    : public std::unary_function<typename std::iterator_traits<Iter>::value_type,T>
+    : public std::unary_function<typename std::iterator_traits<Iter>::value_type, T>
 {
     typedef typename std::iterator_traits<Iter>::value_type __Arg;
-    typedef std::unary_function<__Arg,T>                    __MyBase;
+    typedef std::unary_function<__Arg, T>                   __MyBase;
 public:
     typedef typename __MyBase::argument_type    argument_type;
     typedef typename __MyBase::result_type      result_type;

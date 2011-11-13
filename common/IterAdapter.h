@@ -10,7 +10,7 @@
         iter_adapt_fun          通过函数自定义访问非const迭代器的行为（可读写）
     使用示例
         template<class Iter>
-        void checkInt(Iter first,Iter last){    //对给定的序列进行操作
+        void checkInt(Iter first, Iter last){    //对给定的序列进行操作
             for(;first != last;++first)
                 cout<<*first<<endl;
         }
@@ -26,10 +26,10 @@
             //...   //向vecA中加入了一些元素
             //如果我们要调用checkInt()处理vecA中每个元素的v1成员，怎么办？
             //只要定义了函数ExtV1()，我们就可以实现如下：
-            checkInt(const_iter_adapt_fun<int>(vecA.begin(),ExtV1),
-                     const_iter_adapt_fun<int>(vecA.end(),ExtV1));
+            checkInt(const_iter_adapt_fun<int>(vecA.begin(), ExtV1),
+                     const_iter_adapt_fun<int>(vecA.end(), ExtV1));
         }
-        //由于v1在函数checkInt()里没有改变,所以使用const_iter_adapt_fun
+        //由于v1在函数checkInt()里没有改变, 所以使用const_iter_adapt_fun
         //否则应该使用iter_adapt_fun
         //类型int必须提供给const_iter_adapt_fun和iter_adapt_fun，因为适配器需要知道返回什么类型给checkInt()函数
         //ExtV1()的返回值必须是引用，const或非const都行，根据实际需要定义
@@ -47,8 +47,8 @@
         int main(){
             vector<A> vecA;
             //...
-            checkInt(const_iter_adapt(vecA.begin(),ExtV1Func()),
-                     const_iter_adapt(vecA.end(),ExtV1Func()));
+            checkInt(const_iter_adapt(vecA.begin(), ExtV1Func()),
+                     const_iter_adapt(vecA.end(), ExtV1Func()));
         }
         //result_type是仿函数必须提供的一个类型定义，表示返回给checkInt()函数的类型
         //ExtV1Func::operator ()的返回值必须是引用，const或非const都行，根据实际需要定义
@@ -59,32 +59,32 @@
 NS_SERVER_BEGIN
 
 //const_iter_adapt
-template<class ConstIt,class Ext>
-NS_IMPL::CConstIterAdapter<ConstIt,Ext>
-const_iter_adapt(ConstIt it,Ext ext){
-    return NS_IMPL::CConstIterAdapter<ConstIt,Ext>(it,ext);
+template<class ConstIt, class Ext>
+NS_IMPL::CConstIterAdapter<ConstIt, Ext>
+const_iter_adapt(ConstIt it, Ext ext){
+    return NS_IMPL::CConstIterAdapter<ConstIt, Ext>(it, ext);
 }
 
 //iter_adapt
-template<class It,class Ext>
-NS_IMPL::CIterAdapter<It,Ext> iter_adapt(It it,Ext ext){
-    return NS_IMPL::CIterAdapter<It,Ext>(it,ext);
+template<class It, class Ext>
+NS_IMPL::CIterAdapter<It, Ext> iter_adapt(It it, Ext ext){
+    return NS_IMPL::CIterAdapter<It, Ext>(it, ext);
 }
 
 //const_iter_adapt_fun
-template<class T,class ConstIt,class Func>
-NS_IMPL::CConstIterAdapter<ConstIt,NS_IMPL::CIterAdapterFunctor<ConstIt,T,Func> >
-const_iter_adapt_fun(ConstIt it,Func func){
-    typedef NS_IMPL::CIterAdapterFunctor<ConstIt,T,Func> __Ext;
-    return NS_IMPL::CConstIterAdapter<ConstIt,__Ext>(it,__Ext(func));
+template<class T, class ConstIt, class Func>
+NS_IMPL::CConstIterAdapter<ConstIt, NS_IMPL::CIterAdapterFunctor<ConstIt, T, Func> >
+const_iter_adapt_fun(ConstIt it, Func func){
+    typedef NS_IMPL::CIterAdapterFunctor<ConstIt, T, Func> __Ext;
+    return NS_IMPL::CConstIterAdapter<ConstIt, __Ext>(it, __Ext(func));
 }
 
 //iter_adapt_fun
-template<class T,class It,class Func>
-NS_IMPL::CIterAdapter<It,NS_IMPL::CIterAdapterFunctor<It,T,Func> >
-iter_adapt_fun(It it,Func func){
-    typedef NS_IMPL::CIterAdapterFunctor<It,T,Func> __Ext;
-    return NS_IMPL::CIterAdapter<It,__Ext>(it,__Ext(func));
+template<class T, class It, class Func>
+NS_IMPL::CIterAdapter<It, NS_IMPL::CIterAdapterFunctor<It, T, Func> >
+iter_adapt_fun(It it, Func func){
+    typedef NS_IMPL::CIterAdapterFunctor<It, T, Func> __Ext;
+    return NS_IMPL::CIterAdapter<It, __Ext>(it, __Ext(func));
 }
 
 NS_SERVER_END
