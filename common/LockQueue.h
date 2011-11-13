@@ -43,10 +43,10 @@ private:
     static void _append(CSingleList<E,A> & to,CSingleList<E,A> & from){
         to.append(from);
     }
-    template<class E,class A>
-    static void _append(CList<E,A> & to,CList<E,A> & from){
-        to.splice(to.end(),from);
-    }
+    //template<class E,class A>
+    //static void _append(CList<E,A> & to,CList<E,A> & from){
+    //    to.splice(to.end(),from);
+    //}
 public:
     explicit CLockQueue(size_t capacity = CAPACITY_DEFAULT)
         : capacity_(capacity)
