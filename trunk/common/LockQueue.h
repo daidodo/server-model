@@ -16,7 +16,6 @@
 //*/
 
 #include <common/Mutex.h>
-#include <common/List.h>
 #include <common/SingleList.h>
 
 NS_SERVER_BEGIN
