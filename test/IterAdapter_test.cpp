@@ -81,20 +81,20 @@ int main()
     setV1(iter_adapt_fun<__DZ_STRING>(vec.begin(), ExtraV1), iter_adapt_fun<__DZ_STRING>(vec.end(), ExtraV1));
     if(!checkV1(const_iter_adapt_fun<__DZ_STRING>(vec.begin(), ExtraV1Const),
                 const_iter_adapt_fun<__DZ_STRING>(vec.end(), ExtraV1Const)))
-        return false;
+        return 1;
     __Vec:: const_iterator begin = vec.begin(), end = vec.end();
     if(!checkV1(const_iter_adapt_fun<__DZ_STRING>(begin, ExtraV1Const),
                 const_iter_adapt_fun<__DZ_STRING>(end, ExtraV1Const)))
-        return false;
+        return 1;
     setV2(iter_adapt(vec.begin(), ExtraV2()), iter_adapt(vec.end(), ExtraV2()));
     if(!checkV2(const_iter_adapt(vec.begin(), ExtraV2Const()),
                 const_iter_adapt(vec.end(), ExtraV2Const())))
-        return false;
+        return 1;
     begin = vec.begin();
     end = vec.end();
     if(!checkV2(const_iter_adapt(begin, ExtraV2Const()),
                 const_iter_adapt(end, ExtraV2Const())))
-        return false;
+        return 1;
     cout<<"IterAdapter test succ\n";
     return 0;
 }
