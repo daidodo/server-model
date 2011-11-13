@@ -7,10 +7,12 @@
         CLockHashTable
     History:
         20090316    增加BucketSize和Iterate函数，提供遍历容器的途径
+        20111113    将Hash的模板参数去掉CV修饰
 //*/
 
 #include <vector>
 #include <common/Tools.h>   //Tools::DestroyArray,Tools::Destroy
+#include <common/impl/Template.h>   //COmitCV
 #include <common/impl/LockHashTable_impl.h>
 
 NS_IMPL_BEGIN
@@ -39,7 +41,7 @@ public:
     typedef KeyOfValue                          extract_key;
     typedef typename extract_key::result_type   key_type;
 	typedef EqualKey<key_type>                  key_equal;
-    typedef Hash<key_type>                      hasher;
+    typedef Hash<typename COmitCV<key_type>::result_type>   hasher;
     typedef typename Alloc::
         template rebind<value_type>::other      allocator_type;
     typedef value_type *                        pointer;
@@ -256,13 +258,17 @@ private:
         key_equal equaler;
         extract_key extractor;
         size_type ret = 0;
-        __NodePtr p = bucket_[buck_pos],n = p ? p->next_ : 0;
-        while(n && equaler(extractor(n->data_),k)){
-            p->next_ = n->next_;
-            putNode(n);
+        __NodePtr p = bucket_[buck_pos], n = (p ? p->next_ : 0);
+        while(n){
+            if(equaler(extractor(n->data_), k)){
+                p->next_ = n->next_;
+                putNode(n);
+                ++ret;
+            }else
+                p = n;
             n = p->next_;
-            ++ret;
         }
+        p = bucket_[buck_pos];
         if(p && equaler(extractor(p->data_),k)){
             bucket_[buck_pos] = p->next_;
             putNode(p);
