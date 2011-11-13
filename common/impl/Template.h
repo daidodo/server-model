@@ -37,6 +37,22 @@ struct CAssert<true>{
     typedef int Result;
 };
 
+//omit const & volatile
+template<class T>
+struct COmitCV{
+    typedef T result_type;
+};
+
+template<class T>
+struct COmitCV<const T>{
+    typedef T result_type;
+};
+
+template<class T>
+struct COmitCV<volatile T>{
+    typedef T result_type;
+};
+
 NS_IMPL_END
 
 #endif

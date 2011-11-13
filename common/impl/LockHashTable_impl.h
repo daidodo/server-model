@@ -74,7 +74,7 @@ class __hash_table_write_pointer : public __hash_table_pointer_base<Value,LockT>
 public:
     typedef Value * pointer;
     typedef Value & reference;
-    pointer operator ->(){return &operator ->();}
+    pointer operator ->(){return &operator *();}
     reference operator *(){return __MyBase::pv_->data_;}
 };
 

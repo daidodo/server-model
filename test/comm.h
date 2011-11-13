@@ -6,6 +6,8 @@
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <ctime>
+#include <cstdlib>
 #include <common/Tools.h>
 
 using namespace std;
