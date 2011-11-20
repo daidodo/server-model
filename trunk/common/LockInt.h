@@ -160,17 +160,17 @@ private:
 public:
     CLockIntRange(){}
     ~CLockIntRange(){cleanup();}
-    void Lock(T x){
+    void Lock(const T & x){
         guard_type g(lock_);
         get(x,1)->Lock();
     }
-    void Unlock(T x){
+    void Unlock(const T & x){
         guard_type g(lock_);
         lock_type * m = get(x,2);
         if(m)
             m->Unlock();
     }
-    lock_type & GetLock(T x){
+    lock_type & GetLock(const T & x){
         guard_type g(lock_);
         return *get(x,1);
     }
@@ -188,7 +188,7 @@ private:
         2   有x则删除
        返回找到或新添加的lock_type *
     //*/
-    lock_type * get(T x,int op){
+    lock_type * get(const T & x,int op){
         lock_type * ret = 0;
         typename __Map::iterator wh = map_.find(x);
         if(wh == map_.end()){
