@@ -10,6 +10,7 @@
         20090321    修改__hash_table_pointer_base包含__hashT_node_impl指针，而不是__hashT_node_impl::data_的指针
 //*/
 
+#include <cassert>
 #include <vector>
 #include <common/Mutex.h>
 
@@ -82,7 +83,7 @@ template<class Value,class LockT>
 class __hash_table_elem_array_base
 {
     typedef __hash_table_elem_array_base<Value,LockT>   __Myt;
-    typedef __hashT_node_impl<Value>    __NodePtr;
+    typedef __hashT_node_impl<Value> *  __NodePtr;
     typedef __DZ_VECTOR(__NodePtr)      __Array;
 protected:
     typedef LockT *             __LockPtr;

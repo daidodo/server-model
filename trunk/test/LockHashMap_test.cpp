@@ -35,7 +35,7 @@ inline static __DZ_STRING val(int i)
 {
     __DZ_STRING ret;
     for(int j = 0;j <= i;++i)
-        ret.push_back('a' + j % 26);
+        ret.push_back('b' + j % 27);
     return ret;
 }
 
@@ -89,7 +89,7 @@ static bool testMap()
             return false;
         }
         s.push_back('a' + i % 26);
-        //xp->first = 0;    //there should be an error
+        //xp->first = 0;    //there should be a compile error
         xp->second = s;
         if(xp->first != i || xp->second != s){
             cerr<<"1: write_pointer={"<<xp->first<<", '"<<xp->second<<"'} is not {"<<i<<", '"<<s<<"'}\n";
@@ -103,7 +103,7 @@ static bool testMap()
             return false;
         }
         s.push_back('a' + i % 26);
-        //xp->first = 0;    //there should be an error
+        //xp->first = 0;    //there should be a compile error
         xp->second = s;
         if(xp->first != i || xp->second != s){
             cerr<<"2: write_pointer={"<<xp->first<<", '"<<xp->second<<"'} is not {"<<i<<", '"<<s<<"'}\n";
@@ -134,7 +134,7 @@ static bool testMap()
         if(!s.empty())
             s.resize(s.size() - 1);
     }
-    s.clear();
+    s = "a";
     for(int i = 600;i > 0;--i){
         int j = i - 1;
         __HashMap::write_pointer xp;
@@ -142,11 +142,85 @@ static bool testMap()
             cerr<<"hashmap.Find("<<j<<", read_pointer) returns false\n";
             return false;
         }
-        s.push_back('b' + i % 27);
-        //xp->first = 0;    //there should be an error
+        ++s[0];
+        //xp->first = 0;    //there should be a compile error
         xp->second = s;
         if(xp->first != j || xp->second != s){
             cerr<<"3: write_pointer={"<<xp->first<<", '"<<xp->second<<"'} is not {"<<j<<", '"<<s<<"'}\n";
+            return false;
+        }
+    }
+    for(size_t i = 0;i < hashmap.BucketSize();++i){
+        __HashMap::read_elem_array xparray;
+        if(!hashmap.Iterate(i, xparray)){
+            cerr<<"hashmap.Iterate("<<i<<", read_elem_array) returns false\n";
+            return false;
+        }
+        if(xparray.empty()){
+            cerr<<"read_elem_array is empty\n";
+            return false;
+        }
+        for(size_t j = 0;j < xparray.size();++j){
+            int k = xparray[j].first;
+            __DZ_STRING VAL = "a";
+            VAL[0] += 600 - k;
+            const __DZ_STRING & v = xparray[j].second;
+            if(1 != v.size()){
+                cerr<<"v.size()="<<v.size()<<" is not 1\n";
+                return false;
+            }
+            if(VAL != v){
+                cerr<<"read_elem_array["<<i<<", "<<j<<"]={"<<k<<", "<<(UINT(v[0]) & 0xFF)<<"} is not "<<(UINT(VAL[0]) & 0xFF)<<"\n";
+                return false;
+            }
+        }
+    }
+    for(size_t i = 0;i < hashmap.BucketSize();++i){
+        __HashMap::write_elem_array xparray;
+        if(!hashmap.Iterate(i, xparray)){
+            cerr<<"hashmap.Iterate("<<i<<", write_elem_array) returns false\n";
+            return false;
+        }
+        if(xparray.empty()){
+            cerr<<"write_elem_array is empty\n";
+            return false;
+        }
+        for(size_t j = 0;j < xparray.size();++j){
+            int k = xparray[j].first;
+            __DZ_STRING VAL = "a";
+            VAL[0] += k;
+            //xparray[j].first = 0;   //there should be a compile error
+            xparray[j].second = VAL;
+        }
+    }
+    __DZ_STRING VAL = "a";
+    for(int i = 0;i < 600;++i){
+        __HashMap::read_pointer xp;
+        if(!hashmap.Find(i, xp)){
+            cerr<<"hashmap.Find("<<i<<", read_pointer) failed\n";
+            return false;
+        }
+        VAL[0] = 'a' + i;
+        if(xp->second != VAL){
+            cerr<<"read_pointer={"<<xp->first<<", "<<xp->second<<"} is not {"<<i<<", "<<VAL<<"}\n";
+            return false;
+        }
+    }
+    for(int i = 600;i < 700;++i){
+        if(!hashmap.SetValue(i, "bcde")){
+            cerr<<"hashmap.SetValue("<<i<<") failed\n";
+            return false;
+        }
+    }
+    VAL = "bcde";
+    for(int i = 600;i < 700;++i){
+        __HashMap::read_pointer xp;
+        if(!hashmap.Find(i, xp)){
+            cerr<<"hashmap.Find("<<i<<", read_pointer) failed\n";
+            return false;
+        }
+        if(xp->second != VAL){
+            cerr<<"read_pointer={"<<xp->first<<", "<<xp->second<<"} is not {"<<i<<", "<<VAL<<"}\n";
             return false;
         }
     }
