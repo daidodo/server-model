@@ -26,9 +26,9 @@ static bool testLockIntRange()
 
 int main()
 {
-    if(!testLockIntRange<CLockInt<int> >())
+    if(!testLockIntRange<int>())
         return 1;
-    if(!testLockIntRange<CLockIntMax<int> >())
+    if(!testLockIntRange<CLockInt<int> >())
         return 1;
     cout<<"LockInt test succ\n";
     return 0;

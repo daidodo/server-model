@@ -137,7 +137,7 @@ private:
     CLockIntMax(CLockIntMax &);     //disable copy and assignment
     CLockIntMax & operator =(CLockIntMax &);
     int_type    v_,max_;
-    lock_type   lock_;
+    lock_type lock_;
 };
 
 template<typename T,class LockT = CMutex>
