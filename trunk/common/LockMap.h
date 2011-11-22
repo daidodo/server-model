@@ -15,11 +15,11 @@
 
 NS_SERVER_BEGIN
 
-template<class T,class LockT = CMutex,class Pr = std::less<T> >
-class CLockSet : public __DZ_SET1(T,Pr)
+template<class T, class LockT = CMutex, class Pr = std::less<T> >
+class CLockSet : public __DZ_SET1(T, Pr)
 {
 //typedefs
-    typedef __DZ_SET1(T,Pr)                     __MyBase;
+    typedef __DZ_SET1(T, Pr)                     __MyBase;
 public:
     typedef __MyBase                            container_type;
     typedef typename __MyBase::iterator         iterator;
@@ -28,15 +28,20 @@ public:
     typedef CLockAdapter<lock_type>             adapter_type;
     typedef CGuard<lock_type>                   guard_type;
     bool insertL(const T & v){
-        guard_type g(lock_,true);
+        guard_type g(lock_);
         return __MyBase::insert(v).second;
     }
+    bool findL(const T & v) const{
+        guard_type g(lock_);
+        typename __MyBase::const_iterator wh = __MyBase::find(v);
+        return wh != __MyBase::end();
+    }
     size_t eraseL(const T & v){
-        guard_type g(lock_,true);
+        guard_type g(lock_);
         return __MyBase::erase(v);
     }
     size_t Size() const{
-        guard_type g(lock_,false);
+        guard_type g(lock_);
         return __MyBase::size();
     }
     lock_type & GetLock(){return lock_;}
@@ -52,11 +57,11 @@ private:
     lock_type lock_;
 };
 
-template<class Key,class Value,class LockT = CMutex,class Pr = std::less<Key> >
-class CLockMap:public __DZ_MAP1(Key,Value,Pr)
+template<class Key, class Value, class LockT = CMutex, class Pr = std::less<Key> >
+class CLockMap:public __DZ_MAP1(Key, Value, Pr)
 {
 //typedefs
-    typedef __DZ_MAP1(Key,Value,Pr)             __MyBase;
+    typedef __DZ_MAP1(Key, Value, Pr)             __MyBase;
 public:
     typedef __MyBase                            container_type;
     typedef typename __MyBase::iterator         iterator;
@@ -68,19 +73,19 @@ public:
     typedef CLockAdapter<lock_type>             adapter_type;
     typedef CGuard<lock_type>                   guard_type;
     bool insertL(const value_type & v){
-        guard_type g(lock_,true);
+        guard_type g(lock_);
         return __MyBase::insert(v).second;
     }
-    bool insertL(const key_type & v,const mapped_type & d = mapped_type()){
-        guard_type g(lock_,true);
-        return __MyBase::insert(value_type(v,d)).second;
+    bool insertL(const key_type & v, const mapped_type & d = mapped_type()){
+        guard_type g(lock_);
+        return __MyBase::insert(value_type(v, d)).second;
     }
     size_t eraseL(const key_type & v){
-        guard_type g(lock_,true);
+        guard_type g(lock_);
         return __MyBase::erase(v);
     }
-    bool pickL(const key_type & v,mapped_type & p){    //ËÑË÷²¢É¾³ý
-        guard_type g(lock_,true);
+    bool pickL(const key_type & v, mapped_type & p){    //ËÑË÷²¢É¾³ý
+        guard_type g(lock_);
         iterator wh = find(v);
         if(wh != __MyBase::end()){
             p = wh->second;
@@ -90,7 +95,7 @@ public:
         return false;
     }
     size_t Size() const{
-        guard_type g(lock_,false);
+        guard_type g(lock_);
         return __MyBase::size();
     }
     lock_type & GetLock(){return lock_;}

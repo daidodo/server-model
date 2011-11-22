@@ -14,7 +14,7 @@ NS_SERVER_BEGIN
 
 namespace Tools{
 
-    __DZ_STRING DumpHex(const char * v,size_t sz,char sep,bool hasLen)
+    __DZ_STRING DumpHex(const char * v, size_t sz,char sep,bool hasLen)
     {
         const char DIGIT[] = "0123456789ABCDEF";
         assert(v);
