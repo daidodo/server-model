@@ -3,8 +3,7 @@
 
 /*
     对象的加锁访问,适合本身无锁,但需要互斥访问的数据
-        CLockObject     提供加锁的访问
-        CRWLockObject   提供加锁的读和写
+        CLockObject     提供加读写锁的对象访问机制
         CLockContainer  提供对一般容器的简单加锁机制,在必要的时候应该专门定义相应的加锁容器
     History
         20080920    用模板参数决定锁类型
@@ -16,15 +15,15 @@
 
 NS_SERVER_BEGIN
 
-template<class T,class LockT>
-class CLockObject
+template<class T, class LockT>
+class CLockObject1
 {
-    typedef __lockPtr<T,LockT,true>         __Writable;
-    typedef __lockPtr<const T,LockT,false>  __Readable;
-    typedef __Writable                      __Locked;
+    typedef NS_IMPL::__lockPtr<T, LockT, true>          __Writable;
+    typedef NS_IMPL::__lockPtr<const T, LockT, false>   __Readable;
+    typedef __Writable  __Locked;
 public:
-    typedef __Locked::lock_type     lock_type;
-    typedef __Locked::guard_type    guard_type;
+    typedef typename __Locked::lock_type     lock_type;
+    typedef typename __Locked::guard_type    guard_type;
     typedef CLockAdapter<lock_type> adapter_type;
     typedef T                       value_type;
     typedef T *                     pointer;
@@ -41,13 +40,13 @@ public:
     }
     //加锁的访问方式
     __Locked LockPointer(){
-        return __Locked(&ref_,lock_);
+        return __Locked(&ref_, lock_);
     }
     __Writable WritePointer(){
-        return __Writable(&ref_,lock_);
+        return __Writable(&ref_, lock_);
     }
     __Readable ReadPointer() const{
-        return __Readable(&ref_,lock_);
+        return __Readable(&ref_, lock_);
     }
     //无锁的访问方式
     pointer operator ->(){return &ref_;}
@@ -59,15 +58,15 @@ private:
     CMutex      lock_;
 };
 
-template<class Container,class LockT>
-class CLockContainer : public Container
+template<class Container, class LockT>
+class CLockContainer1 : public Container
 {
-    typedef __lockPtr<Container,LockT,true>         __Writable;
-    typedef __lockPtr<const Container,LockT,false>  __Readable;
-    typedef __Writable                              __Locked;
+    typedef NS_IMPL::__lockPtr<Container, LockT, true>         __Writable;
+    typedef NS_IMPL::__lockPtr<const Container, LockT, false>  __Readable;
+    typedef __Writable  __Locked;
 public:
-    typedef __Locked::lock_type     lock_type;
-    typedef __Locked::guard_type    guard_type;
+    typedef typename __Locked::lock_type     lock_type;
+    typedef typename __Locked::guard_type    guard_type;
     typedef CLockAdapter<lock_type> adapter_type;
     typedef Container               container_type;
     lock_type & GetLock() const{return lock_;}
@@ -79,13 +78,13 @@ public:
     }
     //加锁的访问方式
     __Locked LockPointer(){
-        return __Locked(this,lock_);
+        return __Locked(this, lock_);
     }
     __Writable WritePointer(){
-        return __Writable(this,lock_);
+        return __Writable(this, lock_);
     }
     __Readable ReadPointer() const{
-        return __Readable(this,lock_);
+        return __Readable(this, lock_);
     }
 private:
     lock_type lock_;

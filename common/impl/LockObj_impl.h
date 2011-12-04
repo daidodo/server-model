@@ -13,7 +13,7 @@
 
 NS_IMPL_BEGIN
 
-template<class T,class LockT,class bWrite>
+template<class T, class LockT, bool bWrite>
 struct __lockPtr{
     typedef LockT               lock_type;
     typedef CGuard<lock_type>   guard_type;
@@ -23,8 +23,7 @@ private:
     const pointer   p_;
     guard_type      g_;
 public:
-    __lockPtr(pointer p,lock_type & lock):p_(p),g_(lock,bWrite){}
-    __lockPtr(const __lockPtr & x); //gcc编译的时候需要
+    __lockPtr(pointer p, lock_type & lock):p_(p), g_(lock, bWrite){}
     pointer operator ->() const{return p_;}
     reference operator *() const{return *p_;}
 };
