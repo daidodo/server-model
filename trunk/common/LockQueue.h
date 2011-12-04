@@ -13,6 +13,7 @@
         20080911    增加PushAll(),避免频繁Push()
         20080912    增加_append(),对适用PushAll()的类型进行接口统一
         20080920    增加lock_type，adapter_type和guard_type，修改GetLock()，Lock()和Unlock()
+        20111204    去掉对CList的支持
 //*/
 
 #include <common/Mutex.h>
@@ -20,10 +21,10 @@
 
 NS_SERVER_BEGIN
 
-template<class T,class Container = CSingleList<T> >
+template<class T, class Container = CSingleList<T> >
 class CLockQueue : public Container
 {
-    typedef CLockQueue<T,Container>             __Myt;
+    typedef CLockQueue<T, Container>             __Myt;
     typedef Container                           __MyBase;
 public:
     typedef Container                           container_type;
@@ -38,20 +39,16 @@ public:
     typedef CGuard<lock_type>                   guard_type;
 private:
     static const size_t CAPACITY_DEFAULT = 10000;   //默认容量
-    template<class E,class A>
-    static void _append(CSingleList<E,A> & to,CSingleList<E,A> & from){
+    template<class E, class A>
+    static void _append(CSingleList<E, A> & to, CSingleList<E, A> & from){
         to.append(from);
     }
-    //template<class E,class A>
-    //static void _append(CList<E,A> & to,CList<E,A> & from){
-    //    to.splice(to.end(),from);
-    //}
 public:
     explicit CLockQueue(size_t capacity = CAPACITY_DEFAULT)
         : capacity_(capacity)
         , top_size_(0)
     {}
-    explicit CLockQueue(const __MyBase & con,size_t capacity = CAPACITY_DEFAULT)
+    explicit CLockQueue(const __MyBase & con, size_t capacity = CAPACITY_DEFAULT)
         : __MyBase(con)
         , capacity_(capacity)
         , top_size_(con.size())
@@ -75,9 +72,9 @@ public:
         return __MyBase::size();
     }
     //timeMs < 0,阻塞式;timeMs >= 0,等待timeMs毫秒
-    bool Push(const_reference v,S32 timeMs = -1){
+    bool Push(const_reference v, S32 timeMs = -1){
         guard_type guard(lock_);
-        const int sig = waitNotFull(timeMs);
+        const int sig = waitNotFull(timeMs, 1);
         if(sig < 0)
             return false;
         __MyBase::push_back(v);
@@ -89,9 +86,9 @@ public:
         return true;
     }
     //timeMs < 0,阻塞式;timeMs >= 0,等待timeMs毫秒
-    bool PushFront(const_reference v,S32 timeMs = -1){
+    bool PushFront(const_reference v, S32 timeMs = -1){
         guard_type guard(lock_);
-        const int sig = waitNotFull(timeMs);
+        const int sig = waitNotFull(timeMs, 1);
         if(sig < 0)
             return false;
         __MyBase::push_front(v);
@@ -105,14 +102,14 @@ public:
     //把con的所有元素加到队列尾
     //timeMs < 0,阻塞式;timeMs >= 0,等待timeMs毫秒
     //只有重载了CLockQueue::_append函数的类型，才能使用此操作
-    bool PushAll(container_type & con,S32 timeMs = -1){
+    bool PushAll(container_type & con, S32 timeMs = -1){
         if(con.empty())
             return true;
         guard_type guard(lock_);
-        const int sig = waitNotFull(timeMs);
+        const int sig = waitNotFull(timeMs, con.size());
         if(sig < 0)
             return false;
-        _append(*this,con);
+        _append(*this, con);
         const size_t sz = __MyBase::size();
         if(sz > top_size_)  //for statistic
             top_size_ = sz;
@@ -121,9 +118,9 @@ public:
         return true;
     }
     //timeMs < 0,阻塞式;timeMs >= 0,等待timeMs毫秒
-    bool Pop(reference v,S32 timeMs = -1){
+    bool Pop(reference v, S32 timeMs = -1){
         guard_type guard(lock_);
-        const int sig = waitNotEmpty(timeMs);
+        const int sig = waitNotEmpty(timeMs, 1);
         if(sig < 0)
             return false;
         v = __MyBase::front();
@@ -134,10 +131,10 @@ public:
     }
     //把队列的所有元素转移到con里
     //timeMs < 0,阻塞式;timeMs >= 0,等待timeMs毫秒
-    bool PopAll(container_type & con,S32 timeMs = -1){
+    bool PopAll(container_type & con, S32 timeMs = -1){
         con.clear();
         guard_type guard(lock_);
-        const int sig = waitNotEmpty(timeMs);
+        const int sig = waitNotEmpty(timeMs, __MyBase::size());
         if(sig < 0)
             return false;
         __MyBase::swap(con);
@@ -162,14 +159,17 @@ private:
         0   not full
         1   full
     //*/
-    int waitNotEmpty(S32 timeMs){
+    int waitNotEmpty(S32 timeMs, size_t need){
+        if(need > __MyBase::size())
+            return -1;
         while(__MyBase::empty()){
             if(timeMs < 0){
                 not_empty_.Wait(lock_);
-            }else if(!timeMs || !not_empty_.TimeWait(lock_,timeMs))
+            }else if(!timeMs || !not_empty_.TimeWait(lock_, timeMs))
                 return -1;
         }
-        return (__MyBase::size() >= capacity_ ? 1 : 0);
+        need = __MyBase::size() - need; //size after pop
+        return (__MyBase::size() >= capacity_ && need < capacity_ ? 1 : 0);
     }
     /*
     Return Value:
@@ -177,11 +177,13 @@ private:
         0   not empty
         1   empty
     //*/
-    int waitNotFull(S32 timeMs){
-        while(__MyBase::size() >= capacity_){
+    int waitNotFull(S32 timeMs, size_t need){
+        if(need > capacity_)
+            return -1;
+        while(__MyBase::size() + need > capacity_){
             if(timeMs < 0){
                 not_full_.Wait(lock_);
-            }else if(!timeMs || !not_full_.TimeWait(lock_,timeMs))
+            }else if(!timeMs || !not_full_.TimeWait(lock_, timeMs))
                 return -1;
         }
         return (__MyBase::empty() ? 1 : 0);
@@ -191,7 +193,7 @@ private:
     size_type   capacity_;      //队列最大长度,达到capacity_后Push会阻塞
     size_type   top_size_;      //__MyBase::size()的峰值,统计用
     lock_type   lock_;
-    CCondition  not_empty_,not_full_;
+    CCondition  not_empty_, not_full_;
 };
 
 NS_SERVER_END
