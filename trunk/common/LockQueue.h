@@ -13,7 +13,8 @@
         20080911    增加PushAll(),避免频繁Push()
         20080912    增加_append(),对适用PushAll()的类型进行接口统一
         20080920    增加lock_type，adapter_type和guard_type，修改GetLock()，Lock()和Unlock()
-        20111204    去掉对CList的支持
+        20111204    去掉对CList的支持，将Container改成成员变量
+                    修改waitNotEmpty()和waitNotFull()，严格检验size
 //*/
 
 #include <common/Mutex.h>
@@ -22,18 +23,17 @@
 NS_SERVER_BEGIN
 
 template<class T, class Container = CSingleList<T> >
-class CLockQueue : public Container
+class CLockQueue
 {
     typedef CLockQueue<T, Container>             __Myt;
-    typedef Container                           __MyBase;
 public:
-    typedef Container                           container_type;
-    typedef typename __MyBase::value_type       value_type;
-    typedef typename __MyBase::size_type        size_type;
-    typedef typename __MyBase::reference        reference;
-    typedef typename __MyBase::const_reference  const_reference;
-    typedef typename __MyBase::const_iterator   const_iterator;
-    typedef typename __MyBase::iterator         iterator;
+    typedef Container                                 container_type;
+    typedef typename container_type::value_type       value_type;
+    typedef typename container_type::size_type        size_type;
+    typedef typename container_type::reference        reference;
+    typedef typename container_type::const_reference  const_reference;
+    typedef typename container_type::const_iterator   const_iterator;
+    typedef typename container_type::iterator         iterator;
     typedef CMutex                              lock_type;
     typedef CLockAdapter<lock_type>             adapter_type;
     typedef CGuard<lock_type>                   guard_type;
@@ -48,8 +48,8 @@ public:
         : capacity_(capacity)
         , top_size_(0)
     {}
-    explicit CLockQueue(const __MyBase & con, size_t capacity = CAPACITY_DEFAULT)
-        : __MyBase(con)
+    explicit CLockQueue(const container_type & con, size_t capacity = CAPACITY_DEFAULT)
+        : con_(con)
         , capacity_(capacity)
         , top_size_(con.size())
     {}
@@ -65,11 +65,11 @@ public:
     }
     bool Empty() const{
         guard_type guard(lock_);
-        return __MyBase::empty();
+        return con_.empty();
     }
     size_type Size() const{
         guard_type guard(lock_);
-        return __MyBase::size();
+        return con_.size();
     }
     //timeMs < 0,阻塞式;timeMs >= 0,等待timeMs毫秒
     bool Push(const_reference v, S32 timeMs = -1){
@@ -77,8 +77,8 @@ public:
         const int sig = waitNotFull(timeMs, 1);
         if(sig < 0)
             return false;
-        __MyBase::push_back(v);
-        const size_t sz = __MyBase::size();
+        con_.push_back(v);
+        const size_t sz = con_.size();
         if(sz > top_size_)  //for statistic
             top_size_ = sz;
         if(sig)
@@ -91,8 +91,8 @@ public:
         const int sig = waitNotFull(timeMs, 1);
         if(sig < 0)
             return false;
-        __MyBase::push_front(v);
-        const size_t sz = __MyBase::size();
+        con_.push_front(v);
+        const size_t sz = con_.size();
         if(sz > top_size_)  //for statistic
             top_size_ = sz;
         if(sig)
@@ -109,8 +109,8 @@ public:
         const int sig = waitNotFull(timeMs, con.size());
         if(sig < 0)
             return false;
-        _append(*this, con);
-        const size_t sz = __MyBase::size();
+        _append(con_, con);
+        const size_t sz = con_.size();
         if(sz > top_size_)  //for statistic
             top_size_ = sz;
         if(sig)
@@ -123,8 +123,8 @@ public:
         const int sig = waitNotEmpty(timeMs, 1);
         if(sig < 0)
             return false;
-        v = __MyBase::front();
-        __MyBase::pop_front();
+        v = con_.front();
+        con_.pop_front();
         if(sig)
             not_full_.Broadcast();
         return true;
@@ -134,10 +134,10 @@ public:
     bool PopAll(container_type & con, S32 timeMs = -1){
         con.clear();
         guard_type guard(lock_);
-        const int sig = waitNotEmpty(timeMs, __MyBase::size());
+        const int sig = waitNotEmpty(timeMs, con_.size());
         if(sig < 0)
             return false;
-        __MyBase::swap(con);
+        con_.swap(con);
         if(sig)
             not_full_.Broadcast();
         return true;
@@ -149,7 +149,7 @@ public:
     size_t ResetTopSize(){
         guard_type guard(lock_);
         size_t ret = top_size_;
-        top_size_ = __MyBase::size();
+        top_size_ = con_.size();
         return ret;
     }
 private:
@@ -160,16 +160,16 @@ private:
         1   full
     //*/
     int waitNotEmpty(S32 timeMs, size_t need){
-        if(need > __MyBase::size())
+        if(need > con_.size())
             return -1;
-        while(__MyBase::empty()){
+        while(con_.empty()){
             if(timeMs < 0){
                 not_empty_.Wait(lock_);
             }else if(!timeMs || !not_empty_.TimeWait(lock_, timeMs))
                 return -1;
         }
-        need = __MyBase::size() - need; //size after pop
-        return (__MyBase::size() >= capacity_ && need < capacity_ ? 1 : 0);
+        need = con_.size() - need; //size after pop
+        return (con_.size() >= capacity_ && need < capacity_ ? 1 : 0);
     }
     /*
     Return Value:
@@ -180,18 +180,19 @@ private:
     int waitNotFull(S32 timeMs, size_t need){
         if(need > capacity_)
             return -1;
-        while(__MyBase::size() + need > capacity_){
+        while(con_.size() + need > capacity_){
             if(timeMs < 0){
                 not_full_.Wait(lock_);
             }else if(!timeMs || !not_full_.TimeWait(lock_, timeMs))
                 return -1;
         }
-        return (__MyBase::empty() ? 1 : 0);
+        return (con_.empty() ? 1 : 0);
     }
     CLockQueue(const __Myt &);
     __Myt & operator =(const __Myt &);
+    container_type  con_;
     size_type   capacity_;      //队列最大长度,达到capacity_后Push会阻塞
-    size_type   top_size_;      //__MyBase::size()的峰值,统计用
+    size_type   top_size_;      //con_.size()的峰值,统计用
     lock_type   lock_;
     CCondition  not_empty_, not_full_;
 };
@@ -199,3 +200,4 @@ private:
 NS_SERVER_END
 
 #endif
+
