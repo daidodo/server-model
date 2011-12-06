@@ -26,7 +26,7 @@
 
 #include <pthread.h>
 #include <stdexcept>        //std::runtime_error
-#include <common/Tools.h>   //Tools::GetTimespec,Tools::ErrorMsg
+#include <common/Tools.h>   //Tools::GetTimespec, Tools::ErrorMsg
 
 NS_SERVER_BEGIN
 
@@ -44,12 +44,12 @@ protected:
 public:
     CMutex(){
 #ifdef NDEBUG
-        pthread_mutex_init(&mutex_,0);
+        pthread_mutex_init(&mutex_, 0);
 #else   //check dead lock
         pthread_mutexattr_t attr;
         pthread_mutexattr_init(&attr);
-        pthread_mutexattr_settype(&attr,PTHREAD_MUTEX_ERRORCHECK);
-        pthread_mutex_init(&mutex_,&attr);
+        pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK);
+        pthread_mutex_init(&mutex_, &attr);
         pthread_mutexattr_destroy(&attr);
 #endif
     }
@@ -72,8 +72,8 @@ public:
     //在指定的timeMs毫秒内如果不能lock,返回false
     bool TimeLock(U32 timeMs){
         timespec ts;
-        Tools::GetTimespec(timeMs,ts);
-        return !pthread_mutex_timedlock(&mutex_,&ts);
+        Tools::GetTimespec(timeMs, ts);
+        return !pthread_mutex_timedlock(&mutex_, &ts);
     }
 };
 
@@ -83,19 +83,19 @@ protected:
     bool    pshared_;   //是否进程间共享
     int     type_;
 public:
-    explicit CAttrMutex(bool pshared = false,int type = PTHREAD_MUTEX_DEFAULT)
+    explicit CAttrMutex(bool pshared = false, int type = PTHREAD_MUTEX_DEFAULT)
         : CMutex(0)
         , pshared_(pshared)
         , type_(type)
     {
         pthread_mutexattr_t attr;
         if(initAttr(attr)){
-            pthread_mutex_init(&mutex_,&attr);
+            pthread_mutex_init(&mutex_, &attr);
             pthread_mutexattr_destroy(&attr);
         }else{
             pshared_ = false;
             type_ = PTHREAD_MUTEX_DEFAULT;
-            pthread_mutex_init(&mutex_,0);
+            pthread_mutex_init(&mutex_, 0);
         }
     }
     bool ProcessShared() const{return pshared_;}
@@ -104,8 +104,8 @@ private:
     bool initAttr(pthread_mutexattr_t & attr){
         if(pthread_mutexattr_init(&attr))
             return false;
-        if(!pthread_mutexattr_setpshared(&attr,(pshared_ ? PTHREAD_PROCESS_SHARED : PTHREAD_PROCESS_PRIVATE)) &&
-            !pthread_mutexattr_settype(&attr,type_))
+        if(!pthread_mutexattr_setpshared(&attr, (pshared_ ? PTHREAD_PROCESS_SHARED : PTHREAD_PROCESS_PRIVATE)) &&
+            !pthread_mutexattr_settype(&attr, type_))
             return true;
         pthread_mutexattr_destroy(&attr);
         return false;
@@ -120,7 +120,7 @@ protected:
     mutable pthread_cond_t cond_;
 public:
     CCondition(){
-        pthread_cond_init(&cond_,0);
+        pthread_cond_init(&cond_, 0);
     }
     virtual ~CCondition(){
         pthread_cond_destroy(&cond_);
@@ -133,13 +133,13 @@ public:
         return !pthread_cond_broadcast(&cond_);
     }
     bool Wait(CMutex & m){
-        return !pthread_cond_wait(&cond_,&m.mutex_);
+        return !pthread_cond_wait(&cond_, &m.mutex_);
     }
     //等待指定的timeMs毫秒
-    bool TimeWait(CMutex & m,U32 timeMs){
+    bool TimeWait(CMutex & m, U32 timeMs){
         timespec ts;
-        Tools::GetTimespec(timeMs,ts);
-        return !pthread_cond_timedwait(&cond_,&m.mutex_,&ts);
+        Tools::GetTimespec(timeMs, ts);
+        return !pthread_cond_timedwait(&cond_, &m.mutex_, &ts);
     }
 };
 
@@ -151,7 +151,7 @@ protected:
     mutable pthread_rwlock_t lock_;
 public:
     CRWLock(){
-        pthread_rwlock_init(&lock_,0);
+        pthread_rwlock_init(&lock_, 0);
     }
     ~CRWLock(){
         pthread_rwlock_destroy(&lock_);
@@ -167,8 +167,8 @@ public:
     //在指定的timeMs毫秒内如果不能rdlock,返回false
     bool TimeReadLock(U32 timeMs) const{
         timespec ts;
-        Tools::GetTimespec(timeMs,ts);
-        return !pthread_rwlock_timedrdlock(&lock_,&ts);
+        Tools::GetTimespec(timeMs, ts);
+        return !pthread_rwlock_timedrdlock(&lock_, &ts);
     }
     void WriteLock() throw(std::runtime_error){
         int eno = pthread_rwlock_wrlock(&lock_);
@@ -181,8 +181,8 @@ public:
     //在指定的timeMs毫秒内如果不能wrlock,返回false
     bool TimeWriteLock(U32 timeMs){
         timespec ts;
-        Tools::GetTimespec(timeMs,ts);
-        return !pthread_rwlock_timedwrlock(&lock_,&ts);
+        Tools::GetTimespec(timeMs, ts);
+        return !pthread_rwlock_timedwrlock(&lock_, &ts);
     }
     void Unlock() const{
         pthread_rwlock_unlock(&lock_);
@@ -199,7 +199,7 @@ protected:
 public:
     explicit CSpinLock(int pshared = false){
         int ps = (pshared ? PTHREAD_PROCESS_SHARED : PTHREAD_PROCESS_PRIVATE);
-        pthread_spin_init(&lock_,ps);
+        pthread_spin_init(&lock_, ps);
     }
     ~CSpinLock(){
         pthread_spin_destroy(&lock_);
@@ -281,10 +281,10 @@ class CGuard
 public:
     typedef LockT                   lock_type;
     typedef CLockAdapter<lock_type> adapter_type;
-    explicit CGuard(lock_type & r,bool bWrite = true):lock_(&r){
+    explicit CGuard(lock_type & r, bool bWrite = true):lock_(&r){
         bWrite ? adapter_type().WriteLock(r) : adapter_type().ReadLock(r);
     }
-    explicit CGuard(lock_type * p,bool bWrite = true):lock_(p){
+    explicit CGuard(lock_type * p, bool bWrite = true):lock_(p){
         if(lock_)
             bWrite ? adapter_type().WriteLock(*p) : adapter_type().ReadLock(*p);
     }
@@ -311,7 +311,7 @@ struct COnceGuard
         , once_(PTHREAD_ONCE_INIT)
     {}
     void RunOnce(__Function func = 0){
-        pthread_once(&once_,(func ? func : func_));
+        pthread_once(&once_, (func ? func : func_));
     }
 private:
     __Function      func_;

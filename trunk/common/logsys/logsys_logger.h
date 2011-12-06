@@ -9,7 +9,6 @@
         20081014    Ôö¼Ó
 //*/
 
-#include "logsys_logstream.h"
 #include "logsys_logformat.h"
 
 DZLOG_BEGIN
