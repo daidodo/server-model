@@ -37,3 +37,5 @@ endif
 endif
 
 .PHONY: all release comm commrelease clean
+
+.SECONDARY: $(OBJ)
