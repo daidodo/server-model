@@ -6,11 +6,11 @@
     方便使用,隐藏底层实现,便于移植
         CSemaphore      信号量
 //*/
-    
+
 #include <semaphore.h>
 #include <errno.h>
 #include <stdexcept>        //std::runtime_error
-#include <common/Tools.h>   //Tools::ErrorMsg
+#include <common/Tools.h>   //Tools::ErrorMsg, Tools::GetTimespec
 
 NS_SERVER_BEGIN
 
@@ -35,18 +35,20 @@ public:
             throw std::runtime_error(Tools::ErrorMsg(errno).c_str());
     }
     bool TryWait(){
-        return !sem_trywait(&sem_);
+        return (0 == sem_trywait(&sem_));
     }
+#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
     //在指定的timeMs毫秒内如果不能获取信号量,返回false
     bool TimeWait(U32 timeMs){
-        timespec ts;
-        Tools::GetTimespec(timeMs,ts);
-        return !sem_timedwait(&sem_,&ts);
+        struct timespec ts;
+        Tools::GetTimespec(timeMs, ts);
+        return (0 == sem_timedwait(&sem_, &ts));
     }
+#endif
     //获取信号量的当前值；返回-1表示获取失败
     int GetVal() const{
         int ret = -1;
-        if(!sem_getvalue(&sem_,&ret) && ret < 0)
+        if(0 == sem_getvalue(&sem_,&ret) && ret < 0)
             ret = 0;
         return ret;
     }
