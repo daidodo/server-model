@@ -96,7 +96,7 @@ public:
         assert(IsValid());
         return MySQLHelp::_2str(field_->org_table);
     }
-    //Org table name, if table was an alias
+    //DB name
     __DZ_STRING DB() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->db);
