@@ -10,6 +10,8 @@
 #include <cstddef>          //std::ptrdiff_t
 #include <common/Tools.h>   //Tools::Construct,Tools::DestroyArray
 
+NS_SERVER_BEGIN
+
 template<class T,class Alloc = __DZ_ALLOC<T> >
 class CRingBuf
 {
@@ -31,7 +33,6 @@ public:
         , capa_(capacity + 1)
         , head_(0)
         , tail_(0)
-        , top_size_(0)
     {init();}
     ~CRingBuf(){uninit();}
     size_type Capacity() const{return capa_ - 1;}
@@ -79,5 +80,7 @@ private:
     volatile size_type  head_;
     volatile size_type  tail_;
 };
+
+NS_SERVER_END
 
 #endif
