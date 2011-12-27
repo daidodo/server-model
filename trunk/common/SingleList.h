@@ -12,8 +12,10 @@
                     修正eraseNodeAfter和eraseChainAfter里未更改phead_->tail_的bug
         20080912    增加append函数
         20080917    增加copy构造，赋值等函数，完成应有的接口
+        20111227    增加assert
 //*/
 
+#include <cassert>
 #include <common/Tools.h>   //Tools::CInterTypeTag,Tools::Destroy
 #include <common/impl/SingleList_impl.h>
 
@@ -88,11 +90,13 @@ public:
         eraseChainAfter(before_first.ptr_,last.ptr_);
     }
     iterator insert_after(iterator pos,const_reference v){
+        assert(pos.ptr_);
         __node_ptr node = createNode(v);
         insertNodeAfter(pos.ptr_,node);
         return node;
     }
     void insert_after(iterator pos,size_type elemSz,const_reference v){
+        assert(pos.ptr_);
         __node_ptr head,tail;
         createChainFill(head,tail,elemSz,v);
         insertChainAfter(pos.ptr_,head,tail,elemSz);
@@ -185,6 +189,7 @@ private:
     }
     template<class InputIter>
     void insertAfterAux(iterator pos,InputIter first,InputIter last,std::input_iterator_tag){
+        assert(pos.ptr_);
         if(first != last){
             __node_ptr head,tail;
             size_type sz = createChainCopy(head,tail,first,last);
@@ -193,6 +198,7 @@ private:
     }
 
     void eraseNodeAfter(__node_ptr pos){
+        assert(phead_ && pos);
         __node_ptr cur = pos->next_;
         if(cur){
             pos->next_ = cur->next_;
@@ -203,6 +209,7 @@ private:
         }
     }
     void eraseChainAfter(__node_ptr pos,__node_ptr last){
+        assert(phead_ && pos);
         __node_ptr first = pos->next_;
         pos->next_ = last;
         if(!last)
@@ -254,6 +261,7 @@ private:
         insertChainAfter(pos,node,node,1);
     }
     void insertChainAfter(__node_ptr pos,__node_ptr head,__node_ptr tail,size_type sz) __DZ_NOTHROW{
+        assert(phead_ && pos && head && tail);
         tail->next_ = pos->next_;
         pos->next_ = head;
         if(!tail->next_)

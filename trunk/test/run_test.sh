@@ -7,6 +7,8 @@ fi
 
 echo "----TEST begin----"
 
+ulimit -c unlimited
+
 for test in "$@" ; do
   if ! $test ; then
     echo "$test failed----"
