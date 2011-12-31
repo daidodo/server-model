@@ -9,14 +9,13 @@
         CUdpCmdData
 //*/
 
-#include <common/impl/Config.h>
 #include <vector>
 #include <list>
 #include <algorithm>
-#include <common/Tools.h>
-#include <common/Sockets.h>
-#include <common/Mutex.h>
-#include <server/Command.h>
+#include <Tools.h>
+#include <Sockets.h>
+#include <Mutex.h>
+#include "../Command.h"
 
 NS_SERVER_BEGIN
 

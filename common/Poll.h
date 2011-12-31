@@ -6,11 +6,10 @@
         CPoll
 //*/
 
-#include <common/impl/Config.h>
 #include <sys/poll.h>
 #include <vector>
 #include <map>
-#include <common/impl/Config.h>
+#include <impl/Config.h>
 
 NS_SERVER_BEGIN
 

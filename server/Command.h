@@ -1,10 +1,8 @@
 #ifndef DOZERG_COMMAND_H_20071219
 #define DOZERG_COMMAND_H_20071219
 
-#include <common/impl/Config.h>
-#include <deque>
-#include <server/CommandBase.h>
-#include <server/CmdStructs.h>
+#include "CommandBase.h"
+#include "CmdStructs.h"
 
 NS_SERVER_BEGIN
 

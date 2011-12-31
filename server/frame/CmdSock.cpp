@@ -1,8 +1,7 @@
-#include <common/impl/Config.h>
 #include <errno.h>
 #include <sys/socket.h>
-#include <common/Logger.h>
-#include <common/DataStream.h>
+#include <Logger.h>
+#include <DataStream.h>
 #include "CmdSock.h"
 
 NS_SERVER_BEGIN

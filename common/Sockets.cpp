@@ -1,4 +1,3 @@
-#include <common/impl/Config.h>
 #include <arpa/inet.h>      //inet_ntop,sockaddr_in
 #include <sys/poll.h>       //poll
 #include <netdb.h>          //getaddrinfo,freeaddrinfo,gai_strerror
@@ -7,9 +6,9 @@
 #include <sys/ioctl.h>      //SIOCGIFADDR
 #include <net/if.h>         //ifreq
 #include <unistd.h>
-#include <sstream>          //std::ostringstream
+#include <sstream>
 #include <cstring>          //memset
-#include <cassert>          //assert
+#include <cassert>
 #include "Sockets.h"
 
 NS_SERVER_BEGIN

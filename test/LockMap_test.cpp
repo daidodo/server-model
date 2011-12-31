@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/LockMap.h>
+#include <LockMap.h>
 
 static bool testLockSet()
 {

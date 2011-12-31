@@ -7,13 +7,12 @@
         CBPlusTree  B+Ê÷£¬»¹Î´Íê³É
 //*/
 
-#include <common/impl/Config.h>
 #include <cassert>
 #include <utility>                  //std::pair,std::make_pair
 #include <algorithm>                //std::swap,std::equal,std::lexicographical_compare,std::copy,std::copy_backward,std::lower_bound,std::upper_bound
 #include <functional>               //std::less
-#include <common/Tools.h>           //Tools::Construct,Tools::CIdentity,Tools::Destroy
-#include <common/impl/Tree_impl.h>  //std::reverse_iterator,std::distance
+#include <Tools.h>           //Tools::Construct,Tools::CIdentity,Tools::Destroy
+#include <impl/Tree_impl.h>  //std::reverse_iterator,std::distance
 
 NS_SERVER_BEGIN
 

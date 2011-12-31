@@ -1,7 +1,6 @@
-#include <common/impl/Config.h>
-#include <common/Logger.h>
-#include <common/IterAdapter.h>
-#include <common/Tools.h>
+#include <Logger.h>
+#include <IterAdapter.h>
+#include <Tools.h>
 #include "TcpServer.h"
 
 NS_SERVER_BEGIN

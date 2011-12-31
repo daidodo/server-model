@@ -9,7 +9,6 @@
     CBPlusTree的内部实现
 //*/
 
-#include <common/impl/Config.h>
 #include <iterator>     //for std::bidirectional_iterator_tag
 
 //forward declaration

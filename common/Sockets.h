@@ -11,12 +11,11 @@
         CUdpSocket
 //*/
 
-#include <common/impl/Config.h>
-#include <errno.h>          //errno
+#include <errno.h>
 #include <sys/socket.h>     //sockaddr
 #include <vector>           //std::vector
 #include <string>           //std::string
-#include <common/Tools.h>   //Tools::ErrorMsg
+#include <Tools.h>   //Tools::ErrorMsg
 
 NS_SERVER_BEGIN
 

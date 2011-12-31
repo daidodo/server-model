@@ -1,13 +1,10 @@
 #ifndef DZ_LOGSYS_LOG_FORMAT_20071023
 #define DZ_LOGSYS_LOG_FORMAT_20071023
 
-#include <common/impl/Config.h>
-#include <vector>
 #include <string>
 #include <sstream>
-#include <time.h>
 #include <pthread.h>            //pthread_self
-#include <common/Tools.h>
+#include <Tools.h>
 #include "logsys_logstream.h"
 
 IMPL_BEGIN

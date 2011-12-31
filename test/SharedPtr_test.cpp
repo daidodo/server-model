@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/SharedPtr.h>
+#include <SharedPtr.h>
 
 struct CTest
 {

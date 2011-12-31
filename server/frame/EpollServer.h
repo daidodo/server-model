@@ -1,12 +1,11 @@
 #ifndef DOZERG_EPOLL_SERVER_H_20080908
 #define DOZERG_EPOLL_SERVER_H_20080908
 
-#include <common/impl/Config.h>
-#include <common/Threads.h>
-#include <server/MainServer.h>
+#include <Threads.h>
 #if __USE_EPOLL
-#   include <common/Epoll.h>
+#   include <Epoll.h>
 #endif
+#include "../MainServer.h"
 
 NS_SERVER_BEGIN
 

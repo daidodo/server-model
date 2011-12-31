@@ -1,6 +1,5 @@
-#include <common/impl/Config.h>
 #include <fstream>
-#include <common/Logger.h>
+#include <Logger.h>
 #include "AcceptServer.h"
 
 NS_SERVER_BEGIN

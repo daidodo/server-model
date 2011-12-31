@@ -7,11 +7,10 @@
         CSemaphore      –≈∫≈¡ø
 //*/
 
-#include <common/impl/Config.h>
 #include <semaphore.h>
 #include <errno.h>
 #include <stdexcept>        //std::runtime_error
-#include <common/Tools.h>   //Tools::ErrorMsg, Tools::GetTimespec
+#include <Tools.h>   //Tools::ErrorMsg, Tools::GetTimespec
 
 NS_SERVER_BEGIN
 

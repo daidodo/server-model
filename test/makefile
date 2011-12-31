@@ -27,15 +27,20 @@ clean:
 	$(RM) $(foreach dir, $(SRC_DIR), $(dir)/*.o $(dir)/*.d)
 	$(RM) $(TARGET)
 
+cleanall: clean
+	$(RM) tags
+
 run:
 	@./run_test.sh $(TARGET)
 
 ifneq (${MAKECMDGOALS},clean)
+ifneq (${MAKECMDGOALS},cleanall)
 ifneq (${MAKECMDGOALS},run)
 sinclude $(DEP)
 endif
 endif
+endif
 
-.PHONY: all release comm commrelease clean
+.PHONY: all release comm commrelease clean cleanall run
 
 .SECONDARY: $(OBJ)

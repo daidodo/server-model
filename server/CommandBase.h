@@ -1,8 +1,8 @@
 #ifndef DOZERG_COMMAND_BASE_H_20080103
 #define DOZERG_COMMAND_BASE_H_20080103
 
-#include <common/impl/Config.h>
-#include <common/DataStream.h>
+#include <string>
+#include <DataStream.h>
 
 NS_SERVER_BEGIN
 

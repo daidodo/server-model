@@ -1,6 +1,5 @@
-#include <common/impl/Config.h>
-#include <common/Logger.h>
-#include <common/IterAdapter.h>
+#include <Logger.h>
+#include <IterAdapter.h>
 #include "PollServer.h"
 
 NS_SERVER_BEGIN

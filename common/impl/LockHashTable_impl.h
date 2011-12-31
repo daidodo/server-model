@@ -10,10 +10,9 @@
         20090321    修改__hash_table_pointer_base包含__hashT_node_impl指针，而不是__hashT_node_impl::data_的指针
 //*/
 
-#include <common/impl/Config.h>
 #include <cassert>
 #include <vector>
-#include <common/Mutex.h>
+#include <Mutex.h>
 
 NS_IMPL_BEGIN
 

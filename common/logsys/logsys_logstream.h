@@ -1,7 +1,6 @@
 #ifndef DZ_LOGSYS_LOG_STREAM_20071023
 #define DZ_LOGSYS_LOG_STREAM_20071023
 
-#include <common/impl/Config.h>
 #include <string>
 #include <sstream>
 #include "logsys_singlewriter.h"

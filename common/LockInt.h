@@ -12,12 +12,11 @@
         20080920    使用模板参数决定锁类型
 //*/
 
-#include <common/impl/Config.h>
 #include <map>
 #include <list>
 #include <algorithm>    //std::for_each
 #include <utility>      //std::make_pair
-#include <common/Mutex.h>
+#include <Mutex.h>
 
 NS_SERVER_BEGIN
 

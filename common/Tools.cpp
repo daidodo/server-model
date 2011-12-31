@@ -1,4 +1,3 @@
-#include <common/impl/Config.h>
 #include <arpa/inet.h>      //struct in_addr,htonl,inet_ntop,AF_INET,ntohl
 #include <sys/time.h>
 #include <sys/resource.h>   //struct rlimit,getrlimit,RLIMIT_NOFILE,RLIM_INFINITY,setrlimit
@@ -386,7 +385,8 @@ namespace Tools{
             for(int i = 3;i < NOFILE;++i)
                 close(i);
         }
-        chdir("/");
+        if(chdir("/") < 0)
+            exit(1);
         umask(0);
     }
 

@@ -18,10 +18,10 @@ test:
 testrelease:
 	$(MAKE) -C $(TESTDIR) release
 
-cleantest:
-	$(MAKE) -C $(TESTDIR) clean
-
-cleanall: clean cleantest
+cleanall:
+	$(MAKE) -C $(COMMONDIR) cleanall
+	$(MAKE) -C $(SERVERDIR) cleanall
+	$(MAKE) -C $(TESTDIR) cleanall
 	$(RM) tags
 
 love: clean all
@@ -29,5 +29,5 @@ love: clean all
 lines:
 	@find . -regex ".*\.[ch]p?p?" | xargs wc -l
 
-.PHONY : all clean test cleantest cleanall love lines release
+.PHONY : all clean test cleanall love lines release
 

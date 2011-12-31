@@ -6,10 +6,9 @@
         CCompressorZLib
 //*/
 
-#include <common/impl/Config.h>
 #include <vector>
 #include <string>
-#include <common/Tools.h>
+#include <Tools.h>   //Tools::HostByteOrder, Tools::SwapByteOrder
 
 NS_EXTLIB_BEGIN
 #include <zlib.h>

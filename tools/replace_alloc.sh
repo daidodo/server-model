@@ -1,12 +1,21 @@
 #!/bin/bash
 
+printUsage()
+{
+  echo "Usage:"
+  echo "    $0 -alloc FILES         replace allocator strings"
+  echo "    $0 -common FILES        replace common dir strings"
+}
+
 if [ $# -lt 1 ] ; then
-  echo "Usage: $0 FILES"
+  printUsage
   exit 1
 fi
 
-for file in $* ; do
-  echo "handle $file"
+rep_alloc()
+{
+  file="$1"
+  echo "process $file"
   sed -r -e 's/__DZ_VECTOR\(([^\)]+)\)/std::vector<\1>/g' $file > $file.tmp.1
   sed -r -e 's/__DZ_MAP\(([^\)]+)\)/std::map<\1>/g' $file.tmp.1 > $file.tmp.2
   sed -e 's/__DZ_STRING/std::string/g' $file.tmp.2 > $file.tmp.3
@@ -19,4 +28,31 @@ for file in $* ; do
   sed -r -e 's/__DZ_SET\(([^\)]+)\)/std::set<\1>/g' $file.tmp.9 > $file.tmp.10
   mv $file.tmp.10 $file
   rm -f $file.tmp*
+}
+
+rep_common()
+{
+  file="$1"
+  echo "process $file"
+  sed -e 's$include <common/$include <$g' $file > $file.tmp.1
+  mv $file.tmp.1 $file
+  rm -f $file.tmp*
+}
+
+OPT="$1"
+shift
+
+for file in $* ; do
+  case "$OPT" in
+    "-alloc" )
+      rep_alloc $file
+      ;;
+    "-common" )
+      rep_common $file
+      ;;
+    * )
+      printUsage
+      exit 1
+      ;;
+  esac
 done

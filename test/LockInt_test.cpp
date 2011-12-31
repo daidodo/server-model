@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/LockInt.h>
+#include <LockInt.h>
 
 template<class Int>
 static bool testLockIntRange()

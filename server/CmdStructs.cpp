@@ -1,6 +1,4 @@
-#include <common/impl/Config.h>
-#include <cassert>
-#include <common/Logger.h>
+#include <Logger.h>
 #include "CmdStructs.h"
 
 NS_SERVER_BEGIN

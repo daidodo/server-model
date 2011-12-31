@@ -1,7 +1,6 @@
 #ifndef DOZERG_ITERATOR_ADAPTER_IMPL_H_20081013
 #define DOZERG_ITERATOR_ADAPTER_IMPL_H_20081013
 
-#include <common/impl/Config.h>
 #include <iterator>     //std::iterator_traits
 #include <functional>   //std::unary_function
 

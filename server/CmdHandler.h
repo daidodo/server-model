@@ -1,10 +1,8 @@
 #ifndef DOZERG_COMMAND_HANDLER_H_20071220
 #define DOZERG_COMMAND_HANDLER_H_20071220
 
-#include <common/impl/Config.h>
-#include <common/Threads.h>
-#include <server/MainServer.h>
-#include <common/LockHashMap.h>
+#include <Threads.h>
+#include "MainServer.h"
 
 NS_SERVER_BEGIN
 

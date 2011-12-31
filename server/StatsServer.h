@@ -1,9 +1,9 @@
 #ifndef DOZERG_STATS_SERVER_H_20080121
 #define DOZERG_STATS_SERVER_H_20080121
 
-#include <common/impl/Config.h>
-#include <common/Threads.h>
-#include <server/MainServer.h>
+#include <string>
+#include <Threads.h>
+#include "MainServer.h"
 
 NS_SERVER_BEGIN
 

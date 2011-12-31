@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/RingBuffer.h>
+#include <RingBuffer.h>
 
 static bool testRingBuf()
 {

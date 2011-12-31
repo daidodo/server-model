@@ -1,8 +1,7 @@
 #ifndef DZ_LOGSYS_SIGNLE_WRITER_20071020
 #define DZ_LOGSYS_SIGNLE_WRITER_20071020
 
-#include <common/impl/Config.h>
-#include <common/Configuration.h>
+#include <Configuration.h>
 #include "logsys_mutexwriter.h"
 
 IMPL_BEGIN

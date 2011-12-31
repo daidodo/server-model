@@ -1,12 +1,11 @@
 #ifndef DOZERG_EPOLL_H_20080507
 #define DOZERG_EPOLL_H_20080507
 
-#include <common/impl/Config.h>
 #include <sys/epoll.h>
-#include <cstring>          //memset
 #include <vector>
 #include <set>
-#include <common/FdMap.h>   //CFdMap
+#include <cstring>          //memset
+#include <FdMap.h>   //CFdMap
 
 /*
     epoll操作封装,采用ET模式

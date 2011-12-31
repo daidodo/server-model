@@ -1,8 +1,7 @@
-#include <common/impl/Config.h>
 #include "CompressorQuickLZ.h"
 
 NS_EXTLIB_BEGIN
-#include <common/quicklz/quicklz.c>
+#include <quicklz/quicklz.c>
 #ifdef STREAMING_MODE
 #   error STREAMING_MODE flag cannot be used in CCompressorQuickLZ
 #endif

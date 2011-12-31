@@ -1,7 +1,6 @@
-#include <common/impl/Config.h>
 #include <iostream>
-#include <common/Logger.h>
-#include <common/IterAdapter.h>
+#include <Logger.h>
+#include <IterAdapter.h>
 #include "EpollServer.h"
 
 NS_SERVER_BEGIN

@@ -6,11 +6,11 @@
         CCompressorLZO
 //*/
 
-#include <common/impl/Config.h>
 #include <vector>
-#include <cstring>
-#include <common/Tools.h>
-#include <common/lzo/minilzo.h>
+#include <string>
+#include <cstring>          //memcpy
+#include <Tools.h>   //Tools::SwapByteOrder, Tools::HostByteOrder
+#include <lzo/minilzo.h>
 
 NS_SERVER_BEGIN
 
