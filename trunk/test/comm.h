@@ -1,6 +1,7 @@
 #ifndef DOZERG_COMM_H_20111030
 #define DOZERG_COMM_H_20111030
 
+#include <common/impl/Config.h>
 #include <cassert>
 #include <string>
 #include <vector>

@@ -12,18 +12,25 @@
         20081018    把实现代码转移到.h文件里，去掉Configuration.cpp文件
 //*/
 
+#include <common/impl/Config.h>
 #include <map>
 #include <limits>           //std::numeric_limits
 #include <string>
+#include <sstream>
 #include <fstream>          //std::ifstream
 #include <cstdlib>          //atoi
 #include <common/Tools.h>   //Tools::Trim
 
 /*
 配置文件格式：
+---- FORMAT_EQUAL ----
 [SPACE] # comments [ENDLINE]
 [SPACE] expression [SPACE] = [SPACE] results [SPACE] [# comments] [ENDLINE]
 [SPACE] expression [SPACE] = [SPACE] [# comments] [ENDLINE]
+[SPACE] expression [SPACE] [# comments] [ENDLINE]
+---- FORMAT_SPACE ----
+[SPACE] # comments [ENDLINE]
+[SPACE] expression [SPACE] results [SPACE] [# comments] [ENDLINE]
 [SPACE] expression [SPACE] [# comments] [ENDLINE]
 //*/
 
@@ -31,42 +38,38 @@ NS_SERVER_BEGIN
 
 class CConfiguration
 {
-    typedef __DZ_MAP(__DZ_STRING, __DZ_STRING)   container_type;
-    __DZ_STRING     conf_file_;
-    container_type  content_;
+    typedef std::map<std::string, std::string>   container_type;
 public:
+    static const int FORMAT_EQUAL = 0;
+    static const int FORMAT_SPACE = 1;
     //得到配置文件名
-    __DZ_STRING GetFileName() const{return conf_file_;}
+    std::string GetFileName() const{return conf_file_;}
     //清除读入的配置项
     void Clear(){content_.clear();}
     //从文件中读取配置项
-    bool Load(const char * file_name){
+    bool Load(const char * file_name, int format = FORMAT_EQUAL){
         if(!file_name)
             return false;
         std::ifstream inf(file_name);
         if(!inf.is_open())
             return false;
         Clear();
-        for(__DZ_STRING line;!inf.eof();){
+        for(std::string line;!inf.eof();){
             std::getline(inf, line);
-            line = line.substr(0, line.find_first_of("#"));
-            if(line.empty())
-                continue;
-            __DZ_STRING::size_type i = line.find_first_of("=");
-            content_[Tools::Trim(line.substr(0, i))] = Tools::Trim((__DZ_STRING::npos == i ? "" : line.substr(i + 1)));
+            parseFormat(line.substr(0, line.find_first_of("#")), format);
         }
         conf_file_ = file_name;
         return true;
     }
     //得到配置项的字符串值
-    __DZ_STRING GetString(const __DZ_STRING & key, const __DZ_STRING & strdefault = "") const{
+    std::string GetString(const std::string & key, const std::string & strdefault = "") const{
         container_type::const_iterator wh = content_.find(key);
         if(wh == content_.end())
             return strdefault;
         return wh->second;
     }
     //得到配置项的整数值
-    int GetInt(const __DZ_STRING & key, int ndefault = 0,
+    int GetInt(const std::string & key, int ndefault = 0,
         int min = std::numeric_limits<int>::min(),
         int max = std::numeric_limits<int>::max()) const
     {
@@ -89,6 +92,27 @@ public:
         }
         return (ret < min ? min : (ret > max ? max : ret));
     }
+private:
+    void parseFormat(const std::string & line, int format){
+        if(line.empty())
+            return;
+        switch(format){
+            case FORMAT_EQUAL:{
+                std::string::size_type i = line.find_first_of("=");
+                content_[Tools::Trim(line.substr(0, i))] = Tools::Trim((std::string::npos == i ? "" : line.substr(i + 1)));
+                break;}
+            case FORMAT_SPACE:{
+                std::istringstream iss(line);
+                std::string key, val;
+                iss>>key>>val;
+                if(!key.empty())
+                    content_[key] = val;
+                break;}
+            default:;
+        }
+    }
+    std::string     conf_file_;
+    container_type  content_;
 };
 
 NS_SERVER_END

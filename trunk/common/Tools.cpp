@@ -1,26 +1,31 @@
-#include <sstream>          //std::ostringstream
-#include <cctype>           //std::isspace
-#include <algorithm>        //std::min
-#include <cstring>
-#include <cassert>
+#include <common/impl/Config.h>
 #include <arpa/inet.h>      //struct in_addr,htonl,inet_ntop,AF_INET,ntohl
 #include <sys/time.h>
 #include <sys/resource.h>   //struct rlimit,getrlimit,RLIMIT_NOFILE,RLIM_INFINITY,setrlimit
 #include <sys/types.h>
 #include <sys/sysctl.h>
+#include <sys/stat.h>
+#include <sys/param.h>
+#include <signal.h>
+#include <unistd.h>
+#include <sstream>          //std::ostringstream
+#include <cctype>           //std::isspace
+#include <algorithm>        //std::min
+#include <cstring>
+#include <cassert>
 #include "Tools.h"
 
 NS_SERVER_BEGIN
 
 namespace Tools{
 
-    __DZ_STRING DumpHex(const char * v, size_t sz,char sep,bool hasLen)
+    std::string DumpHex(const char * v, size_t sz,char sep,bool hasLen)
     {
         const char DIGIT[] = "0123456789ABCDEF";
         assert(v);
-        __DZ_STRING ret;
+        std::string ret;
         if(hasLen){
-            __DZ_OSTRINGSTREAM oss;
+            std::ostringstream oss;
             oss<<"("<<sz<<")";
             ret = oss.str();
         }
@@ -34,7 +39,7 @@ namespace Tools{
         return ret;
     }
 
-    __DZ_STRING DumpStr(const char * v,size_t sz,char replace,bool hasLen)
+    std::string DumpStr(const char * v,size_t sz,char replace,bool hasLen)
     {
         const char DEFAULT = '.';
         const char TRAN_CHAR = '\\';
@@ -42,9 +47,9 @@ namespace Tools{
         assert(v);
         if(!IsReadable(replace))
             replace = DEFAULT;
-        __DZ_STRING ret;
+        std::string ret;
         if(hasLen){
-            __DZ_OSTRINGSTREAM oss;
+            std::ostringstream oss;
             oss<<"("<<sz<<")";
             ret = oss.str();
         }
@@ -65,15 +70,15 @@ namespace Tools{
         return ret;
     }
 
-    __DZ_STRING DumpVal(const char * v,size_t sz,int base,bool hasLen)
+    std::string DumpVal(const char * v,size_t sz,int base,bool hasLen)
     {
         const char TRAN_CHAR = '\\';
         const char FOLLOW_CHAR[] = "abtnvfr";
         const char DIGIT[] = "0123456789ABCDEF";
         assert(v);
-        __DZ_STRING ret;
+        std::string ret;
         if(hasLen){
-            __DZ_OSTRINGSTREAM oss;
+            std::ostringstream oss;
             oss<<"("<<sz<<")";
             ret = oss.str();
         }
@@ -108,12 +113,12 @@ namespace Tools{
     }
 
     //预读取前PRE_READ个字符，统计可读字符个数，然后选择合适的转换函数
-    __DZ_STRING Dump(const char * v,size_t sz,size_t show_sz,bool hasLen)
+    std::string Dump(const char * v,size_t sz,size_t show_sz,bool hasLen)
     {
         const size_t PRE_READ = 32;
-        __DZ_STRING ret;
+        std::string ret;
         if(hasLen){
-            __DZ_OSTRINGSTREAM oss;
+            std::ostringstream oss;
             oss<<"("<<sz<<")";
             ret = oss.str();
         }
@@ -133,11 +138,11 @@ namespace Tools{
         return ret;
     }
 
-    __DZ_STRING UnHex(const char * v,size_t sz)
+    std::string UnHex(const char * v,size_t sz)
     {
         typedef const char * __Ptr;
         assert(v);
-        __DZ_STRING ret;
+        std::string ret;
         ret.reserve(sz >> 1);
         int r = -1;
         for(__Ptr i = v,e = v + sz;i < e;++i){
@@ -158,7 +163,7 @@ namespace Tools{
     }
 
 
-    __DZ_STRING Trim(__DZ_STRING str)
+    std::string Trim(std::string str)
     {
         size_t i = 0;
         for(;i < str.length() && std::isspace(str[i]);++i);
@@ -199,7 +204,7 @@ namespace Tools{
     {
         assert(src && tarlen && target && tarlen);
         //compute next array
-        __DZ_VECTOR(ssize_t) next(tarlen,-1);
+        std::vector<ssize_t> next(tarlen,-1);
         size_t i = 0,j = tarlen - 1;
         for(ssize_t k = -1;i < j;){
             while(k != -1 && target[i] != target[k])
@@ -256,7 +261,7 @@ namespace Tools{
         return cur + elapse;
     }
 
-    __DZ_STRING TimeString(U32 timeS,__DZ_STRING format)
+    std::string TimeString(U32 timeS,std::string format)
     {
         const int SIZE = 255;
         time_t t = timeS;
@@ -267,14 +272,14 @@ namespace Tools{
         return buf;
     }
 
-    __DZ_STRING TimeStringUs(U64 timeUs,__DZ_STRING format)
+    std::string TimeStringUs(U64 timeUs,std::string format)
     {
-        __DZ_OSTRINGSTREAM oss;
+        std::ostringstream oss;
         oss<<" "<<(timeUs % 1000000)<<" us";
         return TimeString(U32(timeUs / 1000000),format) + oss.str();
     }
 
-    __DZ_STRING IPv4String(U32 ip,bool hostByteOrder)
+    std::string IPv4String(U32 ip,bool hostByteOrder)
     {
         struct in_addr in;
         in.s_addr = hostByteOrder ? htonl(ip) : ip;
@@ -284,7 +289,7 @@ namespace Tools{
         return buf;
     }
 
-    U32 IPv4FromStr(__DZ_STRING ip,bool hostByteOrder)
+    U32 IPv4FromStr(std::string ip,bool hostByteOrder)
     {
         struct in_addr in;
         if(inet_pton(AF_INET,ip.c_str(),&in) == 0)
@@ -344,9 +349,9 @@ namespace Tools{
         return true;
     }
 
-    __DZ_STRING ErrorMsg(int error_no)
+    std::string ErrorMsg(int error_no)
     {
-        __DZ_OSTRINGSTREAM os;
+        std::ostringstream os;
         os<<" errno="<<error_no<<" - ";
 #if defined __USE_XOPEN2K || defined __USE_MISC
         const int MAX_BUF = 256;
@@ -358,6 +363,83 @@ namespace Tools{
         return os.str();
     }
 
+    void Daemon(bool closeFiles)
+    {
+        // shield some signals
+        signal(SIGALRM, SIG_IGN);
+        signal(SIGINT,  SIG_IGN);
+        signal(SIGHUP,  SIG_IGN);
+        signal(SIGQUIT, SIG_IGN);
+        signal(SIGPIPE, SIG_IGN);
+        signal(SIGTTOU, SIG_IGN);
+        signal(SIGTTIN, SIG_IGN);
+        signal(SIGCHLD, SIG_IGN);
+        signal(SIGTERM, SIG_IGN);
+        // fork child process
+        if(fork())
+            exit(0);
+        // creates  a new session
+        if(setsid() == -1)
+            exit(1);
+        //do NOT close files
+        if(closeFiles){
+            for(int i = 3;i < NOFILE;++i)
+                close(i);
+        }
+        chdir("/");
+        umask(0);
+    }
+
+    std::string GetHost(const std::string & url)
+    {
+        size_t from = url.find("//");
+        if(std::string::npos == from)
+            return "";
+        from += 2;
+        size_t to = url.find('/', from);
+        if(std::string::npos == to)
+            to = url.size();
+        to -= from;
+        if(!to)
+            return "";
+        return url.substr(from, to);
+    }
+
+    std::string UrlEncode(const std::string & url)
+    {
+        const char DIGIT[] = "0123456789ABCDEF";
+        std::ostringstream oss;
+        for(std::string::const_iterator i = url.begin();i != url.end();++i){
+            if(isalnum(*i) ||
+                    *i == '-' ||
+                    *i == '_' ||
+                    *i == '.' ||
+                    *i == '~')
+                oss<<*i;
+            else if(*i == ' ')
+                oss<<'+';
+            else
+                oss<<'%'<<DIGIT[*i >> 4]<<DIGIT[*i & 0xF];
+        }
+        return oss.str();
+    }
+
+    std::string UrlDecode(const std::string & url)
+    {
+        std::ostringstream oss;
+        for(std::string::const_iterator i = url.begin();i != url.end();++i){
+            if(*i == '%'){
+                if(i + 2 < url.end()){
+                    oss<<char((UnHexChar(*(i + 1)) << 4) + UnHexChar(*(i + 2)));
+                    i += 2;
+                }//else format error
+            }else if(*i == '+')
+                oss<<' ';
+            else
+                oss<<*i;
+        }
+        return oss.str();
+    }
 
 }//namespace Toos
 

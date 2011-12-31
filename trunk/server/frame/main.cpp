@@ -24,7 +24,7 @@
 
 static void test1()
 {
-    __DZ_STRING buf("这是一段中文的法定发得分啊都是阿德说法阿德福阿德说法");
+    std::string buf("这是一段中文的法定发得分啊都是阿德说法阿德福阿德说法");
 
     CInBitStream bs(buf);
     bs.SetSource(buf);

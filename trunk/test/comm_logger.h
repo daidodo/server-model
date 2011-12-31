@@ -1,3 +1,5 @@
+#include <common/impl/Config.h>
+
 class CTest
 {
     DECL_LOGGER(logger);

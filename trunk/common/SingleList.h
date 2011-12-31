@@ -15,13 +15,14 @@
         20111227    Ôö¼Óassert
 //*/
 
+#include <common/impl/Config.h>
 #include <cassert>
 #include <common/Tools.h>   //Tools::CInterTypeTag,Tools::Destroy
 #include <common/impl/SingleList_impl.h>
 
 NS_SERVER_BEGIN
 
-template<class T,class Alloc = __DZ_ALLOC<T> >
+template<class T,class Alloc = std::allocator<T> >
 class CSingleList
 {
 //typedefs:
@@ -97,7 +98,7 @@ public:
     }
     void insert_after(iterator pos,size_type elemSz,const_reference v){
         assert(pos.ptr_);
-        __node_ptr head,tail;
+        __node_ptr head = 0,tail = 0;
         createChainFill(head,tail,elemSz,v);
         insertChainAfter(pos.ptr_,head,tail,elemSz);
     }

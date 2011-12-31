@@ -1,9 +1,10 @@
+#include "comm.h"
+
 #ifndef LOGSYS
 #   define LOGSYS
 #endif
 #include <common/Logger.h>
 
-#include "comm.h"
 #include "comm_logger.h"
 
 int main()

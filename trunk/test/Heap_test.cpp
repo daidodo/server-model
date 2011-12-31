@@ -1,6 +1,6 @@
-#include <common/Heap.h>
-
 #include "comm.h"
+
+#include <common/Heap.h>
 
 #define MAX_VAL     100000
 #define HEAP_SZ     1000

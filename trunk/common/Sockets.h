@@ -1,12 +1,6 @@
 #ifndef DOZERG_SOCKTS_H_20080229
 #define DOZERG_SOCKTS_H_20080229
 
-#include <errno.h>          //errno
-#include <sys/socket.h>     //sockaddr
-#include <vector>           //std::vector
-#include <string>           //std::string
-#include <common/Tools.h>   //Tools::ErrorMsg
-
 /*
     对网络socket的简单包装
     隐藏了IPv4和IPv6协议相关性
@@ -16,6 +10,13 @@
         CListenSocket   tcp服务器端监听socket
         CUdpSocket
 //*/
+
+#include <common/impl/Config.h>
+#include <errno.h>          //errno
+#include <sys/socket.h>     //sockaddr
+#include <vector>           //std::vector
+#include <string>           //std::string
+#include <common/Tools.h>   //Tools::ErrorMsg
 
 NS_SERVER_BEGIN
 
@@ -37,21 +38,22 @@ class CSockAddr
     typedef struct addrinfo         __AI;
     enum EAddrType{ADDR_SS,ADDR_SA4,ADDR_SA6};
     static int gai_errno;
-    __DZ_VECTOR(char) sa_;
+    std::vector<char> sa_;
 public:
-    static __DZ_STRING ErrMsg();
+    static std::string ErrMsg();
     CSockAddr(){}
-    CSockAddr(__DZ_STRING ip,__DZ_STRING port){     //ip和port必须是地址和端口号，而不能是主机名和服务名
+    CSockAddr(const std::string & ip,const std::string & port){     //ip和port必须是地址和端口号，而不能是主机名和服务名
         SetAddr(ip,port);
     }
-    CSockAddr(__DZ_STRING ip,U16 port,bool hostByteOrder = true){
+    CSockAddr(const std::string & ip,U16 port,bool hostByteOrder = true){
         SetAddr(ip,port,hostByteOrder);
     }
-    __DZ_STRING ToString() const;
-    bool SetAddr(__DZ_STRING ip,__DZ_STRING port);  //ip和port必须是地址和端口号，而不能是主机名和服务名
-    bool SetAddr(__DZ_STRING ip,U16 port,bool hostByteOrder = true){
+    std::string ToString() const;
+    bool SetAddr(const std::string & ip,const std::string & port);  //ip和port必须是地址和端口号，而不能是主机名和服务名
+    bool SetAddr(const std::string & ip,U16 port,bool hostByteOrder = true){
         return SetAddr(ip,"") && SetPort(port,hostByteOrder);
     }
+	bool SetAddr(const std::string & eth);		//获取接口地址
     void SetIP(U32 ip4,bool hostByteOrder = true);
     void SetIP(const void * ip6);
     bool SetPort(U16 port,bool hostByteOrder = true);
@@ -80,10 +82,10 @@ public:
         UDP         //SOCK_DGRAM + IPPROTO_UDP
     };
     static const int INVALID_FD = -1;
-    static __DZ_STRING ErrMsg(){return Tools::ErrorMsg(errno);}
+    static std::string ErrMsg(){return Tools::ErrorMsg(errno);}
     CSocket();
     virtual ~CSocket();
-    int FD() const{return fd_;}
+    int Fd() const{return fd_;}
     bool IsValid() const{return fd_ != INVALID_FD;}
     bool SetLinger(bool on = true,int timeout = 0);
     bool SetBlock(bool on = true);
@@ -96,20 +98,20 @@ public:
     size_t GetRecvSize() const;
     void Close();
     ssize_t RecvData(char * buf,size_t sz,bool block = false);
-    ssize_t RecvData(__DZ_VECTOR(char) & buf,size_t sz,bool block = false);
-    ssize_t RecvData(__DZ_STRING & buf,size_t sz,bool block = false);
+    ssize_t RecvData(std::vector<char> & buf,size_t sz,bool block = false);
+    ssize_t RecvData(std::string & buf,size_t sz,bool block = false);
     //在指定的时间timeoutMs内发送数据buf,必须是非阻塞模式
     //返回是否发送完成
     bool SendData(const char * buf,size_t sz,U32 timeoutMs);
-    bool SendData(const __DZ_VECTOR(char) & buf,U32 timeoutMs){
+    bool SendData(const std::vector<char> & buf,U32 timeoutMs){
         return SendData(&buf[0],buf.size(),timeoutMs);
     }
-    bool SendData(const __DZ_STRING & buf,U32 timeoutMs){
+    bool SendData(const std::string & buf,U32 timeoutMs){
         return SendData(&buf[0],buf.length(),timeoutMs);
     }
     //发送数据buf,直接调用send
     //返回：+n,实际发送的字节数；0,需要重试；-n，出错
-    ssize_t SendData(const __DZ_VECTOR(char) & buf);
+    ssize_t SendData(const std::vector<char> & buf);
 protected:
     bool getSock(int family,ESockType socktype);
     bool bindAddr(const CSockAddr & addr);
@@ -122,7 +124,7 @@ class CTcpConnSocket : public CSocket
     friend class CListenSocket;
     CSockAddr peerAddr_;
 public:
-    __DZ_STRING ToString() const;
+    std::string ToString() const;
     const CSockAddr & PeerAddr() const{return peerAddr_;}
     bool Connect(const CSockAddr & addr);
     bool Reconnect();   //close and connect again
@@ -136,7 +138,7 @@ public:
     static const int RET_SUCC = 0;
     static const int RET_EAGAIN = 1;
     static const int RET_ERROR = 2;
-    __DZ_STRING ToString() const;
+    std::string ToString() const;
     bool Listen(const CSockAddr & addr,bool block = true,int queueSz = DEFAULT_LISTEN_QUEUE);
     int Accept(CTcpConnSocket & sock) const;
 private:
@@ -147,15 +149,15 @@ class CUdpSocket : public CSocket
 {
     CSockAddr hostAddr_,peerAddr_;
 public:
-    __DZ_STRING ToString() const;
+    std::string ToString() const;
     bool Socket(const CSockAddr & addr);
     bool Bind(const CSockAddr & addr);      //指定本机地址hostAddr_
     bool Connect(const CSockAddr & addr);   //指定对方地址peerAddr_,可多次调用指定不同的对方地址
     const CSockAddr & HostAddr() const{return hostAddr_;}
     const CSockAddr & PeerAddr() const{return peerAddr_;}
     //from返回谁发送了数据,如果不需要,请使用CSocket::RecvData
-    ssize_t RecvData(CSockAddr & from,__DZ_VECTOR(char) & buf,size_t sz,bool block = false);
-    bool SendData(const CSockAddr & to,const __DZ_VECTOR(char) & buf,U32 timeoutMs);
+    ssize_t RecvData(CSockAddr & from,std::vector<char> & buf,size_t sz,bool block = false);
+    bool SendData(const CSockAddr & to,const std::vector<char> & buf,U32 timeoutMs);
     using CSocket::RecvData;
     using CSocket::SendData;
 private:

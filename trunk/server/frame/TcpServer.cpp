@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <common/Logger.h>
 #include <common/IterAdapter.h>
 #include <common/Tools.h>
@@ -45,7 +46,7 @@ int CTcpServer::doIt()
             DEBUG("tcp request from fd="<<fd<<", revent_="<<i->event_);
             __SockPtr pSock;
             fdSockMap_.GetSock(fd,pSock);
-            if(!pSock || pSock->FD() != fd){
+            if(!pSock || pSock->Fd() != fd){
                 WARN("fdSockMap[fd="<<fd<<"]="<<Tools::ToStringPtr(pSock)
                     <<" is invalid");
                 continue;
@@ -126,7 +127,7 @@ bool CTcpServer::sendCmdData(__CmdSock & sock,U32 & sc,U32 & se,U32 & su) const
 
 bool CTcpServer::recvCmdData(int fd,__SockPtr & pSock,U32 & cc,U32 & rc,U32 & hc,U32 & bc)
 {
-    typedef __DZ_VECTOR(CCmdBuf) __CmdData;
+    typedef std::vector<CCmdBuf> __CmdData;
     LOCAL_LOGGER(logger,"CTcpServer::recvCmdData");
     ASSERT(pSock,"pSock is null");
     __CmdData cmdData;

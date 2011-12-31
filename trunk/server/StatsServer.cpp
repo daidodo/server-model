@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <common/Logger.h>
 #include <server/frame/AcceptServer.h>
 #include <server/frame/EpollServer.h>
@@ -59,7 +60,7 @@ void CStatsServer::writeStats()
 {
     assert(acceptServer_ && (epollServer_ || pollServer_) && tcpServer_ && cmdHandler_);
     LOCAL_LOGGER(logger,"CStatsServer::writeStats");
-    __DZ_STRING fname = serverStatusFile_;
+    std::string fname = serverStatusFile_;
     if(!serverStatusTimestamp_.empty())
         fname += Tools::TimeString(time(0),serverStatusTimestamp_.c_str());
     std::ofstream outf(fname.c_str(),std::ios_base::app);

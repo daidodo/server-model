@@ -1,24 +1,24 @@
-#include <common/SharedPtr.h>
-
 #include "comm.h"
+
+#include <common/SharedPtr.h>
 
 struct CTest
 {
-    typedef __DZ_ALLOC<CTest> allocator_type;
+    typedef std::allocator<CTest> allocator_type;
     static int cnt;
     CTest(){++cnt;}
-    explicit CTest(const __DZ_STRING & s):s_(s){++cnt;}
+    explicit CTest(const std::string & s):s_(s){++cnt;}
     CTest(const CTest & a):s_(a.s_){++cnt;}
     ~CTest(){--cnt;}
     static CTest * GetObject(){
         CTest * ret = allocator_type().allocate(1);
         return new (ret) CTest;
     }
-    static CTest * GetObject(const __DZ_STRING & s){
+    static CTest * GetObject(const std::string & s){
         CTest * ret = allocator_type().allocate(1);
         return new (ret) CTest(s);
     }
-    __DZ_STRING s_;
+    std::string s_;
 };
 
 int CTest::cnt = 0;

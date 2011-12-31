@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <iostream>
 #include <fstream>
 #include <common/Logger.h>
@@ -105,7 +106,7 @@ void CMainServer::Reconfig()
     }
 }
 
-void CMainServer::ShowConfig(__DZ_STRING verInfo) const
+void CMainServer::ShowConfig(std::string verInfo) const
 {
     using namespace std;
     assert(acceptServer_ && (epollServer_ || pollServer_) && tcpServer_ && cmdHandler_);

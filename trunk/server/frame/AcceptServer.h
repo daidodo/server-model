@@ -1,6 +1,7 @@
 #ifndef DOZERG_ACCEPT_SERVER_H_20080908
 #define DOZERG_ACCEPT_SERVER_H_20080908
 
+#include <common/impl/Config.h>
 #include <common/Threads.h>
 #include <server/MainServer.h>
 
@@ -33,7 +34,7 @@ class CAcceptServer : public CThreadPool
     //members:
     __FdSockMap &   fdSockMap_;
     __FdEventQue &  addingFdQue_;
-    __DZ_STRING     ipstr_,port_;   //监听的ip和端口,不能重新配置
+    std::string     ipstr_,port_;   //监听的ip和端口,不能重新配置
     CListenSocket   listen_;        //监听socket
 public:
     __Stats * const stats_;

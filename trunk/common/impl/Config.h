@@ -56,3 +56,13 @@ typedef unsigned int    UINT;
 #   define __DZ_NOTHROW
 #endif
 
+//allocator choice
+#ifdef __GNUC__
+#   ifdef NDEBUG
+#       define _CXX_ALLOCATOR_H
+#       define __glibcxx_base_allocator __gnu_cxx::__mt_alloc
+#       include <ext/mt_allocator.h>
+#   endif
+
+#endif
+

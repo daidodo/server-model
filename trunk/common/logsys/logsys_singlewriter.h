@@ -1,6 +1,7 @@
 #ifndef DZ_LOGSYS_SIGNLE_WRITER_20071020
 #define DZ_LOGSYS_SIGNLE_WRITER_20071020
 
+#include <common/impl/Config.h>
 #include <common/Configuration.h>
 #include "logsys_mutexwriter.h"
 
@@ -11,7 +12,7 @@ IMPL_BEGIN
 class CSingleWriter : public CMutexWriter
 {
     //日期时间的格式可参考strftime
-    __DZ_STRING time_format_;
+    std::string time_format_;
     int         level_;
     ~CSingleWriter(){}
     CSingleWriter(){}
@@ -22,7 +23,7 @@ public:
         static CSingleWriter inst;
         return inst;
     }
-    void Config(const char * conf = 0){ //conf为配置文件名,为0时采用默认配置
+    void Config(const char * conf){ //conf为配置文件名,为0时采用默认配置
         CConfigItems item;
         if(conf){
             NS_SERVER::CConfiguration config;

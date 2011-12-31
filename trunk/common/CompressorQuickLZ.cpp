@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include "CompressorQuickLZ.h"
 
 NS_EXTLIB_BEGIN
@@ -13,42 +14,42 @@ CCompressorQuickLZ::CCompressorQuickLZ()
     : workmem_(SCRATCH_COMPRESS)
 {}
 
-int CCompressorQuickLZ::Compress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const
+int CCompressorQuickLZ::Compress(const std::vector<char> & input,std::vector<char> & output) const
 {
     return compressTemplate(input,output);
 }
 
-int CCompressorQuickLZ::Decompress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const
+int CCompressorQuickLZ::Decompress(const std::vector<char> & input,std::vector<char> & output) const
 {
     return decompressTemplate(input,output);
 }
 
-int CCompressorQuickLZ::Compress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const
+int CCompressorQuickLZ::Compress(const std::vector<unsigned char> & input,std::vector<unsigned char> & output) const
 {
     return compressTemplate(input,output);
 }
 
-int CCompressorQuickLZ::Decompress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const
+int CCompressorQuickLZ::Decompress(const std::vector<unsigned char> & input,std::vector<unsigned char> & output) const
 {
     return decompressTemplate(input,output);
 }
 
-int CCompressorQuickLZ::Compress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const
+int CCompressorQuickLZ::Compress(const std::vector<signed char> & input,std::vector<signed char> & output) const
 {
     return compressTemplate(input,output);
 }
 
-int CCompressorQuickLZ::Decompress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const
+int CCompressorQuickLZ::Decompress(const std::vector<signed char> & input,std::vector<signed char> & output) const
 {
     return decompressTemplate(input,output);
 }
 
-int CCompressorQuickLZ::Compress(const __DZ_STRING & input,__DZ_STRING & output) const
+int CCompressorQuickLZ::Compress(const std::string & input,std::string & output) const
 {
     return compressTemplate(input,output);
 }
 
-int CCompressorQuickLZ::Decompress(const __DZ_STRING & input,__DZ_STRING & output) const
+int CCompressorQuickLZ::Decompress(const std::string & input,std::string & output) const
 {
     return decompressTemplate(input,output);
 }

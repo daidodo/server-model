@@ -7,6 +7,7 @@
         CSemaphore      –≈∫≈¡ø
 //*/
 
+#include <common/impl/Config.h>
 #include <semaphore.h>
 #include <errno.h>
 #include <stdexcept>        //std::runtime_error

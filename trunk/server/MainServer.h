@@ -1,6 +1,7 @@
 #ifndef DOZERG_MAIN_SERVER_H_20071219
 #define DOZERG_MAIN_SERVER_H_20071219
 
+#include <common/impl/Config.h>
 #include <fstream>
 #include <list>
 #include <common/Configuration.h>
@@ -37,7 +38,7 @@ struct CMainServer
     ~CMainServer();
     void Init(const char * serverconf);
     void Reconfig();            //重新读取配置文件
-    void ShowConfig(__DZ_STRING verInfo) const;    //显示当前配置信息
+    void ShowConfig(std::string verInfo) const;    //显示当前配置信息
 	void StartServer();
 //members:
     //threads
@@ -54,8 +55,8 @@ struct CMainServer
     __FdEventQue *  eventFdQue_;
     __QueryCmdQue   queryCmdQue_;
     //configs
-    __DZ_STRING configFile_;            //读取服务器配置的文件名
-    __DZ_STRING showConfigFile_;        //显示服务器配置的文件名,不能重新配置
+    std::string configFile_;            //读取服务器配置的文件名
+    std::string showConfigFile_;        //显示服务器配置的文件名,不能重新配置
     bool        useEpoll_;              //使用epoll还是poll,不能重新配置
     bool        serverStatsOn_;         //是否开启统计线程,不能重新配置
     int         acceptServerStatckSz_;  //各个线程的栈大小,不能重新配置

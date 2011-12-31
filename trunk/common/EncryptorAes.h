@@ -8,12 +8,12 @@
     keystr_根据用户指定的key经过md5算法得到
 //*/
 
+#include <common/impl/Config.h>
 #include <string>
 #include <vector>
 #include <cstring>              //memset
 #include <openssl/aes.h>
 #include <openssl/md5.h>
-#include <common/impl/Alloc.h>
 
 NS_SERVER_BEGIN
 
@@ -30,7 +30,7 @@ public:
     //key为用户知道的加密解密的密钥
     //keylen为key的长度
     //intensity为加密强度
-    void SetKey(__DZ_STRING key, EKeyIntensity intensity = L128){
+    void SetKey(std::string key, EKeyIntensity intensity = L128){
         SetKey((const unsigned char *)key.c_str(), key.length(), intensity);
     }
     void SetKey(const char * key, size_t keylen, EKeyIntensity intensity = L128){
@@ -53,28 +53,28 @@ public:
         -2      decrypt data format error
     //*/
     //加密/解密input中从from偏移开始的数据, 结果放入output中
-    int Encrypt(const __DZ_VECTOR(char) & input, __DZ_VECTOR(char) & output, size_t from = 0) const{
+    int Encrypt(const std::vector<char> & input, std::vector<char> & output, size_t from = 0) const{
         return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_VECTOR(char) & input, __DZ_VECTOR(char) & output, size_t from = 0) const{
+    int Decrypt(const std::vector<char> & input, std::vector<char> & output, size_t from = 0) const{
         return decryptTemplate(input, output, from);
     }
-    int Encrypt(const __DZ_VECTOR(signed char) & input, __DZ_VECTOR(signed char) & output, size_t from = 0) const{
+    int Encrypt(const std::vector<signed char> & input, std::vector<signed char> & output, size_t from = 0) const{
         return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_VECTOR(signed char) & input, __DZ_VECTOR(signed char) & output, size_t from = 0) const{
+    int Decrypt(const std::vector<signed char> & input, std::vector<signed char> & output, size_t from = 0) const{
         return decryptTemplate(input, output, from);
     }
-    int Encrypt(const __DZ_VECTOR(unsigned char) & input, __DZ_VECTOR(unsigned char) & output, size_t from = 0) const{
+    int Encrypt(const std::vector<unsigned char> & input, std::vector<unsigned char> & output, size_t from = 0) const{
         return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_VECTOR(unsigned char) & input, __DZ_VECTOR(unsigned char) & output, size_t from = 0) const{
+    int Decrypt(const std::vector<unsigned char> & input, std::vector<unsigned char> & output, size_t from = 0) const{
         return decryptTemplate(input, output, from);
     }
-    int Encrypt(const __DZ_STRING & input, __DZ_STRING & output, size_t from = 0) const{
+    int Encrypt(const std::string & input, std::string & output, size_t from = 0) const{
         return encryptTemplate(input, output, from);
     }
-    int Decrypt(const __DZ_STRING & input, __DZ_STRING & output, size_t from = 0) const{
+    int Decrypt(const std::string & input, std::string & output, size_t from = 0) const{
         return decryptTemplate(input, output, from);
     }
 private:

@@ -6,15 +6,15 @@
         CCompressorQuickLZ
 //*/
 
+#include <common/impl/Config.h>
 #include <vector>
 #include <string>
-#include <common/impl/Alloc.h>
 
 NS_SERVER_BEGIN
 
 class CCompressorQuickLZ
 {
-    mutable __DZ_VECTOR(char)   workmem_;
+    mutable std::vector<char>   workmem_;
 public:
     CCompressorQuickLZ();
     /*
@@ -22,14 +22,14 @@ public:
         0       success
         -1      decompress input format error
     //*/
-    int Compress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const;
-    int Decompress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const;
-    int Compress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const;
-    int Decompress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const;
-    int Compress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const;
-    int Decompress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const;
-    int Compress(const __DZ_STRING & input,__DZ_STRING & output) const;
-    int Decompress(const __DZ_STRING & input,__DZ_STRING & output) const;
+    int Compress(const std::vector<char> & input,std::vector<char> & output) const;
+    int Decompress(const std::vector<char> & input,std::vector<char> & output) const;
+    int Compress(const std::vector<unsigned char> & input,std::vector<unsigned char> & output) const;
+    int Decompress(const std::vector<unsigned char> & input,std::vector<unsigned char> & output) const;
+    int Compress(const std::vector<signed char> & input,std::vector<signed char> & output) const;
+    int Decompress(const std::vector<signed char> & input,std::vector<signed char> & output) const;
+    int Compress(const std::string & input,std::string & output) const;
+    int Decompress(const std::string & input,std::string & output) const;
 private:
     template<class Buffer>
     int compressTemplate(const Buffer & input,Buffer & output) const;

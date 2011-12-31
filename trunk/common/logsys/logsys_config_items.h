@@ -3,21 +3,21 @@
 
 //日志配置项和默认值
 
+#include <common/impl/Config.h>
 #include <time.h>
 #include <sys/time.h>
 #include <string>
-#include <common/impl/Alloc.h>
 #include "logsys_namespace.h"
 
 IMPL_BEGIN
 
 struct CConfigItems
 {
-    __DZ_STRING level_;
-    __DZ_STRING filename_;
+    std::string level_;
+    std::string filename_;
     size_t      filesz_;
     size_t      backIndex_;
-    __DZ_STRING timeFormat_;
+    std::string timeFormat_;
     size_t      buffersz_;
     bool        quickFlush_;
     CConfigItems()

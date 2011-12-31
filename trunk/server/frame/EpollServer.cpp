@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <iostream>
 #include <common/Logger.h>
 #include <common/IterAdapter.h>
@@ -176,7 +177,7 @@ void CEpollServer::removeClosedFd()
 U32 CEpollServer::handleExpiredFd(U32 & last_check_time,U32 curtime)
 {
     typedef std::pair<int,U32>          __FdTime;
-    typedef __DZ_VECTOR(__FdTime)       __FdVec;
+    typedef std::vector<__FdTime>       __FdVec;
     typedef Tools::CSelect1st<__FdTime> __ExtFd;
     U32 ret = 0;
     if(epoll_.CanTimeout() && curtime > last_check_time + epoll_.GetFdTimeout()){
@@ -227,7 +228,7 @@ void CEpollServer::addClient(U32 curtime)
         for(;i != tmp.end();++i,++sock_i){
             const int & fd = i->fd_;
             const __SockPtr & pSock = *sock_i;
-            if(!pSock || pSock->FD() != fd){
+            if(!pSock || pSock->Fd() != fd){
                 ERROR("fd="<<fd<<" is not pSock="<<Tools::ToStringPtr(pSock)
                     <<" before epoll_.AddFd, ignore it");
             }else if(i->Writable()){

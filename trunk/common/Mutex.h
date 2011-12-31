@@ -24,6 +24,7 @@
                     在CGuard构造函数中根据锁的const属性，自动选择加锁函数
 //*/
 
+#include <common/impl/Config.h>
 #include <pthread.h>
 #include <stdexcept>        //std::runtime_error
 #include <common/Tools.h>   //Tools::GetTimespec, Tools::ErrorMsg

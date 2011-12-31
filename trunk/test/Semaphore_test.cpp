@@ -1,6 +1,6 @@
-#include <common/Semaphore.h>
-
 #include "comm.h"
+
+#include <common/Semaphore.h>
 
 static bool testSemOp(CSemaphore & sem)
 {

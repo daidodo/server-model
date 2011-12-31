@@ -25,6 +25,7 @@
         20081013    增加CFdSockMap::GetSock(ForwardIter, ForwardIter, OutputIter) const重载，批量获取连接对象
 //*/
 
+#include <common/impl/Config.h>
 #include <vector>
 #include <cassert>
 #include <algorithm>
@@ -33,7 +34,7 @@
 
 NS_SERVER_BEGIN
 
-template<class T, class Container = __DZ_VECTOR(T)>
+template<class T, class Container = std::vector<T> >
 struct CFdMap
 {
     typedef Container   container_type;
@@ -62,7 +63,7 @@ protected:
 template<
     class Sock,
     class SockPtr = Sock *,
-    class Container = __DZ_VECTOR(SockPtr),
+    class Container = std::vector<SockPtr>,
     class LockT = CMutex
 >class CFdSockMap
 {

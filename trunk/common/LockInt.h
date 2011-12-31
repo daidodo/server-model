@@ -12,6 +12,7 @@
         20080920    使用模板参数决定锁类型
 //*/
 
+#include <common/impl/Config.h>
 #include <map>
 #include <list>
 #include <algorithm>    //std::for_each
@@ -147,9 +148,9 @@ struct CLockIntRange
     typedef LockT               lock_type;
     typedef CGuard<lock_type>   guard_type;
 private:
-    typedef __DZ_MAP(T,lock_type *) __Map;
-    typedef __DZ_LIST(lock_type *)  __List;
-    typedef __DZ_ALLOC<lock_type>   __MAlloc;
+    typedef std::map<T,lock_type *> __Map;
+    typedef std::list<lock_type *>  __List;
+    typedef std::allocator<lock_type>   __MAlloc;
     static lock_type * getLock(){
         lock_type * ret = __MAlloc().allocate(1);
         return new (ret) lock_type;

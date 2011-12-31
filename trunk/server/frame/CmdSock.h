@@ -9,10 +9,10 @@
         CUdpCmdData
 //*/
 
+#include <common/impl/Config.h>
 #include <vector>
 #include <list>
 #include <algorithm>
-#include <common/impl/Alloc.h>
 #include <common/Tools.h>
 #include <common/Sockets.h>
 #include <common/Mutex.h>
@@ -39,7 +39,7 @@ struct CFdEvent
 
 struct CCmdBuf
 {
-	typedef __DZ_VECTOR(char) buffer_type;
+	typedef std::vector<char> buffer_type;
     buffer_type Buf;
     bool        UseHttp;
 };
@@ -49,8 +49,8 @@ class CCmdSock : public CTcpConnSocket
 	typedef CCmdSock                __Myt;
 public:
     typedef CCmdBuf::buffer_type    buffer_type;
-    typedef __DZ_LIST(buffer_type)  buffer_list;
-	typedef __DZ_ALLOC<__Myt>       allocator_type;
+    typedef std::list<buffer_type>  buffer_list;
+	typedef std::allocator<__Myt>       allocator_type;
     typedef CGuard<CMutex>          guard_type;
     //Retrun Values
     static const int RET_CONTINUE = 0;
@@ -103,8 +103,8 @@ class CUdpCmdData
 {
     typedef CCmdSock::buffer_type           __Buf;
     typedef std::pair<__Buf *,CSockAddr>    __BufInfo;
-	typedef __DZ_VECTOR(__BufInfo)          __BufVec;
-	typedef __DZ_ALLOC<__Buf>               __BufAlloc;
+	typedef std::vector<__BufInfo>          __BufVec;
+	typedef std::allocator<__Buf>               __BufAlloc;
     static __Buf * getBuf(){
         __Buf * ret = __BufAlloc().allocate(1);
         return new (ret) __Buf;

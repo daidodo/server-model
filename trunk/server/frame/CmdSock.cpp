@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <errno.h>
 #include <sys/socket.h>
 #include <common/Logger.h>

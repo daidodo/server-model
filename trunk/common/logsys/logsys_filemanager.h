@@ -1,21 +1,21 @@
 #ifndef DZ_LOGSYS_FILE_MANAGER_20071023
 #define DZ_LOGSYS_FILE_MANAGER_20071023
 
+#include <common/impl/Config.h>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <stdio.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <common/impl/Alloc.h>
 #include "logsys_config_items.h"
 
 IMPL_BEGIN
 
 class CFileManager
 {
-    typedef __DZ_VECTOR(__DZ_STRING) __FileVec;
-    __DZ_STRING filename_;      //文件名
+    typedef std::vector<std::string> __FileVec;
+    std::string filename_;      //文件名
     size_t      filesz_;        //文件最大size
     __FileVec   backfile_;      //备份文件名
 public:
@@ -25,7 +25,7 @@ public:
         filesz_ = item.filesz_;
         backfile_.resize(item.backIndex_,filename_ + ".");
         for(size_t i = 0;i < backfile_.size();++i){
-            __DZ_OSTRINGSTREAM oss;
+            std::ostringstream oss;
             oss<<(i + 1);
             backfile_[i] += oss.str();
         }

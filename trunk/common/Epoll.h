@@ -1,6 +1,7 @@
 #ifndef DOZERG_EPOLL_H_20080507
 #define DOZERG_EPOLL_H_20080507
 
+#include <common/impl/Config.h>
 #include <sys/epoll.h>
 #include <cstring>          //memset
 #include <vector>
@@ -17,7 +18,7 @@ NS_SERVER_BEGIN
 class CEpoll
 {
     typedef struct epoll_event  __Event;
-    typedef __DZ_SET(int)       __FdSet;
+    typedef std::set<int>       __FdSet;
 public:
     typedef __FdSet::iterator   iterator;
     typedef iterator            const_iterator;
@@ -161,7 +162,7 @@ public:
 private:
     int                     epollfd_;
     int                     maxsz_;
-    __DZ_VECTOR(__Event)    revents_;
+    std::vector<__Event>    revents_;
     CFdMap<U32>             fdTime_;        //s,每个fd的上次活跃时间
     __FdSet                 fdSet_;         //当前处理的fd集合
     U32                     fdtimeout_;     //s,fd的超时时间

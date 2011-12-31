@@ -9,8 +9,8 @@
     CBPlusTree的内部实现
 //*/
 
-#include <iterator>     //for std::bidirectional_iterator_tag
 #include <common/impl/Config.h>
+#include <iterator>     //for std::bidirectional_iterator_tag
 
 //forward declaration
 NS_SERVER_BEGIN

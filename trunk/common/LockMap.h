@@ -8,6 +8,8 @@
     History
         20080619    把CMutex改成模板参数，可以支持各种锁
 //*/
+
+#include <common/impl/Config.h>
 #include <set>
 #include <map>
 #include <functional>       //std::less
@@ -16,10 +18,10 @@
 NS_SERVER_BEGIN
 
 template<class T, class LockT = CMutex, class Pr = std::less<T> >
-class CLockSet : public __DZ_SET1(T, Pr)
+class CLockSet : public std::set<T, Pr>
 {
 //typedefs
-    typedef __DZ_SET1(T, Pr)                     __MyBase;
+    typedef std::set<T, Pr>                     __MyBase;
 public:
     typedef __MyBase                            container_type;
     typedef typename __MyBase::iterator         iterator;
@@ -58,10 +60,10 @@ private:
 };
 
 template<class Key, class Value, class LockT = CMutex, class Pr = std::less<Key> >
-class CLockMap:public __DZ_MAP1(Key, Value, Pr)
+class CLockMap:public std::map<Key, Value, Pr>
 {
 //typedefs
-    typedef __DZ_MAP1(Key, Value, Pr)             __MyBase;
+    typedef std::map<Key, Value, Pr>             __MyBase;
 public:
     typedef __MyBase                            container_type;
     typedef typename __MyBase::iterator         iterator;
@@ -86,7 +88,7 @@ public:
     }
     bool pickL(const key_type & v, mapped_type & p){    //搜索并删除
         guard_type g(lock_);
-        iterator wh = find(v);
+        iterator wh = __MyBase::find(v);
         if(wh != __MyBase::end()){
             p = wh->second;
             erase(wh);

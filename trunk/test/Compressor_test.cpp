@@ -1,10 +1,10 @@
+#include "comm.h"
+
 #include <common/CompressorLZO.h>
 #include <common/CompressorQuickLZ.h>
 #include <common/CompressorZLib.h>
 
-#include "comm.h"
-
-static __DZ_STRING text("1234567890abcdefghijklmnopeaibanadj;3apU(#JDFNPDdbdn(NNEndjafefJJENFbn apfa3 j[f asdfas]a\\3a0fa sdjfna3 nadka.fj3jadshadsfa");
+static std::string text("1234567890abcdefghijklmnopeaibanadj;3apU(#JDFNPDdbdn(NNEndjafefJJENFbn apfa3 j[f asdfas]a\\3a0fa sdjfna3 nadka.fj3jadshadsfa");
 
 template<class CompType, class BufType>
 static bool testCompBuf(const char * compName)
@@ -34,13 +34,13 @@ static bool testCompBuf(const char * compName)
 template<class CompType>
 static bool testComp(const char * compName)
 {
-    if(!testCompBuf<CompType, __DZ_STRING>(compName))
+    if(!testCompBuf<CompType, std::string>(compName))
         return false;
-    if(!testCompBuf<CompType, __DZ_VECTOR(char)>(compName))
+    if(!testCompBuf<CompType, std::vector<char> >(compName))
         return false;
-    if(!testCompBuf<CompType, __DZ_VECTOR(signed char)>(compName))
+    if(!testCompBuf<CompType, std::vector<signed char> >(compName))
         return false;
-    if(!testCompBuf<CompType, __DZ_VECTOR(unsigned char)>(compName))
+    if(!testCompBuf<CompType, std::vector<unsigned char> >(compName))
         return false;
     return true;
 }

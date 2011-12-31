@@ -1,6 +1,6 @@
-#include <common/LockQueue.h>
-
 #include "comm.h"
+
+#include <common/LockQueue.h>
 
 static bool testLockQueue()
 {

@@ -10,6 +10,7 @@
         20111113    将Hash的模板参数去掉CV修饰
 //*/
 
+#include <common/impl/Config.h>
 #include <vector>
 #include <common/Tools.h>   //Tools::DestroyArray,Tools::Destroy
 #include <common/impl/Template.h>   //COmitCV

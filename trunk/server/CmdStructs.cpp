@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <cassert>
 #include <common/Logger.h>
 #include "CmdStructs.h"
@@ -5,9 +6,9 @@
 NS_SERVER_BEGIN
 
 //struct CCmdStatsItems
-__DZ_STRING CCmdStatsItems::ToString() const
+std::string CCmdStatsItems::ToString() const
 {
-    __DZ_OSTRINGSTREAM oss;
+    std::ostringstream oss;
     size_t t = succ_ + fail_;
     oss<<"succ_="<<succ_
         <<", fail_="<<fail_

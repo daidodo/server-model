@@ -11,14 +11,14 @@
                     CFixedHeap::push_unique函数里使用迭代器，而不是下标
 //*/
 
+#include <common/impl/Config.h>
 #include <vector>
 #include <algorithm>
 #include <functional>
-#include <common/impl/Alloc.h>
 
 NS_SERVER_BEGIN
 
-template<class T, class Container = __DZ_VECTOR(T), class BinaryPredicate = std::less<T> >
+template<class T, class Container = std::vector<T>, class BinaryPredicate = std::less<T> >
 class CHeap
 {
     typedef CHeap<T, Container, BinaryPredicate>        __Myt;
@@ -71,7 +71,7 @@ private:
 
 template<
     class T,
-    class Container = __DZ_VECTOR(T),
+    class Container = std::vector<T>,
     class BinaryPredicateLess = std::less<T>,       //小于比较算符
     class BinaryPredicateEqual = std::equal_to<T>   //等于比较算符
 >class CFixedHeap

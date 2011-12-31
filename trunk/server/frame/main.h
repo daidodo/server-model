@@ -1,6 +1,7 @@
 #ifndef DOZERG_MAIN_H_20080514
 #define DOZERG_MAIN_H_20080514
 
+#include <common/impl/Config.h>
 #include <iostream>
 #include <signal.h>
 #include <common/Tools.h>
@@ -51,9 +52,9 @@ static void printUsage()
         <<endl;
 }
 
-static __DZ_STRING versionInfo()
+static std::string versionInfo()
 {
-    __DZ_OSTRINGSTREAM oss;
+    std::ostringstream oss;
     oss<<programName<<" built in "<<__DATE__<<" "<<__TIME__;
 #ifdef NDEBUG
     oss<<", release version";

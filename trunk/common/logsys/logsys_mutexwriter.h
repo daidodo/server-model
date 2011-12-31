@@ -1,6 +1,7 @@
 #ifndef DZ_LOGSYS_MUTEX_WRITER_20071020
 #define DZ_LOGSYS_MUTEX_WRITER_20071020
 
+#include <common/impl/Config.h>
 #include <common/Mutex.h>
 #include "logsys_writebuffer.h"
 #include "logsys_filemanager.h"

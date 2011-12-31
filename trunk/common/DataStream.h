@@ -30,6 +30,7 @@
 
 //*/
 
+#include <common/impl/Config.h>
 #include <cassert>
 #include <string>
 #include <cstring>  //memcpy
@@ -57,16 +58,16 @@ public:
     CInByteStream(const signed char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d,l,netByteOrder);
     }
-    CInByteStream(const __DZ_VECTOR(char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    CInByteStream(const std::vector<char> & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d,netByteOrder);
     }
-    CInByteStream(const __DZ_VECTOR(unsigned char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    CInByteStream(const std::vector<unsigned char> & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d,netByteOrder);
     }
-    CInByteStream(const __DZ_VECTOR(signed char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    CInByteStream(const std::vector<signed char> & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d,netByteOrder);
     }
-    CInByteStream(const __DZ_STRING & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    CInByteStream(const std::string & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d,netByteOrder);
     }
     void SetSource(const char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){
@@ -82,23 +83,23 @@ public:
     void SetSource(const signed char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource((const char *)d,l,netByteOrder);
     }
-    void SetSource(const __DZ_VECTOR(char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    void SetSource(const std::vector<char> & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(&d[0],d.size(),netByteOrder);
     }
-    void SetSource(const __DZ_VECTOR(unsigned char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    void SetSource(const std::vector<unsigned char> & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource((const char *)&d[0],d.size(),netByteOrder);
     }
-    void SetSource(const __DZ_VECTOR(signed char) & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    void SetSource(const std::vector<signed char> & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource((const char *)&d[0],d.size(),netByteOrder);
     }
-    void SetSource(const __DZ_STRING & d,bool netByteOrder = DEF_NET_BYTEORDER){
+    void SetSource(const std::string & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d.c_str(),d.size(),netByteOrder);
     }
     //设置字节序类型
     void OrderType(EOrderType ot){need_reverse_ = NeedReverse(ot);}
     //按照dir指定的方向设置cur_指针偏移
     //返回cur_最后的绝对偏移
-    size_t Seek(ssize_t off,ESeekDir dir){
+    size_t Seek(ssize_t off,ESeekDir dir = Begin){
         switch(dir){
             case Begin:
                 cur_ = off;
@@ -142,7 +143,7 @@ public:
     __Myt & operator >>(long long & c)          {return readPod(c);}
     __Myt & operator >>(unsigned long long & c) {return readPod(c);}
     //read std::string
-    __Myt & operator >>(__DZ_STRING & c){
+    __Myt & operator >>(std::string & c){
         __Length sz;
         operator >>(sz);
         if(ensure(sz)){
@@ -252,7 +253,7 @@ class COutByteStream : public NS_IMPL::CDataStreamBase
 {
     typedef COutByteStream __Myt;
     static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
-    __DZ_VECTOR(char)   data_;
+    std::vector<char>   data_;
     size_t              cur_;
     bool                need_reverse_;  //是否需要改变结果的byte order
 public:
@@ -293,7 +294,7 @@ public:
     size_t Size() const{return Tell();}
     //导出所有写入的数据
     //bAppend表示是追加到dst已有数据后面，还是覆盖dst原有的数据
-    bool ExportData(__DZ_STRING & dst,bool bAppend = false){
+    bool ExportData(std::string & dst,bool bAppend = false){
         data_.resize(cur_);
         if(bAppend){    //数据加到dst后面
             dst.insert(dst.end(),data_.begin(),data_.end());
@@ -303,7 +304,7 @@ public:
         cur_ = 0;
         return true;
     }
-    bool ExportData(__DZ_VECTOR(char) & dst,bool bAppend = false){
+    bool ExportData(std::vector<char> & dst,bool bAppend = false){
         data_.resize(cur_);
         if(bAppend){    //数据加到dst后面
             dst.insert(dst.end(),data_.begin(),data_.end());
@@ -336,7 +337,7 @@ public:
     __Myt & operator <<(long long c)            {return writePod(c);}
     __Myt & operator <<(unsigned long long c)   {return writePod(c);}
     //write std::string
-    __Myt & operator <<(__DZ_STRING c){
+    __Myt & operator <<(std::string c){
         return writeArray(c.c_str(),c.length());
     }
     //write array( = length + raw array) through CManipulatorArray
@@ -382,7 +383,7 @@ public:
         __Myt ds;
         ds.need_reverse_ = need_reverse_;
         if(ds<<m.Value()){
-            __DZ_VECTOR(char) tmp;
+            std::vector<char> tmp;
             ds.ExportData(tmp);
             data_.insert(data_.begin() + m.Off(),tmp.begin(),tmp.end());
             cur_ += tmp.size();
