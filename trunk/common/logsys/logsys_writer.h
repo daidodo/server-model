@@ -1,10 +1,8 @@
 #ifndef DZ_LOGSYS_WRITER_20071019
 #define DZ_LOGSYS_WRITER_20071019
 
-#include <common/impl/Config.h>
 #include <cassert>
-#include <stdio.h>
-#include <unistd.h>
+#include <unistd.h>     //write, close
 #include "logsys_namespace.h"
 
 IMPL_BEGIN

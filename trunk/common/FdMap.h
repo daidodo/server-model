@@ -25,12 +25,11 @@
         20081013    增加CFdSockMap::GetSock(ForwardIter, ForwardIter, OutputIter) const重载，批量获取连接对象
 //*/
 
-#include <common/impl/Config.h>
 #include <vector>
 #include <cassert>
-#include <algorithm>
-#include <common/Mutex.h>
-#include <common/SharedPtr.h>
+#include <algorithm>    //std::swap
+#include <Mutex.h>
+#include <SharedPtr.h>
 
 NS_SERVER_BEGIN
 

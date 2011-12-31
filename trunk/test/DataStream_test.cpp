@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/DataStream.h>
+#include <DataStream.h>
 
 struct CTest
 {

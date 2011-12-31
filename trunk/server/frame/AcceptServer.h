@@ -1,9 +1,8 @@
 #ifndef DOZERG_ACCEPT_SERVER_H_20080908
 #define DOZERG_ACCEPT_SERVER_H_20080908
 
-#include <common/impl/Config.h>
-#include <common/Threads.h>
-#include <server/MainServer.h>
+#include <Threads.h>
+#include "../MainServer.h"
 
 NS_SERVER_BEGIN
 

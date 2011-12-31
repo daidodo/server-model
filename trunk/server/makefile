@@ -26,9 +26,13 @@ clean:
 	$(RM) $(foreach dir, $(SRC_DIR), $(dir)/*.o $(dir)/*.d)
 	$(RM) $(TARGET)
 
+cleanall: clean
+	$(RM) tags
 
 ifneq (${MAKECMDGOALS},clean)
+ifneq (${MAKECMDGOALS},cleanall)
 sinclude $(DEP)
 endif
+endif
 
-.PHONY: all release comm commrelease clean
+.PHONY: all release comm commrelease clean cleanall

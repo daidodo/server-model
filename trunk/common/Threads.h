@@ -9,13 +9,12 @@
         CThreadManager  自动伸缩的线程池
 //*/
 
-#include <common/impl/Config.h>
-#include <errno.h>          //errno
+#include <errno.h>
 #include <pthread.h>
 #include <string>
 #include <vector>
-#include <common/Logger.h>
-#include <common/LockInt.h> //CLockIntMax
+#include <Logger.h>
+#include <LockInt.h> //CLockIntMax
 
 NS_SERVER_BEGIN
 

@@ -10,10 +10,10 @@
         20111113    修改CLockHashMap的value_type，将key_type加const修饰，避免write_pointer可以修改
 //*/
 
-#include <common/impl/Config.h>
 #include <functional>           //std::equal_to
 #include <utility>              //std::pair
-#include <common/impl/LockHashTable.h>  //Tools::HashFn, Tools::CIdentity, Tools::CSelect1st
+#include <impl/LockHashTable.h>
+#include <Tools.h>       //Tools::HashFn, Tools::CIdentity, Tools::CSelect1st
 
 NS_SERVER_BEGIN
 

@@ -1,7 +1,4 @@
-#include <common/impl/Config.h>
-#include <iostream>
-#include <common/Logger.h>
-#include <common/Tools.h>
+#include <Logger.h>
 #include "CmdHandler.h"
 
 NS_SERVER_BEGIN

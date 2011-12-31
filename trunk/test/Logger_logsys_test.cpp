@@ -3,7 +3,7 @@
 #ifndef LOGSYS
 #   define LOGSYS
 #endif
-#include <common/Logger.h>
+#include <Logger.h>
 
 #include "comm_logger.h"
 

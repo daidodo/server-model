@@ -6,10 +6,9 @@
         CRingBuf
 //*/
 
-#include <common/impl/Config.h>
-#include <cassert>          //assert
+#include <cassert>
 #include <cstddef>          //std::ptrdiff_t
-#include <common/Tools.h>   //Tools::Construct,Tools::DestroyArray
+#include <Tools.h>   //Tools::Construct,Tools::DestroyArray
 
 NS_SERVER_BEGIN
 

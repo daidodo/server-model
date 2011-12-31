@@ -1,7 +1,6 @@
 #ifndef DZ_TOOLS_IMPL_2001020
 #define DZ_TOOLS_IMPL_2001020
 
-#include <common/impl/Config.h>
 #include <byteswap.h>   //bswap_16,bswap_32,bswap_64
 
 NS_IMPL_BEGIN

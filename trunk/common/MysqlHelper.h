@@ -9,12 +9,11 @@
         CMyCharacterSetInfo     mysql 5.1.10版本以后才有
 //*/
 
-#include <common/impl/Config.h>
 #include <mysql.h>
 #include <unistd.h>         //sleep
 #include <string>
 #include <cassert>
-#include <common/Tools.h>   //Tools::DumpHex
+#include <Tools.h>   //Tools::DumpHex
 
 NS_SERVER_BEGIN
 

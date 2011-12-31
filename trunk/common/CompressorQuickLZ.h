@@ -6,9 +6,9 @@
         CCompressorQuickLZ
 //*/
 
-#include <common/impl/Config.h>
 #include <vector>
 #include <string>
+#include <impl/Config.h>
 
 NS_SERVER_BEGIN
 

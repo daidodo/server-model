@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/IterAdapter.h>
+#include <IterAdapter.h>
 
 struct CTest
 {

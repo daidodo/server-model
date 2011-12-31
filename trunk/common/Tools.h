@@ -50,13 +50,13 @@
         iterator_traits
 //*/
 
-#include <common/impl/Config.h>
 #include <functional>   //std::unary_function
 #include <string>
 #include <vector>
 #include <utility>      //std::pair,std::make_pair
 #include <endian.h>     //BYTE_ORDER,LITTLE_ENDIAN
-#include <common/impl/Tools_impl.h>
+#include <impl/Config.h>
+#include <impl/Tools_impl.h>
 
 NS_SERVER_BEGIN
 

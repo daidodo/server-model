@@ -1,8 +1,8 @@
 #include "comm.h"
 
-#include <common/CompressorLZO.h>
-#include <common/CompressorQuickLZ.h>
-#include <common/CompressorZLib.h>
+#include <CompressorLZO.h>
+#include <CompressorQuickLZ.h>
+#include <CompressorZLib.h>
 
 static std::string text("1234567890abcdefghijklmnopeaibanadj;3apU(#JDFNPDdbdn(NNEndjafefJJENFbn apfa3 j[f asdfas]a\\3a0fa sdjfna3 nadka.fj3jadshadsfa");
 

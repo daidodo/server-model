@@ -9,11 +9,10 @@
         20080619    把CMutex改成模板参数，可以支持各种锁
 //*/
 
-#include <common/impl/Config.h>
 #include <set>
 #include <map>
 #include <functional>       //std::less
-#include <common/Mutex.h>
+#include <Mutex.h>
 
 NS_SERVER_BEGIN
 

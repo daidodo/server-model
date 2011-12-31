@@ -1,4 +1,3 @@
-#include <common/impl/Config.h>
 #include <exception>        //std::exception
 #include "Threads.h"
 

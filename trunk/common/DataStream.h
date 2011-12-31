@@ -30,13 +30,12 @@
 
 //*/
 
-#include <common/impl/Config.h>
 #include <cassert>
 #include <string>
 #include <cstring>  //memcpy
 #include <vector>
-#include <common/impl/DataStream_impl.h>
-#include <common/Tools.h>
+#include <impl/DataStream_impl.h>
+#include <Tools.h>   //Tools::SwapByteOrder
 
 NS_SERVER_BEGIN
 

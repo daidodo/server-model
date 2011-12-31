@@ -1,15 +1,11 @@
 #ifndef DOZERG_MAIN_SERVER_H_20071219
 #define DOZERG_MAIN_SERVER_H_20071219
 
-#include <common/impl/Config.h>
-#include <fstream>
-#include <list>
-#include <common/Configuration.h>
-#include <common/SharedPtr.h>
-#include <common/LockQueue.h>
-#include <common/LockInt.h>
-#include <common/FdMap.h>
-#include <server/frame/CmdSock.h>
+#include <Configuration.h>
+#include <SharedPtr.h>
+#include <LockQueue.h>
+#include <FdMap.h>
+#include "frame/CmdSock.h"
 
 NS_SERVER_BEGIN
 

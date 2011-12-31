@@ -8,12 +8,12 @@
     keystr_根据用户指定的key经过md5算法得到
 //*/
 
-#include <common/impl/Config.h>
 #include <string>
 #include <vector>
 #include <cstring>              //memset
 #include <openssl/aes.h>
 #include <openssl/md5.h>
+#include <impl/Config.h>
 
 NS_SERVER_BEGIN
 

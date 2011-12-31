@@ -28,8 +28,8 @@ else
     RELEASE := -DNDEBUG -O2
 endif
 
-CC             :=$(CXX)
-INCLUDE        := -I$(BASEDIR)/ -I/usr/local/ssl/include -I/usr/include/mysql
+CC             := $(CXX)
+INCLUDE        := -I$(BASEDIR)/common -I/usr/local/ssl/include -I/usr/include/mysql
 CXXFLAGS       := -Wall $(DEBUG) $(RELEASE) -D_REENTRANT $(LOG) $(LOGSYS) $(EPOLL) $(EXTERN_FLAGS) $(INCLUDE)
 LIB            := -L/usr/local/ssl/lib -L/usr/local/mysql/lib -L/usr/lib -L/usr/local/lib -L$(BASEDIR)/lib -lstdc++ -lpthread -lrt $(MYSQL) $(LOG4CLIB) $(ZIP) $(CRYPTO) $(EXTERN__LIB)
 CFLAGS         := $(CXXFLAGS)
@@ -41,3 +41,4 @@ DEP := $(OBJ:.o=.d)
 
 CXXFLAGS += -MD
 CFLAGS += -MD
+

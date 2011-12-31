@@ -9,8 +9,7 @@
         20080827    通过__alloc得到__elem_alloc
 //*/
 
-#include <common/impl/Config.h>
-#include <common/Tools.h>   //Tools::Destroy
+#include <Tools.h>   //Tools::Destroy
 
 NS_IMPL_BEGIN
 

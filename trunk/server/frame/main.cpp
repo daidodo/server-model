@@ -6,21 +6,21 @@
 #if __DZ_TEST
 //#   include <string>
 //#   include <ctime>
-//#   include <common/Logger.h>
-//#   include <common/Threads.h>
-//#   include <common/Tools.h>
-#   include <common/DataStream.h>
-//#   include <common/LockInt.h>
-//#   include <common/LockQueue.h>
-//#   include <common/RingBuffer.h>
-//#   include <common/Epoll.h>
-//#   include <common/Poll.h>
-//#   include <common/FdMap.h>
-//#   include <common/Mutex.h>
+//#   include <Logger.h>
+//#   include <Threads.h>
+//#   include <Tools.h>
+#   include <DataStream.h>
+//#   include <LockInt.h>
+//#   include <LockQueue.h>
+//#   include <RingBuffer.h>
+//#   include <Epoll.h>
+//#   include <Poll.h>
+//#   include <FdMap.h>
+//#   include <Mutex.h>
 //#   include <server/frame/CmdSock.h>
-//#   include <common/List.h>
-//#   include <common/Tree.h>
-//#   include <common/Semaphore.h>
+//#   include <List.h>
+//#   include <Tree.h>
+//#   include <Semaphore.h>
 
 static void test1()
 {
@@ -30,16 +30,16 @@ static void test1()
     bs.SetSource(buf);
     char a = 0;
     if(bs>>a)
-        cout<<int(a)<<endl;
-    cout<<bs.ToString()<<endl;
+        std::cout<<int(a)<<std::endl;
+    std::cout<<bs.ToString()<<std::endl;
 
     short i = 0,b = 1;
     while(bs>>Manip::bits(b,i)){
-        cout<<b<<"\t"<<i<<endl;
-        cout<<bs.ToString()<<endl;
+        std::cout<<b<<"\t"<<i<<std::endl;
+        std::cout<<bs.ToString()<<std::endl;
         b += 7;
     }
-    cout<<b<<endl;
+    std::cout<<b<<std::endl;
 }
 
 static void test2()
@@ -51,8 +51,8 @@ static void test2()
 
     for(int i = 0;i < 5;++i){
         bs<<Manip::bits(i,a);
-        cout<<i<<endl
-            <<bs.ToString()<<endl;
+        std::cout<<i<<std::endl
+            <<bs.ToString()<<std::endl;
     }
 }
 
@@ -79,7 +79,7 @@ int main(int argc,const char ** argv)
             printUsage();
             return 0;
         }else if(Tools::ExtractArg(argv[i],"-v",ret) && !ret){
-            cout<<versionInfo()<<endl;
+            std::cout<<versionInfo()<<std::endl;
             return 0;
         }else if(Tools::ExtractArg(argv[i],"-c=",ret) && ret){
             serverconf = ret;

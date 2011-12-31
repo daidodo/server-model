@@ -3,9 +3,6 @@
 
 //日志配置项和默认值
 
-#include <common/impl/Config.h>
-#include <time.h>
-#include <sys/time.h>
 #include <string>
 #include "logsys_namespace.h"
 

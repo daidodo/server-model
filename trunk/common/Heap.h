@@ -11,10 +11,10 @@
                     CFixedHeap::push_unique函数里使用迭代器，而不是下标
 //*/
 
-#include <common/impl/Config.h>
 #include <vector>
-#include <algorithm>
-#include <functional>
+#include <algorithm>    //std::less, std::make_heap, ...
+#include <functional>   //std::less, std::equal
+#include <impl/Config.h>
 
 NS_SERVER_BEGIN
 

@@ -21,11 +21,9 @@
         20081015        Ôö¼ÓSCOPE_LOGGER
 //*/
 
-#include <common/impl/Config.h>
-
 #if defined(LOGGER) || defined(__DISPLAY_CODE)
 #   if defined(LOGSYS) || defined(__DISPLAY_CODE)
-#       include <common/logsys/logsys_define.h>
+#       include <logsys/logsys_define.h>
 #       define INIT_LOGGER(filename)	        INIT_LOGSYS(filename)
 #       define DECL_LOGGER(logger)              static DZLOG::CGlobalLogger logger;
 #       define IMPL_LOGGER(classname,logger)    DZLOG::CGlobalLogger classname::logger(#classname);
@@ -85,7 +83,7 @@
 #   define ASSERT(expr,msg)
 #else
 #   include <iostream>
-#   include <common/Mutex.h>
+#   include <Mutex.h>
 NS_SERVER_BEGIN
 extern CMutex _G_cerr_mutex;    //defined in <common/Threads.cpp>
 NS_SERVER_END

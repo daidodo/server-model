@@ -15,10 +15,9 @@
         20111227    Ôö¼Óassert
 //*/
 
-#include <common/impl/Config.h>
 #include <cassert>
-#include <common/Tools.h>   //Tools::CInterTypeTag,Tools::Destroy
-#include <common/impl/SingleList_impl.h>
+#include <Tools.h>   //Tools::CInterTypeTag,Tools::Destroy
+#include <impl/SingleList_impl.h>
 
 NS_SERVER_BEGIN
 

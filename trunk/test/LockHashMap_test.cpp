@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/LockHashMap.h>
+#include <LockHashMap.h>
 
 #define MAX_VAL     10000
 

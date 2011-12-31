@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/Configuration.h>
+#include <Configuration.h>
 
 static inline std::string keyName(const char * key, int i)
 {

@@ -6,13 +6,9 @@
     各字段的详细意义请参考协议文档
 //*/
 
-#include <common/impl/Config.h>
-#include <sstream>
 #include <string>
-#include <vector>
-#include <common/Tools.h>
-#include <common/DataStream.h>
-#include <common/LockMap.h>
+#include <Tools.h>
+#include <LockMap.h>
 
 NS_SERVER_BEGIN
 

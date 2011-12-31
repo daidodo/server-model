@@ -1,4 +1,4 @@
-#include <common/impl/Config.h>
+#include <impl/Config.h>
 
 class CTest
 {

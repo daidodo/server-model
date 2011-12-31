@@ -1,6 +1,6 @@
 #include "comm.h"
 
-#include <common/MysqlHelper.h>
+#include <MysqlHelper.h>
 
 static std::string name(int i)
 {

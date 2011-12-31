@@ -1,6 +1,5 @@
-#include <common/impl/Config.h>
-#include <common/Logger.h>
-#include <server/frame/CmdSock.h>
+#include <Logger.h>
+#include "frame/CmdSock.h"
 #include "CmdHandler.h"
 
 NS_SERVER_BEGIN

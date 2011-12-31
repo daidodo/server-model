@@ -1,7 +1,6 @@
 #ifndef DZ_LOGSYS_FILE_MANAGER_20071023
 #define DZ_LOGSYS_FILE_MANAGER_20071023
 
-#include <common/impl/Config.h>
 #include <vector>
 #include <string>
 #include <sstream>

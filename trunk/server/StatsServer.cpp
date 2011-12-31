@@ -1,10 +1,9 @@
-#include <common/impl/Config.h>
-#include <common/Logger.h>
-#include <server/frame/AcceptServer.h>
-#include <server/frame/EpollServer.h>
-#include <server/frame/PollServer.h>
-#include <server/frame/TcpServer.h>
-#include <server/CmdHandler.h>
+#include <Logger.h>
+#include "frame/AcceptServer.h"
+#include "frame/EpollServer.h"
+#include "frame/PollServer.h"
+#include "frame/TcpServer.h"
+#include "CmdHandler.h"
 #include "StatsServer.h"
 
 NS_SERVER_BEGIN

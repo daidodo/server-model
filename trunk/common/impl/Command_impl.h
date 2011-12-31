@@ -1,8 +1,7 @@
 #ifndef DOZERG_COMMAND_IMPL_H_20081018
 #define DOZERG_COMMAND_IMPL_H_20081018
 
-#include <common/impl/Config.h>
-#include <common/Tools.h>
+#include <Tools.h>   //Tools::Destroy
 
 NS_IMPL_BEGIN
 

@@ -12,14 +12,13 @@
         20081018    把实现代码转移到.h文件里，去掉Configuration.cpp文件
 //*/
 
-#include <common/impl/Config.h>
 #include <map>
-#include <limits>           //std::numeric_limits
 #include <string>
 #include <sstream>
-#include <fstream>          //std::ifstream
+#include <fstream>
+#include <limits>           //std::numeric_limits
 #include <cstdlib>          //atoi
-#include <common/Tools.h>   //Tools::Trim
+#include <Tools.h>   //Tools::Trim
 
 /*
 配置文件格式：

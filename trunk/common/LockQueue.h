@@ -17,9 +17,8 @@
                     修改waitNotEmpty()和waitNotFull()，严格检验size
 //*/
 
-#include <common/impl/Config.h>
-#include <common/Mutex.h>
-#include <common/SingleList.h>
+#include <Mutex.h>
+#include <SingleList.h>
 
 NS_SERVER_BEGIN
 

@@ -1,8 +1,7 @@
-#include <common/impl/Config.h>
 #include <sstream>
-#include <common/Logger.h>
-#include <common/EncryptorAes.h>
-#include <common/impl/Command_impl.h>
+#include <Logger.h>
+#include <EncryptorAes.h>
+#include <impl/Command_impl.h>
 #include "Command.h"
 
 NS_SERVER_BEGIN

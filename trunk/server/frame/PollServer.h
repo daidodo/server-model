@@ -1,10 +1,9 @@
 #ifndef DOZERG_POLL_SERVER_H_20080917
 #define DOZERG_POLL_SERVER_H_20080917
 
-#include <common/impl/Config.h>
-#include <common/Threads.h>
-#include <common/Poll.h>
-#include <server/MainServer.h>
+#include <Threads.h>
+#include <Poll.h>
+#include "../MainServer.h"
 
 NS_SERVER_BEGIN
 

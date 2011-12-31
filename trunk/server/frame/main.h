@@ -1,14 +1,13 @@
 #ifndef DOZERG_MAIN_H_20080514
 #define DOZERG_MAIN_H_20080514
 
-#include <common/impl/Config.h>
+#include <vector>
 #include <iostream>
 #include <signal.h>
-#include <common/Tools.h>
-#include <common/Logger.h>
-#include <server/MainServer.h>
+#include <Logger.h>
+#include "../MainServer.h"
 
-using namespace std;
+//using namespace std;
 using namespace NS_SERVER;
 
 //NS_SERVER_BEGIN
@@ -36,7 +35,7 @@ static const char * const DEFAULT_LOG_CONF_FILE = "../conf/logger.conf";//ƒ¨»œ»’
 
 static void printUsage()
 {
-    cout<<"Usage: "<<programName<<" [option]\n"
+    std::cout<<"Usage: "<<programName<<" [option]\n"
         <<"  options:\n"
         <<"                 run program\n"
         <<"  ?,-h,--help    print help message\n"
@@ -49,27 +48,30 @@ static void printUsage()
         <<"     kill -"<<_SIG_RECONFIG<<" (process id)\n"
         <<"  To exit normally, use:\n"
         <<"     kill -"<<_SIG_EXIT<<" (process id)\n"
-        <<endl;
+        <<std::endl;
 }
 
 static std::string versionInfo()
 {
     std::ostringstream oss;
-    oss<<programName<<" built in "<<__DATE__<<" "<<__TIME__;
+    oss<<programName<<" built at "<<__DATE__<<" "<<__TIME__;
 #ifdef NDEBUG
     oss<<", release version";
 #else
     oss<<", debug version";
+#endif
+#ifdef __USE_MT_ALLOC
+    oss<<" (mt_alloc)";
 #endif
     return oss.str();
 }
 
 static void reconfig(int)
 {
-    cout<<"\nbegin re-config server...\n";
+    std::cout<<"\nbegin re-config server...\n";
     assert(mainServer);
     mainServer->Reconfig();
-    cout<<"\nre-config finished\n";
+    std::cout<<"\nre-config finished\n";
 }
 
 static void showConfig(int)
@@ -86,11 +88,11 @@ static void exitNormally(int)
 static void registerSignal()
 {
     if(signal(_SIG_RECONFIG,reconfig) == SIG_ERR)
-        cerr<<"register RECONFIG signal failed"<<endl;
+        std::cerr<<"register RECONFIG signal failed"<<std::endl;
     if(signal(_SIG_SHOW_CONFIG,showConfig) == SIG_ERR)
-        cerr<<"register SHOW_CONFIG signal failed"<<endl;
+        std::cerr<<"register SHOW_CONFIG signal failed"<<std::endl;
     if(signal(_SIG_EXIT,exitNormally) == SIG_ERR)
-        cerr<<"register EXIT signal failed"<<endl;
+        std::cerr<<"register EXIT signal failed"<<std::endl;
 }
 
 #endif
