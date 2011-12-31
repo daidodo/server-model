@@ -1,10 +1,10 @@
-#include <common/MysqlHelper.h>
-
 #include "comm.h"
 
-static __DZ_STRING name(int i)
+#include <common/MysqlHelper.h>
+
+static std::string name(int i)
 {
-    __DZ_OSTRINGSTREAM oss;
+    std::ostringstream oss;
     oss<<"item_"<<i;
     return oss.str();
 }
@@ -25,7 +25,7 @@ static bool checkRow(const CMyRow & row, int i)
         cerr<<"row.Size()="<<ret<<" is not 2 in result\n";
         return false;
     }
-    __DZ_STRING n(row[0], row.DataLength(0));
+    std::string n(row[0], row.DataLength(0));
     if(n!= name(i)){
         cerr<<"row.name='"<<n<<"' is not '"<<name(i)<<"' for item_"<<i<<endl;
         return false;
@@ -150,7 +150,7 @@ static bool testMySQL()
     }
     //insert
     for(int i = 0;i < 100;++i){
-        __DZ_OSTRINGSTREAM oss;
+        std::ostringstream oss;
         oss<<"insert into `test_table` value('"<<name(i)<<"', '"<<value(i)<<"')";
         sql = oss.str().c_str();
         if(!mysql.Query(sql)){

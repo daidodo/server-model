@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <exception>        //std::exception
 #include "Threads.h"
 
@@ -39,7 +40,7 @@ CThreads::CThreads(__ThreadProc proc,int thread_count,size_t stack_sz)
     , repeat_(false)
 {}
 
-int CThreads::StartThreads(__DZ_STRING name,void * arg,bool repeat)
+int CThreads::StartThreads(std::string name,void * arg,bool repeat)
 {
     if(threads_.empty()){
         LOCAL_LOGGER(logger,"CThreads::StartThreads");
@@ -89,7 +90,7 @@ CThreadPool::CThreadPool(size_t thread_count,size_t stack_sz)
     : threads_(threadProc,thread_count,stack_sz)
 {}
 
-int CThreadPool::StartThreads(__DZ_STRING name,bool repeat)
+int CThreadPool::StartThreads(std::string name,bool repeat)
 {
     return threads_.StartThreads(name,this,repeat);
 }

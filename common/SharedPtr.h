@@ -17,6 +17,7 @@
         20080920    使用模板参数决定锁类型
 //*/
 
+#include <common/impl/Config.h>
 #include <algorithm>        //std::swap
 #include <common/LockInt.h> //CLockInt,CMutex
 #include <common/impl/SharedPtr_impl.h>

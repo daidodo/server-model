@@ -1,6 +1,7 @@
 #ifndef DOZERG_COMMAND_BASE_H_20080103
 #define DOZERG_COMMAND_BASE_H_20080103
 
+#include <common/impl/Config.h>
 #include <common/DataStream.h>
 
 NS_SERVER_BEGIN
@@ -9,8 +10,8 @@ NS_SERVER_BEGIN
 struct ICommand
 {
     static const U32 CMD_VERSION = 1;
-    static __DZ_STRING CommandName(int cmdtype);
-    virtual __DZ_STRING ToStringHelp() const = 0;
+    static std::string CommandName(int cmdtype);
+    virtual std::string ToStringHelp() const = 0;
     virtual bool DecodeParam(CInByteStream & ds) = 0;
     virtual void EncodeParam(COutByteStream & ds) const = 0;
     virtual ~ICommand(){}
@@ -33,16 +34,16 @@ public:
     static const size_t ENCRYPT_KEY_LEN = 8;    //bytes, MUST be consist with the Document
     static const size_t LEN_OFFSET = 8;         //bytes, MUST be consist with the QCmdBase definition
     static U32 MaxCmdLength;                    //bytes, Max Length of TCP commands
-    static QCmdBase * CreateCommand(const __DZ_VECTOR(char) & data,size_t * used = 0);
+    static QCmdBase * CreateCommand(const std::vector<char> & data,size_t * used = 0);
     static void ReleaseCommand(QCmdBase *& cmd);
     explicit QCmdBase(U32 cmdtype = 0);
     U32 CmdType() const{return U32(cmdtype_);}
     U32 CmdBodyLength() const{return length_;}
     bool UseHttp() const{return useHttp_;}
     void UseHttp(bool http){useHttp_ = http;}
-    __DZ_STRING ToString() const;
+    std::string ToString() const;
     //virtual functions
-    __DZ_STRING ToStringHelp() const;
+    std::string ToStringHelp() const;
     bool DecodeParam(CInByteStream & ds);
     void EncodeParam(COutByteStream & ds) const{}
 protected:
@@ -76,13 +77,13 @@ public:
     static const size_t CMD_TYPE_OFFSET = 2;    //bytes, MUST be consist with the UdpQCmdBase definition
     static const size_t ENCRYPT_KEY_LEN = 8;    //bytes, MUST be consist with the Document
     static U32 MaxCmdLength;                    //bytes, Max Length of UDP commands
-    static UdpQCmdBase * CreateCommand(const __DZ_VECTOR(char) & data,size_t * used = 0);
+    static UdpQCmdBase * CreateCommand(const std::vector<char> & data,size_t * used = 0);
     static void ReleaseCommand(UdpQCmdBase *& cmd);
     explicit UdpQCmdBase(U32 cmdtype = 0);
     U32 CmdType() const{return U32(cmdtype_);}
-    __DZ_STRING ToString() const;
+    std::string ToString() const;
     //virtual functions
-    __DZ_STRING ToStringHelp() const;
+    std::string ToStringHelp() const;
     bool DecodeParam(CInByteStream & ds);
     void EncodeParam(COutByteStream & ds) const{}
 protected:

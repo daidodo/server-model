@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <iostream>
 #include <common/Logger.h>
 #include <common/Tools.h>
@@ -54,7 +55,7 @@ void CCmdHandler::ShowConfig(std::ofstream & file) const
         ;
 }
 
-int CCmdHandler::StartThreads(__DZ_STRING name,int thread_count)
+int CCmdHandler::StartThreads(std::string name,int thread_count)
 {
     //business
     return __MyBase::StartThreads(name);
@@ -79,10 +80,10 @@ void CCmdHandler::readyForSend(const RCmdBase & cmd,__Buf & respdata)
     ds.ExportData(data);
     //http
     if(cmd.UseHttp()){
-        __DZ_OSTRINGSTREAM oss;
+        std::ostringstream oss;
         oss<<"HTTP/1.1 200 OK\r\nContent-Length: "<<data.size()
             <<"\r\nContent-Type: Application/octet-stream\r\nConnection: Close\r\n\r\n";
-        __DZ_STRING http = oss.str();
+        std::string http = oss.str();
         respdata.reserve(respdata.size() + http.length() + data.size());
         respdata.insert(respdata.end(),http.begin(),http.end());
     }//encode

@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <common/Logger.h>
 #include <server/frame/CmdSock.h>
 #include "CmdHandler.h"

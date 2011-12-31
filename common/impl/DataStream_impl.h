@@ -1,8 +1,8 @@
 #ifndef DOZERG_DATA_STREAM_IMPL_H_20081016
 #define DOZERG_DATA_STREAM_IMPL_H_20081016
 
-#include <netinet/in.h>         //ntohl
 #include <common/impl/Config.h>
+#include <netinet/in.h>         //ntohl
 
 NS_IMPL_BEGIN
 

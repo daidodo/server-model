@@ -1,6 +1,7 @@
 #ifndef DOZERG_EPOLL_SERVER_H_20080908
 #define DOZERG_EPOLL_SERVER_H_20080908
 
+#include <common/impl/Config.h>
 #include <common/Threads.h>
 #include <server/MainServer.h>
 #if __USE_EPOLL
@@ -19,10 +20,10 @@ class CEpollServer : public CThreadPool
     typedef CMainServer::__FdEvent          __FdEvent;
     typedef CMainServer::__FdEventQue       __FdEventQue;
     typedef CMainServer::__FdSockMap        __FdSockMap;
-    typedef __DZ_VECTOR(__SockPtr)          __SockPtrVec;
-    typedef __DZ_VECTOR(int)                __FdVec;
+    typedef std::vector<__SockPtr>          __SockPtrVec;
+    typedef std::vector<int>                __FdVec;
     typedef __FdEventQue::container_type    __FdEventList;
-    typedef __DZ_VECTOR(__FdEventList)      __FdEvListVec;
+    typedef std::vector<__FdEventList>      __FdEvListVec;
     struct __Stats : public CSpinLock
     {
         typedef CGuard<CSpinLock>   guard_type;

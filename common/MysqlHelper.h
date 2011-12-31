@@ -8,6 +8,8 @@
         CMyFieldInfo
         CMyCharacterSetInfo     mysql 5.1.10版本以后才有
 //*/
+
+#include <common/impl/Config.h>
 #include <mysql.h>
 #include <unistd.h>         //sleep
 #include <string>
@@ -77,37 +79,37 @@ public:
     bool IsValid() const{return field_ != 0;}
     bool operator !() const{return !field_;}
     //Name of column
-    __DZ_STRING Name() const{
+    std::string Name() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->name);
     }
     //Original column name, if an alias
-    __DZ_STRING OrgName() const{
+    std::string OrgName() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->org_name);
     }
     //Table of column if column was a field
-    __DZ_STRING Table() const{
+    std::string Table() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->table);
     }
     //Org table name, if table was an alias
-    __DZ_STRING OrgTable() const{
+    std::string OrgTable() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->org_table);
     }
     //DB name
-    __DZ_STRING DB() const{
+    std::string DB() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->db);
     }
     //Catalog for table
-    __DZ_STRING Catalog() const{
+    std::string Catalog() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->catalog);
     }
     //Default value (set by mysql_list_fields)
-    __DZ_STRING Default() const{
+    std::string Default() const{
         assert(IsValid());
         return MySQLHelp::_2str(field_->def);
     }
@@ -214,17 +216,17 @@ public:
     //character set state
     UINT CharacterSetState() const{return cs_.state;}
     //character set name
-    __DZ_STRING CharacterSetName() const{return MySQLHelp::_2str(cs_.name);}
+    std::string CharacterSetName() const{return MySQLHelp::_2str(cs_.name);}
     //collation name
-    __DZ_STRING CollationName() const{return MySQLHelp::_2str(cs_.csname);}
+    std::string CollationName() const{return MySQLHelp::_2str(cs_.csname);}
     //character set directory
-    __DZ_STRING Directory() const{return MySQLHelp::_2str(cs_.dir);}
+    std::string Directory() const{return MySQLHelp::_2str(cs_.dir);}
     //min. length for multibyte strings
     int MultiByteCharacterMinLength() const{return cs_.mbminlen;}
     //max. length for multibyte strings
     int MultiByteCharacterMaxLength() const{return cs_.mbmaxlen;}
     //comment
-    __DZ_STRING Comment() const{return MySQLHelp::_2str(cs_.comment);}
+    std::string Comment() const{return MySQLHelp::_2str(cs_.comment);}
 };
 #endif
 
@@ -234,8 +236,8 @@ class CMySQL
 public:
     //------------连接数据库------------
     CMySQL():conn_(0){}    //不进行连接
-    explicit CMySQL(__DZ_STRING host,__DZ_STRING user = "",
-        __DZ_STRING passwd = "",__DZ_STRING database = "")  //连接数据库
+    explicit CMySQL(std::string host,std::string user = "",
+        std::string passwd = "",std::string database = "")  //连接数据库
         : conn_(0)
     {
         Connect(host,user,passwd,database);
@@ -243,8 +245,8 @@ public:
     //关闭连接
     ~CMySQL(){Close();}
     //连接数据库
-    void Connect(__DZ_STRING host = "",__DZ_STRING user = "",
-        __DZ_STRING passwd = "",__DZ_STRING database = "")
+    void Connect(std::string host = "",std::string user = "",
+        std::string passwd = "",std::string database = "")
     {
         Close();
         if((conn_ = mysql_init(0)) != 0){
@@ -274,12 +276,12 @@ public:
     //------------查询------------
     //使由db指定的数据库成为默认数据库（当前数据库）
     //在后续查询中，该数据库将是未包含明确数据库区分符的表引用的默认数据库
-    bool SelectDB(__DZ_STRING db){
+    bool SelectDB(std::string db){
         assert(IsConnected());
         return mysql_select_db(conn_,db.c_str()) == 0;
     }
     //执行sql语句
-    bool Query(__DZ_STRING query){
+    bool Query(std::string query){
         assert(IsConnected());
         return !mysql_real_query(conn_,query.c_str(),query.length());
     }
@@ -350,7 +352,7 @@ public:
     }
     //返回最近调用的API函数的错误消息
     //如果未出现错误，返回空字符串
-    __DZ_STRING ErrorMsg() const{
+    std::string ErrorMsg() const{
         assert(IsConnected());
         return MySQLHelp::_2str(mysql_error(conn_));
     }
@@ -362,18 +364,18 @@ public:
     //------------字符串处理------------
     //创建可在SQL语句中使用的合法SQL字符串
     //需要转义的字符为NUL(ASCII 0)、‘\n’、‘\r’、‘\’、‘'’、‘"’、以及Control-Z
-    __DZ_STRING EscapeString(__DZ_STRING str) const{
+    std::string EscapeString(std::string str) const{
         assert(IsConnected());
-        __DZ_STRING ret(str.length() * 2 + 1,0);
+        std::string ret(str.length() * 2 + 1,0);
         U32 len = mysql_real_escape_string(conn_,&ret[0],str.c_str(),str.length());
         ret.resize(len);
         return ret;
     }
     //把字符串从形式上编码为十六进制格式，每个字符编码编码为2个十六进制数
     //以便可采用0xvalue或X'value'格式将字符串置于SQL语句中
-    static __DZ_STRING HexString(__DZ_STRING str){
+    static std::string HexString(std::string str){
 #ifdef __HAS_MYSQL_HEX_STRING
-        __DZ_STRING ret(str.length() * 2 + 1,0);
+        std::string ret(str.length() * 2 + 1,0);
         U32 len = mysql_hex_string(&ret[0],str.c_str(),str.length());
         ret.resize(len);
         return ret;
@@ -390,20 +392,20 @@ public:
     }
 #endif
     //返回当前连接默认的字符集名字
-    __DZ_STRING GetCharacterSetName() const{
+    std::string GetCharacterSetName() const{
         assert(IsConnected());
         return MySQLHelp::_2str(mysql_character_set_name(conn_));
     }
     //设置默认的字符集，字符串csname指定了1个有效的字符集名称
 #ifdef __HAS_MYSQL_CHARSET_INFO
-    bool SetCharacterSet(__DZ_STRING csname){
+    bool SetCharacterSet(std::string csname){
         assert(IsConnected());
         return mysql_set_character_set(conn_,csname.c_str()) == 0;
     }
 #endif
     //------------版本，连接统计信息------------
     //返回表示客户端库版本的字符串，例如：5.0.45
-    static __DZ_STRING GetClientInfo(){
+    static std::string GetClientInfo(){
         return MySQLHelp::_2str(mysql_get_client_info());
     }
     //返回表示客户端库版本的整数
@@ -414,7 +416,7 @@ public:
     }
     //返回描述连接类型的字符串，包括服务器主机名
     //例如"Localhost via UNIX socket"
-    __DZ_STRING GetHostInfo() const{
+    std::string GetHostInfo() const{
         assert(IsConnected());
         return MySQLHelp::_2str(mysql_get_host_info(conn_));
     }
@@ -435,7 +437,7 @@ public:
     //包括以秒为单位的正常运行时间，以及运行线程的数目，问题数，再加载次数，以及打开的表数目
     //例如：
     //Uptime: 157911  Threads: 1  Questions: 5  Slow queries: 0  Opens: 12  Flush tables: 1  Open tables: 6  Queries per second avg: 0.000
-    __DZ_STRING Stat() const{
+    std::string Stat() const{
         assert(IsConnected());
         return MySQLHelp::_2str(mysql_stat(conn_));
     }

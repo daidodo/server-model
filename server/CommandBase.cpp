@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <sstream>
 #include <common/Logger.h>
 #include <common/EncryptorAes.h>
@@ -7,14 +8,14 @@
 NS_SERVER_BEGIN
 
 //struct ICommand
-__DZ_STRING ICommand::CommandName(int cmdtype)
+std::string ICommand::CommandName(int cmdtype)
 {
     switch(cmdtype){
         //ADD NEW COMMAND HERE
         __CMD_CASE(CMD_QUERY);
 		__CMD_CASE(CMD_RESP);
         default:{
-            __DZ_OSTRINGSTREAM oss;
+            std::ostringstream oss;
             oss<<"INVALID_ID_"<<cmdtype;
             return oss.str();
         }
@@ -24,14 +25,14 @@ __DZ_STRING ICommand::CommandName(int cmdtype)
 //struct QCmdBase
 U32 QCmdBase::MaxCmdLength = 1024;
 
-QCmdBase * QCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
+QCmdBase * QCmdBase::CreateCommand(const std::vector<char> & data,size_t * used)
 {
     LOCAL_LOGGER(logger,"QCmdBase::CreateCommand");
     DEBUG("create command from data="<<Tools::DumpHex(data));
     CInByteStream ds(data);
     U16 ver = 0;
     ds>>Manip::offset_value(0,ver);
-	__DZ_VECTOR(char) decryptData;
+	std::vector<char> decryptData;
     if(ver > 100){    //decrypt data if neccessary
         CEncryptorAes aes;
         aes.SetKey(&data[0],ENCRYPT_KEY_LEN);
@@ -96,14 +97,14 @@ bool QCmdBase::Decode(CInByteStream & ds)
     return QCmdBase::DecodeParam(ds) && DecodeParam(ds);
 }
 
-__DZ_STRING QCmdBase::ToString() const
+std::string QCmdBase::ToString() const
 {
-    return __DZ_STRING("(") + QCmdBase::ToStringHelp() + ToStringHelp() + __DZ_STRING(")");
+    return std::string("(") + QCmdBase::ToStringHelp() + ToStringHelp() + std::string(")");
 }
 
-__DZ_STRING QCmdBase::ToStringHelp() const
+std::string QCmdBase::ToStringHelp() const
 {
-    __DZ_OSTRINGSTREAM oss;
+    std::ostringstream oss;
     oss<<(useHttp_ ? "HTTP" : "")
         <<"(version_="<<std::dec<<version_
         <<","<<CommandName(cmdtype_)
@@ -144,7 +145,7 @@ void RCmdBase::Encode(COutByteStream & ds) const
         COutByteStream dss;
         RCmdBase::EncodeParam(dss);
         EncodeParam(dss);
-        __DZ_VECTOR(char) data,encryptData;
+        std::vector<char> data,encryptData;
         dss.ExportData(data);
         CEncryptorAes aes;
         aes.SetKey(&data[0],QCmdBase::ENCRYPT_KEY_LEN);
@@ -166,10 +167,10 @@ void RCmdBase::EncodeParam(COutByteStream & ds) const
 //struct UdpQCmdBase
 U32 UdpQCmdBase::MaxCmdLength = 1024;
 
-UdpQCmdBase * UdpQCmdBase::CreateCommand(const __DZ_VECTOR(char) & data,size_t * used)
+UdpQCmdBase * UdpQCmdBase::CreateCommand(const std::vector<char> & data,size_t * used)
 {
     LOCAL_LOGGER(logger,"UdpQCmdBase::CreateCommand");
-    __DZ_VECTOR(char) decryptData;
+    std::vector<char> decryptData;
     CInByteStream ds(data);
     if(0){    //decrypt data if neccessary
         CEncryptorAes aes;
@@ -232,14 +233,14 @@ bool UdpQCmdBase::Decode(CInByteStream & ds)
     return UdpQCmdBase::DecodeParam(ds) && DecodeParam(ds);
 }
 
-__DZ_STRING UdpQCmdBase::ToString() const
+std::string UdpQCmdBase::ToString() const
 {
-    return __DZ_STRING("(") + UdpQCmdBase::ToStringHelp() + ToStringHelp() + __DZ_STRING(")");
+    return std::string("(") + UdpQCmdBase::ToStringHelp() + ToStringHelp() + std::string(")");
 }
 
-__DZ_STRING UdpQCmdBase::ToStringHelp() const
+std::string UdpQCmdBase::ToStringHelp() const
 {
-    __DZ_OSTRINGSTREAM oss;
+    std::ostringstream oss;
     oss<<"(version_="<<version_
         <<","<<CommandName(cmdtype_)
         <<",seq_="<<seq_
@@ -274,7 +275,7 @@ void UdpRCmdBase::Encode(COutByteStream & ds) const
         COutByteStream dss;
         UdpRCmdBase::EncodeParam(dss);
         EncodeParam(dss);
-        __DZ_VECTOR(char) data,encryptData;
+        std::vector<char> data,encryptData;
         dss.ExportData(data);
         CEncryptorAes aes;
         aes.SetKey(&data[0],UdpQCmdBase::ENCRYPT_KEY_LEN);

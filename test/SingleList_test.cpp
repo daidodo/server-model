@@ -1,6 +1,6 @@
-#include <common/SingleList.h>
-
 #include "comm.h"
+
+#include <common/SingleList.h>
 
 typedef CSingleList<int>    __List;
 

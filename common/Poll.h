@@ -1,22 +1,23 @@
 #ifndef DOZERG_POLL_H_20080506
 #define DOZERG_POLL_H_20080506
 
-#include <sys/poll.h>
-#include <vector>
-#include <map>
-#include <common/impl/Config.h>
-
 /*
     poll操作封装
         CPoll
 //*/
+
+#include <common/impl/Config.h>
+#include <sys/poll.h>
+#include <vector>
+#include <map>
+#include <common/impl/Config.h>
 
 NS_SERVER_BEGIN
 
 class CPoll
 {
     typedef struct pollfd           __PollFd;
-    typedef __DZ_MAP(int,size_t)    __FdMap;
+    typedef std::map<int,size_t>    __FdMap;
     class __PollFdHelper{
         const __PollFd & p_;
         U32              expireTime_;   //s,fd的过期时间
@@ -36,7 +37,7 @@ class CPoll
                 p_.revents & POLLNVAL ||
                 p_.revents & POLLHUP;
         }
-        int FD() const{return p_.fd;}
+        int Fd() const{return p_.fd;}
         U32 ExpireTime() const{return expireTime_;}
         int Flags() const{return p_.events;}
     };
@@ -125,8 +126,8 @@ private:
         return ret;
     }
 
-    __DZ_VECTOR(__PollFd)   pollFd_;
-    __DZ_VECTOR(U32)        fdTime_;        //s,fd的加入时间
+    std::vector<__PollFd>   pollFd_;
+    std::vector<U32>        fdTime_;        //s,fd的加入时间
     __FdMap                 fdMap_;         //fd -> (index + 1)
     U32                     fdtimeout_;     //s,fd的超时时间
     int                     polltimeout_;   //ms,poll的阻塞时间

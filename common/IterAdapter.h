@@ -54,6 +54,7 @@
         //ExtV1Func::operator ()的返回值必须是引用，const或非const都行，根据实际需要定义
 //*/
 
+#include <common/impl/Config.h>
 #include <common/impl/IterAdapter_impl.h>
 
 NS_SERVER_BEGIN

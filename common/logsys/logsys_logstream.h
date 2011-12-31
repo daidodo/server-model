@@ -1,9 +1,9 @@
 #ifndef DZ_LOGSYS_LOG_STREAM_20071023
 #define DZ_LOGSYS_LOG_STREAM_20071023
 
+#include <common/impl/Config.h>
 #include <string>
 #include <sstream>
-#include <common/impl/Alloc.h>
 #include "logsys_singlewriter.h"
 
 IMPL_BEGIN
@@ -13,7 +13,7 @@ IMPL_BEGIN
 class CLogStream
 {
     CSingleWriter & writer_;
-    __DZ_STRING     msg_;
+    std::string     msg_;
 public:
     CLogStream()
         : writer_(CSingleWriter::Instance())
@@ -21,7 +21,7 @@ public:
     ~CLogStream(){FlushStream();}
     template<class T>
     CLogStream & operator <<(const T & s){
-        __DZ_OSTRINGSTREAM oss;
+        std::ostringstream oss;
         oss<<s;
         msg_ += oss.str();
         return *this;

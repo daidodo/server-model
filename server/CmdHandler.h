@@ -1,6 +1,7 @@
 #ifndef DOZERG_COMMAND_HANDLER_H_20071220
 #define DOZERG_COMMAND_HANDLER_H_20071220
 
+#include <common/impl/Config.h>
 #include <common/Threads.h>
 #include <server/MainServer.h>
 #include <common/LockHashMap.h>
@@ -42,7 +43,7 @@ public:
     void Init(const __Config & config);
     void Reconfig(const __Config & config);     //重新读取配置文件
     void ShowConfig(std::ofstream & file) const;//显示当前配置信息
-    virtual int StartThreads(__DZ_STRING name,int thread_count = 0);
+    virtual int StartThreads(std::string name,int thread_count = 0);
     virtual void WaitAll();
 protected:
 	void doIt(__Job & job);

@@ -1,6 +1,7 @@
 #ifndef DOZERG_TCP_SERVER_H_20080909
 #define DOZERG_TCP_SERVER_H_20080909
 
+#include <common/impl/Config.h>
 #include <common/Threads.h>
 #include <server/MainServer.h>
 

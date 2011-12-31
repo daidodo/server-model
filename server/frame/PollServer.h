@@ -1,6 +1,7 @@
 #ifndef DOZERG_POLL_SERVER_H_20080917
 #define DOZERG_POLL_SERVER_H_20080917
 
+#include <common/impl/Config.h>
 #include <common/Threads.h>
 #include <common/Poll.h>
 #include <server/MainServer.h>
@@ -17,12 +18,12 @@ class CPollServer : public CThreadPool
     typedef CMainServer::__FdEvent          __FdEvent;
     typedef CMainServer::__FdEventQue       __FdEventQue;
     typedef CMainServer::__FdSockMap        __FdSockMap;
-    typedef __DZ_VECTOR(__SockPtr)          __SockPtrVec;
-    typedef __DZ_VECTOR(int)                __FdVec;
+    typedef std::vector<__SockPtr>          __SockPtrVec;
+    typedef std::vector<int>                __FdVec;
     typedef std::pair<int,U32>              __FdTime;
-    typedef __DZ_VECTOR(__FdTime)           __FdTimeVec;
+    typedef std::vector<__FdTime>           __FdTimeVec;
     typedef __FdEventQue::container_type    __FdEventList;
-    typedef __DZ_VECTOR(__FdEventList)      __FdEvListVec;
+    typedef std::vector<__FdEventList>      __FdEvListVec;
     struct __Stats : public CSpinLock
     {
         typedef CGuard<CSpinLock>   guard_type;

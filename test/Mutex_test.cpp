@@ -1,6 +1,6 @@
-#include <common/Mutex.h>
-
 #include "comm.h"
+
+#include <common/Mutex.h>
 
 template<class LockT>
 static bool testMutexOp(LockT & m, const char * lockName)

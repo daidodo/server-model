@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <common/Logger.h>
 #include <common/IterAdapter.h>
 #include "PollServer.h"
@@ -65,7 +66,7 @@ int CPollServer::doIt()
                 poll_.RemoveIndex(i);
                 continue;
             }
-            const int fd = poll_[i].FD();
+            const int fd = poll_[i].Fd();
             if(poll_[i].Error()){
                 errFdVec_.push_back(fd);
                 poll_.RemoveIndex(i);
@@ -220,7 +221,7 @@ void CPollServer::addClient(U32 curtime)
         for(;i != tmp.end();++i,++sock_i){
             const int & fd = i->fd_;
             const __SockPtr & pSock = *sock_i;
-            if(!pSock || pSock->FD() != fd){
+            if(!pSock || pSock->Fd() != fd){
                 ERROR("fd="<<fd<<" is not pSock="<<Tools::ToStringPtr(pSock)
                     <<" before poll_.AddFd, ignore it");
             }else{

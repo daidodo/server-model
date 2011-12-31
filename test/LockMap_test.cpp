@@ -1,6 +1,6 @@
-#include <common/LockMap.h>
-
 #include "comm.h"
+
+#include <common/LockMap.h>
 
 static bool testLockSet()
 {
@@ -45,9 +45,9 @@ static bool testLockSet()
 
 static bool testLockMap()
 {
-    CLockMap<int, __DZ_STRING> map;
-    typedef CLockMap<int, __DZ_STRING>::guard_type guard_type;
-    __DZ_STRING s;
+    CLockMap<int, std::string> map;
+    typedef CLockMap<int, std::string>::guard_type guard_type;
+    std::string s;
     for(int i = 0;i < 100;++i){
         s.push_back('a' + i % 26);
         if(!map.insertL(make_pair(i, s))){
@@ -89,7 +89,7 @@ static bool testLockMap()
     }
     for(int i = 100;i > 0;--i){
         int j = i - 1;
-        __DZ_STRING v;
+        std::string v;
         if(!map.pickL(j, v)){
             cerr<<"map.pickL("<<j<<") return false\n";
             return false;

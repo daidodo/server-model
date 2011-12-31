@@ -1,5 +1,5 @@
+#include <common/impl/Config.h>
 #include <sstream>
-#include <common/impl/Alloc.h>
 #include <common/Logger.h>
 #include <common/Tools.h>
 #include <common/EncryptorAes.h>
@@ -8,9 +8,9 @@
 NS_SERVER_BEGIN
 
 //struct CQueryCmd
-__DZ_STRING CQueryCmd::ToStringHelp() const
+std::string CQueryCmd::ToStringHelp() const
 {
-    __DZ_OSTRINGSTREAM oss;
+    std::ostringstream oss;
     oss<<"(fileHash_="<<Tools::DumpHex(fileHash_)
         <<",clientHash_="<<Tools::DumpHex(clientHash_)
         <<",peerId_="<<peerId_
@@ -31,9 +31,9 @@ CQueryRespCmd::CQueryRespCmd(const QCmdBase & head)
     : RCmdBase(CMD_RESP,head)
 {}
 
-__DZ_STRING CQueryRespCmd::ToStringHelp() const
+std::string CQueryRespCmd::ToStringHelp() const
 {
-    __DZ_OSTRINGSTREAM oss;
+    std::ostringstream oss;
     oss<<"(result_="<<U32(result_)
         <<",fileHash_="<<Tools::DumpHex(fileHash_)
         <<",clientHash_="<<Tools::DumpHex(clientHash_);

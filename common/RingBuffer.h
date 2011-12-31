@@ -6,13 +6,14 @@
         CRingBuf
 //*/
 
+#include <common/impl/Config.h>
 #include <cassert>          //assert
 #include <cstddef>          //std::ptrdiff_t
 #include <common/Tools.h>   //Tools::Construct,Tools::DestroyArray
 
 NS_SERVER_BEGIN
 
-template<class T,class Alloc = __DZ_ALLOC<T> >
+template<class T,class Alloc = std::allocator<T> >
 class CRingBuf
 {
 //typedefs:

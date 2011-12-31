@@ -1,6 +1,8 @@
 #ifndef DOZERG_TEMPLATE_H_20091226
 #define DOZERG_TEMPLATE_H_20091226
 
+#include <common/impl/Config.h>
+
 NS_IMPL_BEGIN
 
 //struct CIntegerTraits

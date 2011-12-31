@@ -6,6 +6,7 @@
         CCompressorLZO
 //*/
 
+#include <common/impl/Config.h>
 #include <vector>
 #include <cstring>
 #include <common/Tools.h>
@@ -16,7 +17,7 @@ NS_SERVER_BEGIN
 class CCompressorLZO
 {
     bool    byteOrder_; //host byte order is little-endian(true) or big-endian(false)
-    mutable __DZ_VECTOR(unsigned char)  workmem_;   //Memory required for the wrkmem parameter
+    mutable std::vector<unsigned char>  workmem_;   //Memory required for the wrkmem parameter
 public:
     CCompressorLZO()
         : byteOrder_(Tools::HostByteOrder())
@@ -32,28 +33,28 @@ public:
         -3      decompress input format error
         -4      decompress error
     //*/
-    int Compress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const{
+    int Compress(const std::vector<char> & input,std::vector<char> & output) const{
         return compressTemplate(input,output);
     }
-    int Decompress(const __DZ_VECTOR(char) & input,__DZ_VECTOR(char) & output) const{
+    int Decompress(const std::vector<char> & input,std::vector<char> & output) const{
         return decompressTemplate(input,output);
     }
-    int Compress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const{
+    int Compress(const std::vector<signed char> & input,std::vector<signed char> & output) const{
         return compressTemplate(input,output);
     }
-    int Decompress(const __DZ_VECTOR(signed char) & input,__DZ_VECTOR(signed char) & output) const{
+    int Decompress(const std::vector<signed char> & input,std::vector<signed char> & output) const{
         return decompressTemplate(input,output);
     }
-    int Compress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const{
+    int Compress(const std::vector<unsigned char> & input,std::vector<unsigned char> & output) const{
         return compressTemplate(input,output);
     }
-    int Decompress(const __DZ_VECTOR(unsigned char) & input,__DZ_VECTOR(unsigned char) & output) const{
+    int Decompress(const std::vector<unsigned char> & input,std::vector<unsigned char> & output) const{
         return decompressTemplate(input,output);
     }
-    int Compress(const __DZ_STRING & input,__DZ_STRING & output) const{
+    int Compress(const std::string & input,std::string & output) const{
         return compressTemplate(input,output);
     }
-    int Decompress(const __DZ_STRING & input,__DZ_STRING & output) const{
+    int Decompress(const std::string & input,std::string & output) const{
         return decompressTemplate(input,output);
     }
 private:

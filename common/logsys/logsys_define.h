@@ -1,7 +1,7 @@
 #ifndef DZ_LOGSYS_LOG_SYSTEM_20071023
 #define DZ_LOGSYS_LOG_SYSTEM_20071023
 
-#if defined(LOGSYS)  || defined(__DISPLAY_CODE)
+#if defined(LOGSYS) || defined(__DISPLAY_CODE)
 #   include "logsys_logger.h"
 #   define LOGSYS_LOCK_WRITE(logger,level,msg)  \
         if(level >= logger.Level()){    \
@@ -25,6 +25,6 @@
 #define LOGSYS_WARN(logger,msg)     LOGSYS_LOCK_WRITE(logger,3,msg)
 #define LOGSYS_ERROR(logger,msg)    LOGSYS_LOCK_WRITE(logger,4,msg)
 #define LOGSYS_FATAL(logger,msg)    LOGSYS_LOCK_WRITE(logger,5,msg)
-//LOGSYS_OFF
 
 #endif
+

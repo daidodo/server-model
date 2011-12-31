@@ -1,11 +1,11 @@
-#include <common/FdMap.h>
 #include "comm.h"
+#include <common/FdMap.h>
 
 struct CTest
 {
-    typedef __DZ_ALLOC<CTest> allocator_type;
+    typedef std::allocator<CTest> allocator_type;
     static int objCount;
-    __DZ_STRING a;
+    std::string a;
     static CTest * GetObject(){
         CTest * p = allocator_type().allocate(1);
         return new (p) CTest;
@@ -15,14 +15,14 @@ struct CTest
     }
     static void PutObject(CSharedPtr<CTest> & p){}
     template<class Ptr>
-    static __DZ_STRING ToString(Ptr t){
+    static std::string ToString(Ptr t){
         return (t ? "{'" + t->a + "'}" : "NULL");
     }
     CTest(){++objCount;}
     ~CTest(){--objCount;}
     CTest(const CTest & t):a(t.a){++objCount;}
     void Close(){}
-    bool IsEqual(const __DZ_STRING & s) const{
+    bool IsEqual(const std::string & s) const{
         return a == s;
     }
 };
@@ -31,8 +31,8 @@ int CTest::objCount = 0;
 
 static bool testFdMap()
 {
-    CFdMap<__DZ_STRING> fdmap;
-    __DZ_STRING s;
+    CFdMap<std::string> fdmap;
+    std::string s;
     for(int i = 0;i < 500;++i){
         s.push_back('a' + i % 26);
         fdmap[i] = s;
@@ -67,7 +67,7 @@ template<class Ptr>
 static bool testFdSockMap()
 {
     CFdSockMap<CTest, Ptr> fdmap;
-    __DZ_STRING s100;
+    std::string s100;
     //SetSock 1
     for(int i = 0;i < 500;++i){
         s100.push_back('a' + i % 26);
@@ -78,7 +78,7 @@ static bool testFdSockMap()
     if(!checkSize(fdmap.Size(), 500, 1, "fdmap.Size()"))
         return false;
     //SetSock 2
-    __DZ_STRING s400;
+    std::string s400;
     for(int i = 100;i < 500;++i){
         s400.push_back('b' + i % 27);
         Ptr p = CTest::GetObject();
@@ -117,13 +117,13 @@ static bool testFdSockMap()
     if(!checkSize(fdmap.Size(), 400, 4, "fdmap.Size()"))
         return false;
     //GetSock 3
-    __DZ_VECTOR(int) fdvec;
+    std::vector<int> fdvec;
     for(int i = 400;i > 350;--i)
         fdvec.push_back(i - 1);
-    __DZ_VECTOR(Ptr) pvec(fdvec.size());
+    std::vector<Ptr> pvec(fdvec.size());
     fdmap.GetSock(fdvec.begin(), fdvec.end(), pvec.begin());
     int fd = 400 - 1;
-    for(typename __DZ_VECTOR(Ptr)::const_iterator it = pvec.begin();it != pvec.end();++it, --fd){
+    for(typename std::vector<Ptr>::const_iterator it = pvec.begin();it != pvec.end();++it, --fd){
         Ptr p = *it;
         if(!p || !p->IsEqual(s400)){
             cerr<<"fdmap.GetSock(from, to, dst) returns fdmap["<<fd<<"]="<<CTest::ToString(p)<<" is not '"<<s400<<"'\n";
@@ -153,7 +153,7 @@ static bool testFdSockMap()
     pvec.resize(fdvec.size());
     fdmap.CloseSock(fdvec.begin(), fdvec.end(), pvec.begin());
     fd = 300 - 1;
-    for(typename __DZ_VECTOR(Ptr)::const_iterator it = pvec.begin();it != pvec.end();++it, --fd){
+    for(typename std::vector<Ptr>::const_iterator it = pvec.begin();it != pvec.end();++it, --fd){
         Ptr p = *it;
         if(!p || !p->IsEqual(s400)){
             cerr<<"fdmap.CloseSock(from, to, dst) returns fdmap["<<fd<<"]="<<CTest::ToString(p)<<" is not '"<<s400<<"'\n";

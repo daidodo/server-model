@@ -10,6 +10,7 @@
         20111113    修改CLockHashMap的value_type，将key_type加const修饰，避免write_pointer可以修改
 //*/
 
+#include <common/impl/Config.h>
 #include <functional>           //std::equal_to
 #include <utility>              //std::pair
 #include <common/impl/LockHashTable.h>  //Tools::HashFn, Tools::CIdentity, Tools::CSelect1st
@@ -21,7 +22,7 @@ template<
     class LockT = CRWLock,
     template<typename>class Hash = Tools::HashFn,
     template<typename>class EqualKey = std::equal_to,
-    class Alloc = __DZ_ALLOC<Key>
+    class Alloc = std::allocator<Key>
 >class CLockHashSet{
     //typedefs:
     typedef CLockHashSet<Key, LockT, Hash, EqualKey, Alloc> __Myt;
@@ -68,7 +69,7 @@ template<
     class LockT = CRWLock,
     template<typename>class Hash = Tools::HashFn,
     template<typename>class EqualKey = std::equal_to,
-    class Alloc = __DZ_ALLOC<Value>
+    class Alloc = std::allocator<Value>
 >class CLockHashMap{
     typedef CLockHashMap<Key, Value, LockT, Hash, EqualKey, Alloc>   __Myt;
 public:

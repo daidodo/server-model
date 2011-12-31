@@ -9,6 +9,7 @@
         CThreadManager  自动伸缩的线程池
 //*/
 
+#include <common/impl/Config.h>
 #include <errno.h>          //errno
 #include <pthread.h>
 #include <string>
@@ -36,7 +37,7 @@ public:
     CThreads(__ThreadProc proc,int thread_count,size_t stack_sz = 16 << 10);
     //启动线程服务，repeat表示此服务是否自动重启
     //return +n(启动的线程数),-1(错误)
-    int StartThreads(__DZ_STRING name,void * arg = 0,bool repeat = true);
+    int StartThreads(std::string name,void * arg = 0,bool repeat = true);
     void WaitAll();
     size_t ThreadCount() const{return count_;}
     size_t ActiveCount() const{return activeCnt_.Value();}
@@ -48,9 +49,9 @@ private:
     void *                  proc_arg_;
     int                     count_;     //防止重复启动
     const size_t            stack_sz_;
-    __DZ_VECTOR(pthread_t)  threads_;
+    std::vector<pthread_t>  threads_;
     __ActiveCnt             activeCnt_;
-    __DZ_STRING             name_;
+    std::string             name_;
     bool                    repeat_;
 };
 
@@ -62,7 +63,7 @@ public:
     typedef CThreads::__Active      __Active;
     explicit CThreadPool(size_t thread_count,size_t stack_sz = 16 << 10);
     virtual ~CThreadPool(){}
-    virtual int StartThreads(__DZ_STRING name,bool repeat = true);
+    virtual int StartThreads(std::string name,bool repeat = true);
     virtual void WaitAll();
     size_t ThreadCount() const{return threads_.ThreadCount();}
     size_t ActiveCount() const{return threads_.ActiveCount();}
@@ -134,7 +135,7 @@ public:
     //name为服务线程的名字
     //thread_count为初始线程数，如果超过[threadCountMin_,threadCountMax_]的范围，则采用默认值
     //return +n(启动的线程数),-1(错误)
-    virtual int StartThreads(__DZ_STRING name,int thread_count = 0){
+    virtual int StartThreads(std::string name,int thread_count = 0){
         LOCAL_LOGGER(logger,"CThreadManager::StartThreads");
         if(Started())
             return -1;  //重复启动
@@ -220,7 +221,7 @@ private:
     //fields:
     __Queue & inputQue_;
     const size_t stackSz_;
-    __DZ_STRING name_;
+    std::string name_;
     //schedule thread
     pthread_t   schedule_;
     int         interval_;  //s, 调度频率

@@ -7,6 +7,7 @@
         CBPlusTree  B+Ê÷£¬»¹Î´Íê³É
 //*/
 
+#include <common/impl/Config.h>
 #include <cassert>
 #include <utility>                  //std::pair,std::make_pair
 #include <algorithm>                //std::swap,std::equal,std::lexicographical_compare,std::copy,std::copy_backward,std::lower_bound,std::upper_bound
@@ -20,7 +21,7 @@ template<
     class Value,
     class KeyOfValue = Tools::CIdentity<Value>,
     class Compare = std::less<typename KeyOfValue::result_type>,
-    class Alloc = __DZ_ALLOC<Value>
+    class Alloc = std::allocator<Value>
 >class CTree{
     typedef CTree<Value,KeyOfValue,Compare,Alloc>       __Myt;
 public:
@@ -553,7 +554,7 @@ template<
     class Value,
     class KeyOfValue = Tools::CIdentity<Value>,
     class Compare = std::less<typename KeyOfValue::result_type>,
-    class Alloc = __DZ_ALLOC<Value>
+    class Alloc = std::allocator<Value>
 >class CBPlusTree{
     //typedefs
     typedef CBPlusTree<Value,KeyOfValue,Compare,Alloc>  __Myt;

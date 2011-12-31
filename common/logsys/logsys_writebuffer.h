@@ -1,6 +1,7 @@
 #ifndef DZ_LOGSYS_WRITE_BUFFER_20071019
 #define DZ_LOGSYS_WRITE_BUFFER_20071019
 
+#include <common/impl/Config.h>
 #include <algorithm>
 #include <new>
 #include <cstring>          //memcpy

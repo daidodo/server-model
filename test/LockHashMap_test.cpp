@@ -1,6 +1,6 @@
-#include <common/LockHashMap.h>
-
 #include "comm.h"
+
+#include <common/LockHashMap.h>
 
 #define MAX_VAL     10000
 
@@ -31,9 +31,9 @@ static bool testSet()
     return true;
 }
 
-inline static __DZ_STRING val(int i)
+inline static std::string val(int i)
 {
-    __DZ_STRING ret;
+    std::string ret;
     for(int j = 0;j <= i;++i)
         ret.push_back('b' + j % 27);
     return ret;
@@ -41,9 +41,9 @@ inline static __DZ_STRING val(int i)
 
 static bool testMap()
 {
-    typedef CLockHashMap<int, __DZ_STRING> __HashMap;
+    typedef CLockHashMap<int, std::string> __HashMap;
     __HashMap hashmap;
-    __DZ_STRING s;
+    std::string s;
     for(int i = 0;i < 100;++i){
         s.push_back('a' + i % 26);
         if(!hashmap.Insert(i, s)){
@@ -162,9 +162,9 @@ static bool testMap()
         }
         for(size_t j = 0;j < xparray.size();++j){
             int k = xparray[j].first;
-            __DZ_STRING VAL = "a";
+            std::string VAL = "a";
             VAL[0] += 600 - k;
-            const __DZ_STRING & v = xparray[j].second;
+            const std::string & v = xparray[j].second;
             if(1 != v.size()){
                 cerr<<"v.size()="<<v.size()<<" is not 1\n";
                 return false;
@@ -187,13 +187,13 @@ static bool testMap()
         }
         for(size_t j = 0;j < xparray.size();++j){
             int k = xparray[j].first;
-            __DZ_STRING VAL = "a";
+            std::string VAL = "a";
             VAL[0] += k;
             //xparray[j].first = 0;   //there should be a compile error
             xparray[j].second = VAL;
         }
     }
-    __DZ_STRING VAL = "a";
+    std::string VAL = "a";
     for(int i = 0;i < 600;++i){
         __HashMap::read_pointer xp;
         if(!hashmap.Find(i, xp)){

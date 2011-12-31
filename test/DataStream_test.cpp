@@ -1,6 +1,6 @@
-#include <common/DataStream.h>
-
 #include "comm.h"
+
+#include <common/DataStream.h>
 
 struct CTest
 {
@@ -15,10 +15,10 @@ struct CTest
     char i;
     signed char j;
     unsigned char k;
-    __DZ_STRING l;
-    __DZ_VECTOR(int) m;
+    std::string l;
+    std::vector<int> m;
     char n[20];
-    __DZ_VECTOR(__DZ_STRING) o;
+    std::vector<std::string> o;
     int p;
     bool operator ==(const CTest & t) const{
         return (a == t.a &&
@@ -78,7 +78,7 @@ template<class Buf>
 static bool testStreamInOut()
 {
     const char str1[20] = "this is for test";
-    __DZ_VECTOR(CTest) tests;
+    std::vector<CTest> tests;
     COutByteStream obs;
     for(int i = 0;i < 10;++i){
         CTest t;
@@ -97,7 +97,7 @@ static bool testStreamInOut()
         for(int i = 0;i < 53;++i)
             t.m.push_back(i * i);
         memcpy(t.n, str1, sizeof t.n);
-        __DZ_STRING str2;
+        std::string str2;
         for(int i = 0;i < 30;++i){
             str2.push_back('a' + i);
             t.o.push_back(str2);
@@ -132,9 +132,9 @@ static bool testStreamInOut()
 
 int main()
 {
-    if(!testStreamInOut<__DZ_STRING>())
+    if(!testStreamInOut<std::string>())
         return -1;
-    if(!testStreamInOut<__DZ_VECTOR(char)>())
+    if(!testStreamInOut<std::vector<char> >())
         return -1;
     cout<<"DataStream test succ\n";
 }

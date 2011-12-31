@@ -42,17 +42,21 @@
         ExtractArg
         ToStringPtr
         ErrorMsg
+        Daemon
+        GetHost
+        UrlEncode
+        UrlDecode
         MEM_OFFSET
         iterator_traits
 //*/
 
+#include <common/impl/Config.h>
 #include <functional>   //std::unary_function
 #include <string>
 #include <vector>
 #include <utility>      //std::pair,std::make_pair
 #include <endian.h>     //BYTE_ORDER,LITTLE_ENDIAN
 #include <common/impl/Tools_impl.h>
-#include <common/impl/Alloc.h>
 
 NS_SERVER_BEGIN
 
@@ -138,7 +142,7 @@ namespace Tools
     TEMPLATE_INSTANCE_FOR_TYPE(unsigned long,size_t(v));
     TEMPLATE_INSTANCE_FOR_TYPE(signed long long,size_t(v));
     TEMPLATE_INSTANCE_FOR_TYPE(unsigned long long,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(__DZ_STRING,__stl_hash_string(v.c_str(),v.length()));
+    TEMPLATE_INSTANCE_FOR_TYPE(std::string,__stl_hash_string(v.c_str(),v.length()));
 #undef TEMPLATE_INSTANCE_FOR_TYPE
 
     //字符a是否是可读，即ASCII码属于[32,126]
@@ -158,21 +162,21 @@ namespace Tools
     //默认格式示例："abc" = (3)61 62 63
     //sep为分隔符,默认' '
     //hasLen表示是否有前面的数据长度"(3)"
-    __DZ_STRING DumpHex(const char * v,size_t sz,char sep = ' ',bool hasLen = true);
+    std::string DumpHex(const char * v,size_t sz,char sep = ' ',bool hasLen = true);
 
-    inline __DZ_STRING DumpHex(const signed char * v,size_t sz,char sep = ' ',bool hasLen = true){
+    inline std::string DumpHex(const signed char * v,size_t sz,char sep = ' ',bool hasLen = true){
         return DumpHex((const char *)v,sz,sep,hasLen);
     }
 
-    inline __DZ_STRING DumpHex(const unsigned char * v,size_t sz,char sep = ' ',bool hasLen = true){
+    inline std::string DumpHex(const unsigned char * v,size_t sz,char sep = ' ',bool hasLen = true){
         return DumpHex((const char *)v,sz,sep,hasLen);
     }
 
-    inline __DZ_STRING DumpHex(const __DZ_VECTOR(char) & v,char sep = ' ',bool hasLen = true){
+    inline std::string DumpHex(const std::vector<char> & v,char sep = ' ',bool hasLen = true){
         return v.empty() ? (hasLen ? "(0)" : "") : DumpHex(&v[0],v.size(),sep,hasLen);
     }
 
-    inline __DZ_STRING DumpHex(__DZ_STRING v,char sep = ' ',bool hasLen = true){
+    inline std::string DumpHex(std::string v,char sep = ' ',bool hasLen = true){
         return DumpHex(v.c_str(),v.length(),sep,hasLen);
     }
 
@@ -180,21 +184,21 @@ namespace Tools
     //默认格式示例："a\t\0bc" = (5)a..bc
     //replace为替代符,默认'.'
     //hasLen表示是否有前面的数据长度"(5)"
-    __DZ_STRING DumpStr(const char * v,size_t sz,char replace = '.',bool hasLen = true);
+    std::string DumpStr(const char * v,size_t sz,char replace = '.',bool hasLen = true);
 
-    inline __DZ_STRING DumpStr(const signed char * v,size_t sz,char replace = '.',bool hasLen = true){
+    inline std::string DumpStr(const signed char * v,size_t sz,char replace = '.',bool hasLen = true){
         return DumpStr((const char *)v,sz,replace,hasLen);
     }
 
-    inline __DZ_STRING DumpStr(const unsigned char * v,size_t sz,char replace = '.',bool hasLen = true){
+    inline std::string DumpStr(const unsigned char * v,size_t sz,char replace = '.',bool hasLen = true){
         return DumpStr((const char *)v,sz,replace,hasLen);
     }
 
-    inline __DZ_STRING DumpStr(const __DZ_VECTOR(char) & v,char replace = '.',bool hasLen = true){
+    inline std::string DumpStr(const std::vector<char> & v,char replace = '.',bool hasLen = true){
         return v.empty() ? (hasLen ? "(0)" : "") : DumpStr(&v[0],v.size(),replace,hasLen);
     }
 
-    inline __DZ_STRING DumpStr(__DZ_STRING str,char replace = '.',bool hasLen = true){
+    inline std::string DumpStr(std::string str,char replace = '.',bool hasLen = true){
         return DumpStr(str.c_str(),str.length(),replace,hasLen);
     }
 
@@ -202,42 +206,42 @@ namespace Tools
     //默认格式示例："a\t\223bc" = (5)a\t\223bc
     //base取值为8，16
     //hasLen表示是否有前面的数据长度"(5)"
-    __DZ_STRING DumpVal(const char * v,size_t sz,int base = 8,bool hasLen = true);
+    std::string DumpVal(const char * v,size_t sz,int base = 8,bool hasLen = true);
 
-    inline __DZ_STRING DumpVal(const signed char * v,size_t sz,char base = 8,bool hasLen = true){
+    inline std::string DumpVal(const signed char * v,size_t sz,char base = 8,bool hasLen = true){
         return DumpVal((const char *)v,sz,base,hasLen);
     }
 
-    inline __DZ_STRING DumpVal(const unsigned char * v,size_t sz,char base = 8,bool hasLen = true){
+    inline std::string DumpVal(const unsigned char * v,size_t sz,char base = 8,bool hasLen = true){
         return DumpVal((const char *)v,sz,base,hasLen);
     }
 
-    inline __DZ_STRING DumpVal(const __DZ_VECTOR(char) & v,char base = 8,bool hasLen = true){
+    inline std::string DumpVal(const std::vector<char> & v,char base = 8,bool hasLen = true){
         return v.empty() ? (hasLen ? "(0)" : "") : DumpVal(&v[0],v.size(),base,hasLen);
     }
 
-    inline __DZ_STRING DumpVal(__DZ_STRING str,char base = 8,bool hasLen = true){
+    inline std::string DumpVal(std::string str,char base = 8,bool hasLen = true){
         return DumpVal(str.c_str(),str.length(),base,hasLen);
     }
 
     //得到数据v的可打印形式，自动选择DumpHex，DumpStr或DumpVal
     //show_sz表示显示出来的数据长度，剩余的数据用"..."代替
     //hasLen表示是否有前面的数据长度
-    __DZ_STRING Dump(const char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true);
+    std::string Dump(const char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true);
 
-    inline __DZ_STRING Dump(const signed char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
+    inline std::string Dump(const signed char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
         return Dump((const char *)v,sz,show_sz,hasLen);
     }
 
-    inline __DZ_STRING Dump(const unsigned char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
+    inline std::string Dump(const unsigned char * v,size_t sz,size_t show_sz = size_t(-1),bool hasLen = true){
         return Dump((const char *)v,sz,show_sz,hasLen);
     }
 
-    inline __DZ_STRING Dump(const __DZ_VECTOR(char) & v,size_t show_sz = size_t(-1),bool hasLen = true){
+    inline std::string Dump(const std::vector<char> & v,size_t show_sz = size_t(-1),bool hasLen = true){
         return v.empty() ? (hasLen ? "(0)" : "") : Dump(&v[0],v.size(),show_sz,hasLen);
     }
 
-    inline __DZ_STRING Dump(__DZ_STRING str,size_t show_sz = size_t(-1),bool hasLen = true){
+    inline std::string Dump(std::string str,size_t show_sz = size_t(-1),bool hasLen = true){
         return Dump(str.c_str(),str.length(),show_sz,hasLen);
     }
 
@@ -262,21 +266,21 @@ namespace Tools
     }
 
     //把数据的16进制还原成数据本身
-    __DZ_STRING UnHex(const char * v,size_t sz);
+    std::string UnHex(const char * v,size_t sz);
 
-    inline __DZ_STRING UnHex(const U8 * v,size_t sz){
+    inline std::string UnHex(const U8 * v,size_t sz){
         return UnHex((const char *)v,sz);
     }
 
-    inline __DZ_STRING UnHex(const S8 * v,size_t sz){
+    inline std::string UnHex(const S8 * v,size_t sz){
         return UnHex((const char *)v,sz);
     }
 
-    inline __DZ_STRING UnHex(const __DZ_VECTOR(char) & v){
+    inline std::string UnHex(const std::vector<char> & v){
         return UnHex(&v[0],v.size());
     }
 
-    inline __DZ_STRING UnHex(__DZ_STRING v){
+    inline std::string UnHex(std::string v){
         return UnHex(v.c_str(),v.length());
     }
 
@@ -305,15 +309,15 @@ namespace Tools
     //得到v的16进制表示
     //由于字节序原因,可能与cout<<hex<<v的结果不同
     template<typename T>
-    __DZ_STRING Hex(T v){
+    std::string Hex(T v){
         const char * p = reinterpret_cast<const char *>(&v);
         return DumpHex(p,sizeof v);
     }
 
     //去除str头尾的空白符
-    __DZ_STRING Trim(__DZ_STRING str);
-    inline __DZ_STRING Trim(const char * str,size_t len){
-        return Trim(__DZ_STRING(str,len));
+    std::string Trim(std::string str);
+    inline std::string Trim(const char * str,size_t len){
+        return Trim(std::string(str,len));
     }
 
     //类似于string的find_first_of
@@ -339,15 +343,15 @@ namespace Tools
     U64 GetTimeUs(U64 elapse = 0);
 
     //秒级别的时间字符串,格式设置参考strftime函数
-    __DZ_STRING TimeString(U32 timeS,__DZ_STRING format = "%y-%m-%d %H:%M:%S");
+    std::string TimeString(U32 timeS,std::string format = "%y-%m-%d %H:%M:%S");
 
     //微秒级别的时间字符串,格式设置参考strftime函数
-    __DZ_STRING TimeStringUs(U64 timeMs,__DZ_STRING format = "%y-%m-%d %H:%M:%S");
+    std::string TimeStringUs(U64 timeMs,std::string format = "%y-%m-%d %H:%M:%S");
 
     //把IPv4地址转换成字符串表示
-    __DZ_STRING IPv4String(U32 ip,bool hostByteOrder = true);
+    std::string IPv4String(U32 ip,bool hostByteOrder = true);
 
-    U32 IPv4FromStr(__DZ_STRING ip,bool hostByteOrder = true);
+    U32 IPv4FromStr(std::string ip,bool hostByteOrder = true);
 
     //把[src_first,src_last)的内容copy到[dst_first,dst_first + dst_size)区间
     //return实际copy后,元素的src和dst尾标杆
@@ -393,13 +397,13 @@ namespace Tools
     //封装new和delete，方便使用allocator
     template<class T>
     T * New(){
-        T * ret = __DZ_ALLOC<T>().allocate(1);
+        T * ret = std::allocator<T>().allocate(1);
         return new (ret) T;
     }
 
     template<class T1,class T2>
     T1 * New(const T2 & v){
-        T1 * ret = __DZ_ALLOC<T1>().allocate(1);
+        T1 * ret = std::allocator<T1>().allocate(1);
         return new (ret) T1(v);
     }
 
@@ -417,7 +421,7 @@ namespace Tools
 
     template<class T>
     void Delete(T *& p){
-        Destroy(p,__DZ_ALLOC<T>());
+        Destroy(p,std::allocator<T>());
     }
 
     template<class T,class A>
@@ -436,7 +440,7 @@ namespace Tools
 
     //得到程序的文件名，去掉目录部分
     const char * ProgramName(const char * argstr);
-    inline __DZ_STRING ProgramName(__DZ_STRING argstr){
+    inline std::string ProgramName(std::string argstr){
         return argstr.substr(argstr.find_last_of('/') + 1);
     }
 
@@ -450,12 +454,23 @@ namespace Tools
 
     //调用对象指针p的ToString()函数时，进行安全检查
     template<class Ptr>
-    __DZ_STRING ToStringPtr(const Ptr & p){
+    std::string ToStringPtr(const Ptr & p){
         return (p ? p->ToString() : "NULL");
     }
 
     //得到错误码error_no对应的系统错误信息
-    __DZ_STRING ErrorMsg(int error_no);
+    std::string ErrorMsg(int error_no);
+
+    //程序进到后台运行
+    //closeFiles: 是否关闭所有打开的文件(除了0,1,2)
+    void Daemon(bool closeFiles = false);
+
+    //从url里取出host
+    std::string GetHost(const std::string & url);
+
+    //url转码处理
+    std::string UrlEncode(const std::string & url);
+    std::string UrlDecode(const std::string & url);
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits

@@ -1,15 +1,15 @@
-#include <common/RingBuffer.h>
-
 #include "comm.h"
+
+#include <common/RingBuffer.h>
 
 static bool testRingBuf()
 {
-    CRingBuf<__DZ_STRING> ring(100);
+    CRingBuf<std::string> ring(100);
     if(ring.Capacity() != 100){
         cerr<<"ring.Capacity()="<<ring.Capacity()<<" is not 100\n";
         return false;
     }
-    __DZ_STRING s;
+    std::string s;
     for(int i = 0;i < 100;++i){
         s.push_back(i % 26 + 'a');
         if(!ring.Push(s)){
@@ -27,7 +27,7 @@ static bool testRingBuf()
     }
     s.clear();
     for(int i = 0;i < 100;++i){
-        __DZ_STRING v;
+        std::string v;
         if(!ring.Pop(v)){
             cerr<<"ring.Pop() element "<<i<<" failed\n";
             return false;

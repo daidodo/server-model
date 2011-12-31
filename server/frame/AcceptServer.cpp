@@ -1,3 +1,4 @@
+#include <common/impl/Config.h>
 #include <fstream>
 #include <common/Logger.h>
 #include "AcceptServer.h"
@@ -53,7 +54,7 @@ int CAcceptServer::doIt()
         DEBUG("new client arrived "<<Tools::ToStringPtr(client));
         client->SetLinger();
         client->SetBlock(false);
-        int fd = client->FD();
+        int fd = client->Fd();
         DEBUG("set fdSockMap_["<<fd<<"]="<<Tools::ToStringPtr(client)
             <<" and push into addingFdQue_");
         fdSockMap_.SetSock(fd,client);

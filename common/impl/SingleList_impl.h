@@ -8,9 +8,9 @@
         __slist_iterator
 //*/
 
+#include <common/impl/Config.h>
 #include <cstddef>      //std::ptrdiff_t
 #include <iterator>     //std::forward_iterator_tag
-#include <common/impl/Config.h>
 
 NS_SERVER_BEGIN
 template<class T,class Alloc>
