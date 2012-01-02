@@ -2,7 +2,7 @@
 
 ./kill.sh
 
-sleep 1
+sleep 2
 
 RET=-1
 ./start.sh && RET=0
