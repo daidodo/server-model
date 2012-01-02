@@ -311,6 +311,6 @@ public:
     }
 };
 
-NS_IMPL_BEGIN
+NS_IMPL_END
 
 #endif

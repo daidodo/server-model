@@ -333,7 +333,7 @@ namespace Tools
     //在src串里匹配target串，使用KMP算法
     //找到返回匹配串的起始位置
     //未找到返回-1
-    ssize_t StringMatchKMP(const char * src,size_t srclen,const char * target,size_t tarlen);
+    ssize_t StringMatchKmp(const char * src,size_t srclen,const char * target,size_t tarlen);
 
     //某些函数需要制定到期时间tp.
     //根据timeMs毫秒生成到期时间
@@ -348,7 +348,7 @@ namespace Tools
     //微秒级别的时间字符串,格式设置参考strftime函数
     std::string TimeStringUs(U64 timeMs,std::string format = "%y-%m-%d %H:%M:%S");
 
-    //把IPv4地址转换成字符串表示
+    //IPv4地址与字符串的转换
     std::string IPv4String(U32 ip,bool hostByteOrder = true);
 
     U32 IPv4FromStr(std::string ip,bool hostByteOrder = true);
@@ -503,3 +503,4 @@ namespace std{
 #undef ITERATOR_TRAITS_FOR_INTEGER_TYPE
 
 #endif
+

@@ -543,12 +543,17 @@ protected:
     key_compare     comparator_;
 };
 
+template<class Value,class key_of_value,class Compare,class Alloc>
+inline void swap(NS_SERVER::CTree<Value,key_of_value,Compare,Alloc> & left,NS_SERVER::CTree<Value,key_of_value,Compare,Alloc> & right){
+    left.swap(right);
+}
+
 /*
     CTree NOTE:
         header_->size_ stores the size of CTree;
 //*/
 
-//class CBPlusTree
+/*/class CBPlusTree
 template<
     class Value,
     class KeyOfValue = Tools::CIdentity<Value>,
@@ -894,17 +899,12 @@ private:
     size_type       size_;
 };
 
-NS_SERVER_END
+template<class Value,class key_of_value,class Compare,class Alloc>
+inline void swap(NS_SERVER::CBPlusTree<Value,key_of_value,Compare,Alloc> & left,NS_SERVER::CBPlusTree<Value,key_of_value,Compare,Alloc> & right){
+    left.swap(right);
+}
+//*/
 
-namespace std{
-    template<class Value,class key_of_value,class Compare,class Alloc>
-    inline void swap(NS_SERVER::CTree<Value,key_of_value,Compare,Alloc> & left,NS_SERVER::CTree<Value,key_of_value,Compare,Alloc> & right){
-        left.swap(right);
-    }
-    template<class Value,class key_of_value,class Compare,class Alloc>
-    inline void swap(NS_SERVER::CBPlusTree<Value,key_of_value,Compare,Alloc> & left,NS_SERVER::CBPlusTree<Value,key_of_value,Compare,Alloc> & right){
-        left.swap(right);
-    }
-}//namespace std
+NS_SERVER_END
 
 #endif
