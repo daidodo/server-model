@@ -56,7 +56,7 @@ struct CMainServer
     bool        useEpoll_;              //使用epoll还是poll,不能重新配置
     bool        serverStatsOn_;         //是否开启统计线程,不能重新配置
     int         acceptServerStatckSz_;  //各个线程的栈大小,不能重新配置
-    int         pollServerStackSz_;         
+    int         pollServerStackSz_;
     int         epollServerStackSz_;
     int         tcpServerStackSz_;
     int         cmdHandlerStackSz_;

@@ -23,11 +23,11 @@ static const char * programName;
 static CMainServer * mainServer;
 
 // 信号定义
-static const int _SIG_SHOW_CONFIG = SIGRTMIN + 13; //显示配置信息
+static const int _SIG_SHOW_CONFIG = SIGRTMIN + 13;  //显示配置信息
 
-static const int _SIG_RECONFIG = SIGRTMIN + 14;    //重读配置文件
+static const int _SIG_RECONFIG = SIGRTMIN + 14;     //重读配置文件
 
-static const int _SIG_EXIT = SIGRTMIN + 15;        //正常退出
+static const int _SIG_EXIT = SIGTERM;               //正常退出
 
 static const char * const DEFAULT_CONF_FILE = "../conf/server.conf";    //默认服务器配置文件
 
@@ -42,7 +42,8 @@ static void printUsage()
         <<"  -v             print program version\n"
         <<"  -c=FILENAME    specify config file, default '"<<DEFAULT_CONF_FILE<<"'\n"
         <<"  -l=FILENAME    specify log config file, default '"<<DEFAULT_LOG_CONF_FILE<<"'\n"
-        <<"\n  To show the server config info, use:\n"
+        <<std::endl
+        <<"  To show the server config info, use:\n"
         <<"     kill -"<<_SIG_SHOW_CONFIG<<" (process id)\n"
         <<"  To reconfig the server, use:\n"
         <<"     kill -"<<_SIG_RECONFIG<<" (process id)\n"
