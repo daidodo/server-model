@@ -1,7 +1,7 @@
 #!/bin/sh
 
 PWD=`pwd`
-BIN=Server.out
+BIN=server.out
 CMD=${PWD}/${BIN}
 
 PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`

@@ -3,8 +3,8 @@
 printUsage()
 {
   echo "Usage:"
-  echo "    $0 -alloc FILES         replace allocator strings"
-  echo "    $0 -common FILES        replace common dir strings"
+  echo "    $0 -alloc FILES        replace allocator strings"
+  echo "    $0 -common FILES       replace common dir strings"
 }
 
 if [ $# -lt 1 ] ; then
