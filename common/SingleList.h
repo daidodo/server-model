@@ -303,14 +303,12 @@ private:
     size_type   size_;
 };
 
-NS_SERVER_END
+template<class T,class Alloc>
+void swap(CSingleList<T,Alloc> & a,CSingleList<T,Alloc> & b)
+{
+    a.swap(b);
+}
 
-namespace std{
-    template<class T,class Alloc>
-    void swap(NS_SERVER::CSingleList<T,Alloc> & a,NS_SERVER::CSingleList<T,Alloc> & b)
-    {
-        a.swap(b);
-    }
-}//namespace std
+NS_SERVER_END
 
 #endif
