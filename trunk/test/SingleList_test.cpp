@@ -148,7 +148,7 @@ static bool testSingleList()
     sum = 0;
     for(__List::const_iterator i = list1.begin();i != list1.end();++i, ++sum)
         if(1 != *i){
-            cerr<<"list1 item="<<*i<<" is not 1\n";
+            cerr<<"1: list1 item="<<*i<<" is not 1\n";
             return false;
         }
     if(10 != sum){
@@ -156,13 +156,40 @@ static bool testSingleList()
         return false;
     }
     list1.resize(20, 2);
-
-
+    sum = 0;
+    for(__List::const_iterator i = list1.begin();i != list1.end();++i, ++sum){
+        if(sum < 10){
+            if(1 != *i){
+                cerr<<"2: list1 item["<<sum<<"]="<<*i<<" is not 1\n";
+                return false;
+            }
+        }else{
+            if(2 != *i){
+                cerr<<"3: list1 item["<<sum<<"]="<<*i<<" is not 2\n";
+                return false;
+            }
+        }
+    }
     list1.assign(list2.begin(), list2.end());
     if(!compareList(list3, list1)){
         cerr<<"compareList(list3, list1) failed\n";
         return false;
     }
+    if(list1 != list2){
+        cerr<<"list1 != list2\n";
+        return false;
+    }
+    list1.resize(list1.size() - 1);
+    if(!(list1 < list2)){
+        cerr<<"list1 < list2 is false\n";
+        return false;
+    }
+    swap(list1, list2);
+    if(!(list1 > list2)){
+        cerr<<"list1 > list2 is false\n";
+        return false;
+    }
+
 
 
     

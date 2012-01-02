@@ -112,7 +112,7 @@ private:
             active = self.adjustThreadCount(active << 1);   //Expect
             if(active > count)  //need more threads
                 self.addThreads(active - count);
-            else{               //have waste threads
+            else{               //have idle threads
                 count -= active;    //Waste
                 if(count >= 5 && count >= (active >> 1))
                     self.deleteThread(count);
@@ -156,18 +156,20 @@ public:
     bool Started() const{return !name_.empty();}
     int ThreadCount() const{return threadCount_;}
     int ActiveCount() const{return activeCount_;}
-    //设置调度线程的处理间隔时间（秒）
+    //设置/获取调度线程的处理间隔时间（秒）
     void ScheduleInterval(int timeS){interval_ = timeS;}
+    int ScheduleInterval() const{return interval_;}
+    //设置/获取最多线程数
     void ThreadCountMax(int thread_max){
         if(thread_max >= threadCountMin_)
             threadCountMax_ = thread_max;
     }
+    int ThreadCountMax() const{return threadCountMax_;}
+    //设置/获取最少线程数
     void ThreadCountMin(int thread_min){
         if(thread_min <= threadCountMax_ && thread_min >= THREAD_COUNT_MIN_DEFAULT)
             threadCountMin_ = thread_min;
     }
-    int ScheduleInterval() const{return interval_;}
-    int ThreadCountMax() const{return threadCountMax_;}
     int ThreadCountMin() const{return threadCountMin_;}
 protected:
     virtual void doIt(__Job &) = 0;

@@ -15,7 +15,7 @@
 #include <sys/socket.h>     //sockaddr
 #include <vector>           //std::vector
 #include <string>           //std::string
-#include <Tools.h>   //Tools::ErrorMsg
+#include <Tools.h>          //Tools::ErrorMsg
 
 NS_SERVER_BEGIN
 
@@ -139,6 +139,7 @@ public:
     static const int RET_ERROR = 2;
     std::string ToString() const;
     bool Listen(const CSockAddr & addr,bool block = true,int queueSz = DEFAULT_LISTEN_QUEUE);
+    //return: RET_xxx
     int Accept(CTcpConnSocket & sock) const;
 private:
     CSockAddr hostAddr_;
@@ -166,3 +167,4 @@ private:
 NS_SERVER_END
 
 #endif
+
