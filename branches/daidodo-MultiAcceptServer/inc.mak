@@ -4,6 +4,8 @@
 # SRC_SUFFIX
 
 COMMON := $(BASEDIR)/common
+LIBCOMM := $(COMMON)/libcommon.a
+
 
     #external
 EXTERN_FLAGS   :=#-pg

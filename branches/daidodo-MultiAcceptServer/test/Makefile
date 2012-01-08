@@ -7,18 +7,15 @@ SRC_SUFFIX := cpp
 MYSQL := -lmysqlclient_r -lz
 sinclude $(BASEDIR)/inc.mak
 
-COMM_DIR := $(BASEDIR)/common
-LIBCOMM := $(COMM_DIR)/libcommon.a
-
 all: comm $(TARGET)
 
 release: commrelease $(TARGET)
 
 comm:
-	$(MAKE) -C $(COMM_DIR) all
+	$(MAKE) -C $(COMMON) all
 
 commrelease:
-	$(MAKE) -C $(COMM_DIR) release
+	$(MAKE) -C $(COMMON) release
 
 %_test: %_test.o $(LIBCOMM)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIB)
