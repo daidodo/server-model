@@ -7,6 +7,8 @@
 EXTERN_FLAGS   :=#-pg
 EXTERN__LIB    :=
 
+COMMON := $(BASEDIR)/common
+
 #### OPTIONS ###
     #------use logger(-DLOGGER) or not
 LOG            := -DLOGGER
@@ -21,6 +23,9 @@ CRYPTO         := -lcrypto
 #MYSQL          := -lmysqlclient_r -lz
     #------use epoll(-DUSEEPOLL) or poll
 EPOLL          := -DUSEEPOLL
+    #------use mt_alloc or not
+MT_ALLOC       := -I$(COMMON)/alloc
+
 
 ifneq ($(findstring release, $(MAKECMDGOALS)), release)
     DEBUG := -g
@@ -29,7 +34,7 @@ else
 endif
 
 CC             := $(CXX)
-INCLUDE        := -I$(BASEDIR)/common -I/usr/local/ssl/include -I/usr/include/mysql
+INCLUDE        := -I$(COMMON) $(MT_ALLOC) -I/usr/local/ssl/include -I/usr/include/mysql
 CXXFLAGS       := -Wall $(DEBUG) $(RELEASE) -D_REENTRANT $(LOG) $(LOGSYS) $(EPOLL) $(EXTERN_FLAGS) $(INCLUDE)
 LIB            := -L/usr/local/ssl/lib -L/usr/local/mysql/lib -L/usr/lib -L/usr/local/lib -L$(BASEDIR)/lib -lstdc++ -lpthread -lrt $(MYSQL) $(LOG4CLIB) $(ZIP) $(CRYPTO) $(EXTERN__LIB)
 CFLAGS         := $(CXXFLAGS)
