@@ -1,4 +1,5 @@
-TARGET = $(BASEDIR)/bin/server.out
+TARGET = $(OBJ:_server.o=_server)
+SVROBJ = $(filter-out %_server.o, $(OBJ))
 
 # common defines
 BASEDIR := ..
@@ -16,7 +17,8 @@ comm:
 commrelease:
 	$(MAKE) -C $(COMMON) release
 
-$(TARGET): $(OBJ) $(LIBCOMM)
+#$(TARGET): $(OBJ) $(LIBCOMM)
+%_server: %_server.o $(SVROBJ) $(LIBCOMM)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIB)
 
 clean:
