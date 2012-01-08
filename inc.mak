@@ -3,11 +3,12 @@
 # SRC_DIR
 # SRC_SUFFIX
 
+COMMON := $(BASEDIR)/common
+
     #external
 EXTERN_FLAGS   :=#-pg
 EXTERN__LIB    :=
 
-COMMON := $(BASEDIR)/common
 
 #### OPTIONS ###
     #------use logger(-DLOGGER) or not

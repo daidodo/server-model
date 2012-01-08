@@ -3,14 +3,9 @@
 
 //allocator choice
 #ifdef __GNUC__
-#   ifdef NDEBUG
-#       include <ext/mt_allocator.h>
-#       define __glibcxx_base_allocator __gnu_cxx::__mt_alloc
-#       define __USE_MT_ALLOC
-#   else
-#       include <ext/new_allocator.h>
-#       define __glibcxx_base_allocator  __gnu_cxx::new_allocator
-#   endif
+#   include <ext/mt_allocator.h>
+#   define __glibcxx_base_allocator __gnu_cxx::__mt_alloc
+#   define __USE_MT_ALLOC
 #endif
 
 #endif
