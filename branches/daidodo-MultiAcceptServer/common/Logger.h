@@ -96,6 +96,6 @@ NS_SERVER_END
 #define INFO_COUT(msg)  {LOGGER_INFO(logger,msg);__COUT(msg);}
 #define WARN_COUT(msg)  {LOGGER_WARN(logger,msg);__COUT(msg);}
 #define ERROR_COUT(msg) {LOGGER_ERROR(logger,msg);__COUT(msg);}
-#define FATAL_COUT(msg) {LOGGER_FATAL(logger,msg);__COUT(msg);abort();}
+#define FATAL_COUT(msg) {LOGGER_FATAL(logger,msg);__COUT(msg);}
 
 #endif

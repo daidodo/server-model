@@ -81,6 +81,7 @@ public:
         UDP         //SOCK_DGRAM + IPPROTO_UDP
     };
     static const int INVALID_FD = -1;
+    //functions
     static std::string ErrMsg(){return Tools::ErrorMsg(errno);}
     CSocket();
     virtual ~CSocket();
@@ -106,7 +107,7 @@ public:
         return SendData(&buf[0],buf.size(),timeoutMs);
     }
     bool SendData(const std::string & buf,U32 timeoutMs){
-        return SendData(&buf[0],buf.length(),timeoutMs);
+        return SendData(&buf[0],buf.size(),timeoutMs);
     }
     //发送数据buf,直接调用send
     //返回：+n,实际发送的字节数；0,需要重试；-n，出错
@@ -115,6 +116,7 @@ protected:
     bool getSock(int family,ESockType socktype);
     bool bindAddr(const CSockAddr & addr);
     bool connectAddr(const CSockAddr & addr);
+    //members
     int fd_;
 };
 
