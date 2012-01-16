@@ -3,12 +3,12 @@
 
 NS_SERVER_BEGIN
 
-class CFdEvent
+struct CFdEvent
 {
     static const int EVENT_READ = 1;
     static const int EVENT_WRITE = 2;
     static const int EVENT_CLOSE = 4;
-public:
+    static const int EVENT_EXCL = 8;
     static const int & ExtractFd(const CFdEvent & fe){return fe.Fd();}
     CFdEvent(int f, int e)
         : fd_(f)
@@ -18,8 +18,9 @@ public:
     bool Readable() const{return (event_ & EVENT_READ);}
     bool Writable() const{return (event_ & EVENT_WRITE);}
     bool Closable() const{return (event_ & EVENT_CLOSE);}
-    //members:
+    bool Exclusive() const{return (event_ & EVENT_EXCL);}
 private:
+    //members:
     int fd_;
     int event_;
 };

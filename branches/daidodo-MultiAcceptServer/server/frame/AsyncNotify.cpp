@@ -14,8 +14,7 @@ CAsyncNotify::CAsyncNotify(const CNotifyCtorParams & params)
 {}
 
 CAsyncNotify::~CAsyncNotify()
-{
-}
+{}
 
 bool CAsyncNotify::Init(const CNotifyInitParams & params)
 {
@@ -93,7 +92,7 @@ void CAsyncNotify::addFdEvent(U32 curtime, __FdList & errFdList)
 {
     SCOPE_LOGGER(logger, "CAsyncNotify::addFdEvent");
     __FdEventList tmp;
-    if(!addingFdQue_.PopAll(tmp,0)){
+    if(!addingFdQue_.PopAll(tmp, 0)){
         WARN("addingFdQue_.PopAll() failed");
         return;
     }
@@ -112,10 +111,15 @@ void CAsyncNotify::addFdEvent(U32 curtime, __FdList & errFdList)
             errFdList.push_back(fd);
         }else{
             U32 ev = 0;
-            if(i->Writable())
-                ev |= EPOLLOUT;
             if(i->Readable())
                 ev |= EPOLLIN;
+            if(i->Writable())
+                ev |= EPOLLOUT;
+
+
+
+
+
             if(epoll_.AddOrModifyFd(fd, ev, curtime)){
                 DEBUG("epoll_.AddOrModifyFd(fd="<<fd<<", ev="<<ev<<", client="<<Tools::ToStringPtr(pSock)<<") succ");
             }else{

@@ -46,6 +46,7 @@
         GetHost
         UrlEncode
         UrlDecode
+        IsTimeout
         MEM_OFFSET
         iterator_traits
 //*/
@@ -471,6 +472,10 @@ namespace Tools
     //url转码处理
     std::string UrlEncode(const std::string & url);
     std::string UrlDecode(const std::string & url);
+
+    //通用的检验是否超时的逻辑
+    //jumping: 可以容忍的时间跳变
+    bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping = 0)
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits

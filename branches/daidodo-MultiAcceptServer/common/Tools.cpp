@@ -441,6 +441,14 @@ namespace Tools{
         return oss.str();
     }
 
+    bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping)
+    {
+        if(!oldTime || timeout <= 0)
+            return false;   //²»»á³¬Ê±
+        return curtime + jumping < oldTime
+            || curtime > oldTime + timeout + jumping;
+    }
+
 }//namespace Toos
 
 NS_SERVER_END

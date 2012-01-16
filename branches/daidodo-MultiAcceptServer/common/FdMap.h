@@ -40,9 +40,9 @@ struct CFdMap
     typedef T           value_type;
     typedef T &         reference;
     typedef const T &   const_reference;
-    explicit CFdMap(size_t sz = 100){map_.reserve(sz);}
-    size_t Size() const{return map_.size();}
-    void Reserve(size_t sz){map_.reserve(sz);}
+    explicit CFdMap(size_t capacity = 100){map_.reserve(capacity);}
+    size_t Capacity() const{return map_.size();}
+    void Capacity(size_t sz){map_.reserve(sz);}
     reference operator [](int fd){
         assert(fd >= 0);
         if(size_t(fd) >= map_.size())
