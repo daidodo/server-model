@@ -1,5 +1,6 @@
 #include <Logger.h>
 #include <Tools.h>
+#include <Sockets.h>
 #include <IterAdapter.h>
 
 #include "AsyncNotify.h"
@@ -20,8 +21,7 @@ bool CAsyncNotify::Init(const CNotifyInitParams & params)
 {
     if(!initEpoll(params.maxFdNum_))
         return false;
-    epoll_.SetFdTimeout(params.fdTimeoutS_);     //seconds
-    epoll_.SetEpollTimeout(params.epollTimeoutMs_);     //milliseconds
+    epoll_.EpollTimeout(params.epollTimeoutMs_);//milliseconds
     return true;
 }
 
@@ -30,17 +30,16 @@ int CAsyncNotify::doIt()
     LOCAL_LOGGER(logger, "CAsyncNotify::doIt");
     __FdEventList fdEventList;
     __FdList errFdList;
-    U32 curtime;
     for(;;){
         if(!epoll_.Wait()){
             ERROR("epoll wait error"<<CSocket::ErrMsg());
             continue;
         }
-        curtime = time(0);
+        //handle events
         for(size_t i = 0, sz = epoll_.Size();i < sz;++i){
             CEpollEvent event = epoll_[i];
             const int fd = event.Fd();
-            if(!event.IsValid()){
+            if(event.Invalid()){
                 WARN("epoll_["<<i<<"]="<<event.ToString()<<" is invalid");
                 continue;
             }else if(event.Error()){
@@ -60,9 +59,19 @@ int CAsyncNotify::doIt()
                 fdEventList.push_back(__FdEvent(fd, revents));
             }
         }
-        addFdEvent(curtime, errFdList);
-        handleExpiredFd();
-        handleErrorFd();
+        //add events
+        if(!eventQue_.PushAll(fdEventList, 500)){
+            errFdList.insert(errFdList.end()
+                    , const_iter_adapt_fun<int>(fdEventList.begin(), __FdEvent::ExtractFd)
+                    , const_iter_adapt_fun<int>(fdEventList.end(), __FdEvent::ExtractFd));
+            fdEventList.clear();
+        }
+        //add sockets
+        addFdEvent(errFdList);
+        //close sockets
+        fdSockMap_.CloseSock(errFdList.begin(), errFdList.end());
+        epoll_.RemoveFd(errFdList.begin(), errFdList.end());
+        errFdList.clear();
     }
     return 0;
 }
@@ -70,17 +79,19 @@ int CAsyncNotify::doIt()
 bool CAsyncNotify::initEpoll(U32 maxFdNum)
 {
     LOCAL_LOGGER(logger,"CAsyncNotify::initEpoll");
+    //adjust max file num
     U32 i = Tools::GetMaxFileDescriptor();
     if(i < maxFdNum){
         Tools::SetMaxFileDescriptor(maxFdNum);
         i = Tools::GetMaxFileDescriptor();
     }
     if(i != maxFdNum){
-        WARN("real MAX fd size="<<i<<" is not maxFdNum="<<maxFdNum);
+        WARN("real MAX fd num="<<i<<" is not maxFdNum="<<maxFdNum);
         maxFdNum = i;
     }else{
-        INFO("MAX fd size="<<maxFdNum);
+        INFO("MAX fd num="<<maxFdNum);
     }
+    //create epoll
     if(!epoll_.Create(maxFdNum)){
         FATAL_COUT("epoll_.Create(maxFdNum="<<maxFdNum<<") error"<<CSocket::ErrMsg());
         return false;
@@ -88,16 +99,18 @@ bool CAsyncNotify::initEpoll(U32 maxFdNum)
     return true;
 }
 
-void CAsyncNotify::addFdEvent(U32 curtime, __FdList & errFdList)
+void CAsyncNotify::addFdEvent(__FdList & errFdList)
 {
     SCOPE_LOGGER(logger, "CAsyncNotify::addFdEvent");
+    //pop all
     __FdEventList tmp;
-    if(!addingFdQue_.PopAll(tmp, 0)){
-        WARN("addingFdQue_.PopAll() failed");
+    if(!addingQue_.PopAll(tmp, 0)){
+        WARN("addingQue_.PopAll() failed");
         return;
     }
     if(tmp.empty())
         return;
+    //get sock ptr
     __SockPtrList sockList(tmp.size());
     fdSockMap_.GetSock(const_iter_adapt_fun<int>(tmp.begin(), __FdEvent::ExtractFd), const_iter_adapt_fun<int>(tmp.end(), __FdEvent::ExtractFd), sockList.begin());
     __FdEventList::const_iterator i = tmp.begin();
@@ -105,36 +118,35 @@ void CAsyncNotify::addFdEvent(U32 curtime, __FdList & errFdList)
     for(;i != tmp.end();++i, ++sock_i){
         const int fd = i->Fd();
         const __SockPtr & sock = *sock_i;
+        //validate fd and sock ptr
         if(!sock || sock->Fd() != fd){
             ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" before add to epoll, ignore it");
+            continue;
         }else if(i->Closable()){
             errFdList.push_back(fd);
+            continue;
+        }
+        //add fd and event to epoll
+        U32 ev = 0;
+        if(i->Readable())
+            ev |= EPOLLIN;
+        if(i->Writable())
+            ev |= EPOLLOUT;
+        if(i->Exclusive()){
+            if(!epoll_.ModFlags(fd, ev)){
+                WARN("epoll_.ModFlags(fd="<<fd<<", ev="<<ev<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
+                errFdList.push_back(fd);
+            }
         }else{
-            U32 ev = 0;
-            if(i->Readable())
-                ev |= EPOLLIN;
-            if(i->Writable())
-                ev |= EPOLLOUT;
-
-
-
-
-
-            if(epoll_.AddOrModifyFd(fd, ev, curtime)){
-                DEBUG("epoll_.AddOrModifyFd(fd="<<fd<<", ev="<<ev<<", client="<<Tools::ToStringPtr(pSock)<<") succ");
-            }else{
-                ERROR("epoll_.AddOrModifyFd(fd="<<fd<<", ev="<<ev<<", client="<<Tools::ToStringPtr(pSock)<<") failed,"<<CSocket::ErrMsg()<<", close it");
+            if(!epoll_.AddFlags(fd, ev)){
+                WARN("epoll_.AddFlags(fd="<<fd<<", ev="<<ev<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
                 errFdList.push_back(fd);
             }
         }
     }
 }
 
-void CAsyncNotify::handleExpiredFd()
-{
-}
-
-void CAsyncNotify::handleErrorFd()
+void CAsyncNotify::handleCloseFd(__FdList & errFdList)
 {
 }
 

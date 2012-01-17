@@ -9,7 +9,7 @@ struct CFdEvent
     static const int EVENT_WRITE = 2;
     static const int EVENT_CLOSE = 4;
     static const int EVENT_EXCL = 8;
-    static const int & ExtractFd(const CFdEvent & fe){return fe.Fd();}
+    static const int & ExtractFd(const CFdEvent & fe){return fe.fd_;}
     CFdEvent(int f, int e)
         : fd_(f)
         , event_(e)
@@ -25,11 +25,14 @@ private:
     int event_;
 };
 
-class CCmdSock
+struct CCmdSock
 {
+    typedef std::allocator<CCmdSock> allocator_type;
     //functions
-public:
     bool Acceptable(){return false;}
+    int Fd() const{return 0;}
+    std::string ToString() const{return "";}
+    void Close(){}
 };
 
 NS_SERVER_END

@@ -15,8 +15,8 @@
         TRACE           向变量名为logger的日志对象写入各级别的日志，方便使用
         ...
         ASSERT          使用日志的断言
-        ERROR_COUT      将ERROR信息写入日志文件和标准错误输出
-        FATAL_COUT      将FATAL信息写入日志文件和标准错误输出，并终止程序
+        TRACE_COUT      将各级别信息写入日志文件和标准错误输出
+        ...
     History:
         20081015        增加SCOPE_LOGGER
 //*/

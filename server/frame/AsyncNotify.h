@@ -30,7 +30,6 @@ struct CNotifyCtorParams
 struct CNotifyInitParams
 {
     U32 maxFdNum_;
-    U32 fdTimeoutS_;     //seconds
     int epollTimeoutMs_; //milliseconds
 };
 
@@ -44,10 +43,9 @@ public:
 protected:
     virtual int doIt();
 private:
-    bool initEpoll(int maxFdNum);
-    void addFdEvent(U32 curtime, __FdList & errFdList);
-    void handleExpiredFd();
-    void handleErrorFd();
+    bool initEpoll(U32 maxFdNum);
+    void addFdEvent(__FdList & errFdList);
+    void handleCloseFd(__FdList & errFdList);
     //members
     __FdEventQue & addingQue_;
     __FdEventQue & eventQue_;
