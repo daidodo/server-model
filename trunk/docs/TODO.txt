@@ -26,6 +26,7 @@
 (FIXED)5.CCmdSock::RecvCommand函数内，如果recv_left_为0，会误认为对方关闭连接
 	此时应该返回RET_COMPLETE
 6.在CTcpServer::recvCmdData内，对于解命令体失败的情况，没有通知上一级进行处理
+7.Logsys无法输出16/8进制数值，std::hex和std::oct无用
                 SEVER TEST:
 
 
