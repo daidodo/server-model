@@ -1,31 +1,31 @@
-﻿                SERVER TODO:
-(DONE)1.改善消息队列，使可以一次pop出所有元素
-(DONE)2.独立出accept的线程，减少poll或epoll线程的CPU占用率
-(DONE)3.独立出send操作，专门负责发送回应
-(DONE)4.优化服务器架构
-(DONE)5.支持epoll和poll
-(DONE)6.CPoll::RemoveFd和CEpoll::RemoveFd批量版本可以继续优化
-(DONE)7.优化logsys::CLocalLogger，减少FlushStream()调用次数，例如增加CScopeLogger
-	注意：CScopeLogger只能在关键地方使用，不能作为常用日志类
-(DONE)8.为CInByteStream和COutByteStream增加manipulator
-9.增加CInBitStream和COutBitStream，实现对位的操作
-(CANCEL)10.logsys里的CWriteBuffer每次写文件固定为buf_sz_的大小，是否可以修改为自适应写入数据的大小
-	这样会导致用户的设置无效
-(DONE)11.用名字空间包裹整个代码
-(CANCLE)12.CLockHashTable代码需要改进一下
-13.CmdBase只能支持一种命令头，如果有多套命令，将会非常麻烦
-14.CmdSock与命令的耦合太强，在多套命令体系里不适用，需要优化设计
+                SERVER TODO:
+(DONE)1.������Ϣ���У�ʹ����һ��pop������Ԫ��
+(DONE)2.������accept���̣߳�����poll��epoll�̵߳�CPUռ����
+(DONE)3.������send������ר�Ÿ����ͻ�Ӧ
+(DONE)4.�Ż��������ܹ�
+(DONE)5.֧��epoll��poll
+(DONE)6.CPoll::RemoveFd��CEpoll::RemoveFd�����汾���Լ����Ż�
+(DONE)7.�Ż�logsys::CLocalLogger������FlushStream()���ô�������������CScopeLogger
+	ע�⣺CScopeLoggerֻ���ڹؼ��ط�ʹ�ã�������Ϊ������־��
+(DONE)8.ΪCInByteStream��COutByteStream����manipulator
+9.����CInBitStream��COutBitStream��ʵ�ֶ�λ�Ĳ���
+(CANCEL)10.logsys���CWriteBufferÿ��д�ļ��̶�Ϊbuf_sz_�Ĵ�С���Ƿ�����޸�Ϊ����Ӧд�����ݵĴ�С
+	�����ᵼ���û���������Ч
+(DONE)11.�����ֿռ������������
+(CANCLE)12.CLockHashTable������Ҫ�Ľ�һ��
+13.CmdBaseֻ��֧��һ������ͷ������ж����������ǳ��鷳
+14.CmdSock����������̫ǿ���ڶ���������ϵ�ﲻ���ã���Ҫ�Ż����
 
                 SERVER BUGS:
-(FIXED)1.在服务器fd个数满了之后，accept线程会陷入死循环，浪费CPU
-	等待1秒，不要死循环
-(FIXED)2.CFdSockMap::GetSock函数实现有线程同步问题，改为返回对象，或传引用参数
-(FIXED)3.CmdHandler线程里太频繁的执行Tools::GetTimeUs()，可能成为性能瓶颈
-	通过配置，选择是否统计命令执行时间
-(FIXED)4.CEpollServer::handleExpiredFd里没有从epoll_里删除fd
-(FIXED)5.CCmdSock::RecvCommand函数内，如果recv_left_为0，会误认为对方关闭连接
-	此时应该返回RET_COMPLETE
-6.在CTcpServer::recvCmdData内，对于解命令体失败的情况，没有通知上一级进行处理
+(FIXED)1.�ڷ�����fd��������֮��accept�̻߳�������ѭ�����˷�CPU
+	�ȴ�1�룬��Ҫ��ѭ��
+(FIXED)2.CFdSockMap::GetSock����ʵ�����߳�ͬ�����⣬��Ϊ���ض��󣬻����ò���
+(FIXED)3.CmdHandler�߳���̫Ƶ����ִ��Tools::GetTimeUs()�����ܳ�Ϊ����ƿ��
+	ͨ�����ã�ѡ���Ƿ�ͳ������ִ��ʱ��
+(FIXED)4.CEpollServer::handleExpiredFd��û�д�epoll_��ɾ��fd
+(FIXED)5.CCmdSock::RecvCommand�����ڣ����recv_left_Ϊ0��������Ϊ�Է��ر�����
+	��ʱӦ�÷���RET_COMPLETE
+6.��CTcpServer::recvCmdData�ڣ����ڽ�������ʧ�ܵ������û��֪ͨ��һ�����д���
                 SEVER TEST:
 
 
