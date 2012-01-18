@@ -15,6 +15,7 @@
         20080604    增加release，set成员函数，safe_bool_type，和4个比较操作
         20080912    增加swap函数，并重载std::swap
         20080920    使用模板参数决定锁类型
+        20120118    增加release()
 //*/
 
 #include <algorithm>        //std::swap
@@ -57,6 +58,7 @@ public:
     }
     reference operator *() const{return *ref_->ptr_;}
     pointer operator ->() const{return ref_->ptr_;}
+    void release(){__ref_type::subRef(ref_, true);}
     bool operator !() const{return !ref_;}
     operator safe_bool_type() const{return operator !() ? 0 : &__Myt::init;}
     bool operator ==(const __Myt & a) const{return ref_ == a.ref_;}

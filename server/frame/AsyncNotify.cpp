@@ -14,9 +14,6 @@ CAsyncNotify::CAsyncNotify(const CNotifyCtorParams & params)
     , fdSockMap_(params.fdSockMap_)
 {}
 
-CAsyncNotify::~CAsyncNotify()
-{}
-
 bool CAsyncNotify::Init(const CNotifyInitParams & params)
 {
     if(!initEpoll(params.maxFdNum_))
@@ -101,7 +98,7 @@ bool CAsyncNotify::initEpoll(U32 maxFdNum)
 
 void CAsyncNotify::addFdEvent(__FdList & errFdList)
 {
-    SCOPE_LOGGER(logger, "CAsyncNotify::addFdEvent");
+    LOCAL_LOGGER(logger, "CAsyncNotify::addFdEvent");
     //pop all
     __FdEventList tmp;
     if(!addingQue_.PopAll(tmp, 0)){
@@ -132,23 +129,19 @@ void CAsyncNotify::addFdEvent(__FdList & errFdList)
             ev |= EPOLLIN;
         if(i->Writable())
             ev |= EPOLLOUT;
-        if(i->Exclusive()){
-            if(!epoll_.ModFlags(fd, ev)){
-                WARN("epoll_.ModFlags(fd="<<fd<<", ev="<<ev<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
-                errFdList.push_back(fd);
-            }
-        }else{
-            if(!epoll_.AddFlags(fd, ev)){
-                WARN("epoll_.AddFlags(fd="<<fd<<", ev="<<ev<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
-                errFdList.push_back(fd);
-            }
+        if(!epoll_.ModifyFlags(fd, ev, i->AddFlags())){
+            WARN("epoll_.ModFlags(fd="<<fd<<", ev="<<ev<<", add="<<i->AddFlags()<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
+            errFdList.push_back(fd);
         }
+        //update sock event flags
+        int rev = 0;
+        ev = epoll_.GetFlags(fd);
+        if(0 != (ev & EPOLLIN))
+            rev |= __FdEvent::EVENT_READ;
+        if(0 != (ev & EPOLLOUT))
+            rev |= __FdEvent::EVENT_WRITE;
+        sock->EventFlags(rev);
     }
 }
-
-void CAsyncNotify::handleCloseFd(__FdList & errFdList)
-{
-}
-
 
 NS_SERVER_END

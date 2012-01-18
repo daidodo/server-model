@@ -2,8 +2,7 @@
 #include <sys/poll.h>       //poll
 #include <netdb.h>          //getaddrinfo,freeaddrinfo,gai_strerror
 #include <fcntl.h>          //fcntl
-#include <stropts.h>        //ioctl
-#include <sys/ioctl.h>      //SIOCGIFADDR
+#include <sys/ioctl.h>      //ioctl,SIOCGIFADDR
 #include <net/if.h>         //ifreq
 #include <unistd.h>
 #include <sstream>
