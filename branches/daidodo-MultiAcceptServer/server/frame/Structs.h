@@ -19,7 +19,7 @@ struct CFdEvent
     static const int EVENT_READ_ADD = EVENT_READ | EVENT_ADD;
     static const int EVENT_WRITE_ADD = EVENT_WRITE | EVENT_ADD;
     static const int & ExtractFd(const CFdEvent & fe){return fe.fd_;}
-    CFdEvent(int f, int e)
+    CFdEvent(int f, U32 e)
         : fd_(f)
         , event_(e)
     {}
@@ -31,7 +31,7 @@ struct CFdEvent
 private:
     //members:
     int fd_;
-    int event_;
+    U32 event_;
 };
 
 struct CCmdBase
@@ -42,6 +42,8 @@ struct CCmdBase
     std::string ToString() const{return "";}
 };
 
+typedef CCmdBase __CmdBase;
+
 struct CCmdSock
 {
     typedef std::allocator<CCmdSock> allocator_type;
@@ -49,7 +51,9 @@ struct CCmdSock
     //constants
     static const int RET_IO_ERROR = -2;     //io出错
     static const int RET_IO_RETRY = -1;     //io需要重试
-    static const int RET_COMPLETE = 0;      //发送完成或接收了完整cmd
+    static const int RET_IO_COMPLETE = 0;   //发送完成或接收了完整cmd
+    static const int RET_CMD_ERROR = -1;    //命令处理出错
+    static const int RET_CMD_SUCC = 0;      //命令处理完成
 public:
     //functions
     static CCmdSock * GetObject(){return 0;}
@@ -64,14 +68,21 @@ public:
     void Close(){}
     CSocket & Socket(){return *sock_;}
     //接收数据，decode cmd
-    //return: RET_xxx
+    //return: RET_IO_xxx
     //解出的命令通过cmd返回
-    int RecvCmd(CCmdBase *& cmd){return RET_IO_RETRY;}
+    int RecvCmd(__CmdBase *& cmd){return RET_IO_RETRY;}
     //发送缓冲的数据
-    //return: RET_xxx
-    int SendBuffer(){return RET_COMPLETE;}
+    //return: RET_IO_xxx
+    int SendBuffer(){return RET_IO_COMPLETE;}
     //将buf加入发送缓冲
     void AddSendBuf(buffer & buf){}
+    //处理cmd
+    //ev: 返回需要对读写事件标志进行的修改
+    //return: RET_CMD_xxx
+    int Process(__CmdBase & cmd, U32 & ev){
+        ev = 0;
+        return RET_CMD_SUCC;
+    }
     //获取/设置读写事件标志
     bool WriteEvent() const{return (eventFlags_ & CFdEvent::EVENT_WRITE);}
     bool ReadEvent() const{return (eventFlags_ & CFdEvent::EVENT_READ);}
@@ -91,7 +102,8 @@ typedef CFdSockMap<__CmdSock, __SockPtr> __FdSockMap;
 typedef __FdEventQue::container_type __FdEventList;
 typedef std::vector<int> __FdList;
 typedef std::vector<__SockPtr> __SockPtrList;
-typedef Tools::CTriple<CCmdBase *, int, __SockPtr> __CmdTriple;
+
+typedef Tools::CTriple<__CmdBase *, int, __SockPtr> __CmdTriple;
 typedef CLockQueue<__CmdTriple> __QueryCmdQue;
 
 NS_SERVER_END
