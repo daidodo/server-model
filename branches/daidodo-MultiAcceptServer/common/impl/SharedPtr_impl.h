@@ -7,6 +7,7 @@
     History
         20080605    在_ref_imp::subRef添加p = 0,修正重复删除bug
         20080827    通过__alloc得到__elem_alloc
+        20120118    增加release功能
 //*/
 
 #include <Tools.h>   //Tools::Destroy
@@ -39,10 +40,11 @@ struct _ref_imp{
                 v->addRef(p);
         }
     }
-    static void subRef(_ref_imp *& p){
+    static void subRef(_ref_imp *& p, bool release = false){
         if(p){
             if(!--(p->cnt_)){
-                Tools::Destroy(p->ptr_,__elem_alloc());
+                if(!release)
+                    Tools::Destroy(p->ptr_,__elem_alloc());
                 Tools::Destroy(p,__ref_alloc());
             }
             p = 0;

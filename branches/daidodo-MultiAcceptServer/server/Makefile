@@ -17,7 +17,6 @@ comm:
 commrelease:
 	$(MAKE) -C $(COMMON) release
 
-#$(TARGET): $(OBJ) $(LIBCOMM)
 %_server: %_server.o $(SVROBJ) $(LIBCOMM)
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(LIB)
 

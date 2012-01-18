@@ -74,24 +74,16 @@ public:
             epollFd_ = -1;
         }
     }
-    //增加fd对应的flags
-    //如果fd没有flags，则新增
-    //如果fd已有flags，则OR
-    bool AddFlags(int fd, U32 flags)
-    {
-        U32 & oldFlags = fdInfo_[fd];
-        if(oldFlags)
-            return modifyFdFlags(fd, flags);
-        return addFdFlags(fd, flags);
-    }
+    //获取fd对应的flags
+    U32 GetFlags(int fd) const{return fdInfo_[fd];}
     //修改fd对应的flags
     //如果fd没有flags，则新增
-    //如果fd已有flags，则覆盖
-    bool ModFlags(int fd, U32 flags)
+    //如果fd已有flags，则覆盖(add=false)或OR(add=true)
+    bool ModifyFlags(int fd, U32 flags, bool add)
     {
         U32 & oldFlags = fdInfo_[fd];
         if(oldFlags)
-            return modifyFdFlags(fd, flags | oldFlags);
+            return modifyFdFlags(fd, (add ? flags | oldFlags : flags));
         return addFdFlags(fd, flags);
     }
     //将fd从Epoll中移除
