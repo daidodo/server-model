@@ -68,7 +68,7 @@ bool CAsyncIO::handleSend(__SockPtr & sock, __FdEventList & addingList)
             if(!sock->WriteEvent())
                 addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_WRITE_ADD));
             break;
-        case __CmdSock::RET_COMPLETE:
+        case __CmdSock::RET_IO_COMPLETE:
             break;
         default:assert(0);
     }
@@ -81,7 +81,7 @@ bool CAsyncIO::handleRecv(__SockPtr & sock, __FdEventList & addingList)
     if(sock->Acceptable())
         return handleAccept(sock, addingList);
     const int fd = sock->Fd();
-    CCmdBase * cmd;
+    __CmdBase * cmd;
     for(bool loop = true;loop;){
         int ret = sock->RecvCmd(cmd);
         switch(ret){
@@ -93,7 +93,7 @@ bool CAsyncIO::handleRecv(__SockPtr & sock, __FdEventList & addingList)
                     addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_READ_ADD));
                 loop = false;
                 break;
-            case __CmdSock::RET_COMPLETE:
+            case __CmdSock::RET_IO_COMPLETE:
                 if(!handleCmd(sock, cmd)){
                     addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_CLOSE));
                     return false;
@@ -122,9 +122,9 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, __FdEventList & addingList)
     return true;
 }
 
-bool CAsyncIO::handleCmd(__SockPtr & sock, CCmdBase * cmd)
+bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd)
 {
-    typedef CSharedPtr<CCmdBase, false> __CmdBasePtr;
+    typedef CSharedPtr<__CmdBase, false> __CmdBasePtr;
     LOCAL_LOGGER(logger, "CAsyncIO::handleCmd");
     assert(sock && cmd);
     __CmdBasePtr g(cmd);    //guard only

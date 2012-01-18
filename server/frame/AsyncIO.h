@@ -30,7 +30,7 @@ private:
     bool handleSend(__SockPtr & sock, __FdEventList & addingList);
     bool handleRecv(__SockPtr & sock, __FdEventList & addingList);
     bool handleAccept(__SockPtr & sock, __FdEventList & addingList);
-    bool handleCmd(__SockPtr & sock, CCmdBase * cmd);
+    bool handleCmd(__SockPtr & sock, __CmdBase * cmd);
     //members
     __FdEventQue & addingQue_;
     __FdEventQue & eventQue_;
