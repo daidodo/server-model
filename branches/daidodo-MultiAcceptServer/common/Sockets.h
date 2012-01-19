@@ -16,6 +16,7 @@
 #include <vector>           //std::vector
 #include <string>           //std::string
 #include <Tools.h>          //Tools::ErrorMsg
+#include <FileDesc.h>
 
 NS_SERVER_BEGIN
 
@@ -71,24 +72,14 @@ private:
     const __SA6 * SA6() const{return sa_.empty() ? 0 : (const __SA6 *)(&sa_[0]);}
 };
 
-class CSocket
+struct CSocket : public IFileDesc
 {
-    CSocket(const CSocket &);
-    CSocket & operator =(const CSocket &);
-public:
     enum ESockType{ //type of connection
         TCP,        //SOCK_STREAM + IPPROTO_TCP
         UDP         //SOCK_DGRAM + IPPROTO_UDP
     };
-    static const int INVALID_FD = -1;
     //functions
-    static std::string ErrMsg(){return Tools::ErrorMsg(errno);}
-    CSocket();
-    virtual ~CSocket();
-    int Fd() const{return fd_;}
-    bool IsValid() const{return fd_ != INVALID_FD;}
     bool SetLinger(bool on = true,int timeout = 0);
-    bool SetBlock(bool on = true);
     bool SetReuse(bool on = true);
     bool SetSendTimeout(U32 timeMs);
     bool SetRecvTimeout(U32 timeMs);
@@ -96,7 +87,6 @@ public:
     bool SetRecvSize(size_t sz);
     size_t GetSendSize() const;
     size_t GetRecvSize() const;
-    void Close();
     ssize_t RecvData(char * buf,size_t sz,bool block = false);
     ssize_t RecvData(std::vector<char> & buf,size_t sz,bool block = false);
     ssize_t RecvData(std::string & buf,size_t sz,bool block = false);
@@ -116,8 +106,6 @@ protected:
     bool getSock(int family,ESockType socktype);
     bool bindAddr(const CSockAddr & addr);
     bool connectAddr(const CSockAddr & addr);
-    //members
-    int fd_;
 };
 
 class CTcpConnSocket : public CSocket

@@ -156,15 +156,6 @@ bool CSockAddr::IsValid() const
 }
 
 //class CSocket
-CSocket::CSocket()
-    : fd_(INVALID_FD)
-{}
-
-CSocket::~CSocket()
-{
-    Close();
-}
-
 bool CSocket::SetLinger(bool on,int timeout)
 {
     if(!IsValid())
@@ -173,20 +164,6 @@ bool CSocket::SetLinger(bool on,int timeout)
     ling.l_onoff = on ? 1 : 0;
     ling.l_linger = timeout;
     if(setsockopt(fd_,SOL_SOCKET,SO_LINGER,&ling,sizeof ling) < 0)
-        return false;
-    return true;
-}
-bool CSocket::SetBlock(bool on)
-{
-    if(!IsValid())
-        return false;
-    int oldflag = fcntl(fd_,F_GETFL);
-    if(oldflag == -1)
-        return false;
-    int newflag = (on ? oldflag & ~O_NONBLOCK : oldflag | O_NONBLOCK);
-    if(oldflag == newflag)
-        return true;
-    if(fcntl(fd_,F_SETFL,newflag) < 0)
         return false;
     return true;
 }
@@ -249,14 +226,6 @@ size_t CSocket::GetRecvSize() const
     if(getsockopt(fd_,SOL_SOCKET,SO_RCVBUF,&ret,&len) < 0)
         return 0;
     return ret;
-}
-
-void CSocket::Close()
-{
-    if(IsValid()){
-        close(fd_);
-        fd_ = INVALID_FD;
-    }
 }
 
 ssize_t CSocket::RecvData(char * buf,size_t sz,bool block)
