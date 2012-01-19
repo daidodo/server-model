@@ -26,7 +26,7 @@ int CAsyncNotify::doIt()
 {
     LOCAL_LOGGER(logger, "CAsyncNotify::doIt");
     __FdEventList fdEventList;
-    __FdList errFdList;
+    __FdArray errFdList;
     for(;;){
         if(!epoll_.Wait()){
             ERROR("epoll wait error"<<CSocket::ErrMsg());
@@ -43,14 +43,14 @@ int CAsyncNotify::doIt()
                 WARN("epoll_["<<i<<"]="<<event.ToString()<<" is error");
                 errFdList.push_back(fd);
             }else{
-                int revents = 0;
-                if(epoll_[i].Readable()){
-                    DEBUG("epoll_["<<i<<"]="<<event.ToString()<<" can read");
-                    revents |= __FdEvent::EVENT_READ;
+                __Events revents = 0;
+                if(epoll_[i].CanInput()){
+                    DEBUG("epoll_["<<i<<"]="<<event.ToString()<<" can input");
+                    revents |= EVENT_IN;
                 }
-                if(epoll_[i].Writable()){
-                    DEBUG("epoll_["<<i<<"]="<<event.ToString()<<" can write");
-                    revents |= __FdEvent::EVENT_WRITE;
+                if(epoll_[i].CanOutput()){
+                    DEBUG("epoll_["<<i<<"]="<<event.ToString()<<" can output");
+                    revents |= EVENT_OUT;
                 }
                 DEBUG("push epoll_["<<i<<"]="<<event.ToString()<<", revents="<<revents<<" into fdEventList");
                 fdEventList.push_back(__FdEvent(fd, revents));
@@ -61,8 +61,8 @@ int CAsyncNotify::doIt()
             errFdList.insert(errFdList.end()
                     , const_iter_adapt_fun<int>(fdEventList.begin(), __FdEvent::ExtractFd)
                     , const_iter_adapt_fun<int>(fdEventList.end(), __FdEvent::ExtractFd));
-            fdEventList.clear();
         }
+        fdEventList.clear();
         //add sockets
         addFdEvent(errFdList);
         //close sockets
@@ -96,11 +96,11 @@ bool CAsyncNotify::initEpoll(U32 maxFdNum)
     return true;
 }
 
-void CAsyncNotify::addFdEvent(__FdList & errFdList)
+void CAsyncNotify::addFdEvent(__FdArray & errFdList)
 {
     LOCAL_LOGGER(logger, "CAsyncNotify::addFdEvent");
     //pop all
-    __FdEventList tmp;
+    __FdList tmp;
     if(!addingQue_.PopAll(tmp, 0)){
         WARN("addingQue_.PopAll() failed");
         return;
@@ -109,38 +109,30 @@ void CAsyncNotify::addFdEvent(__FdList & errFdList)
         return;
     //get sock ptr
     __SockPtrList sockList(tmp.size());
-    fdSockMap_.GetSock(const_iter_adapt_fun<int>(tmp.begin(), __FdEvent::ExtractFd), const_iter_adapt_fun<int>(tmp.end(), __FdEvent::ExtractFd), sockList.begin());
-    __FdEventList::const_iterator i = tmp.begin();
+    fdSockMap_.GetSock(tmp.begin(), tmp.end(), sockList.begin());
+    __FdList::const_iterator i = tmp.begin();
     __SockPtrList::const_iterator sock_i = sockList.begin();
     for(;i != tmp.end();++i, ++sock_i){
-        const int fd = i->Fd();
+        const int fd = *i;
         const __SockPtr & sock = *sock_i;
         //validate fd and sock ptr
         if(!sock || sock->Fd() != fd){
             ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" before add to epoll, ignore it");
             continue;
-        }else if(i->Closable()){
+        }else if(Events::NeedClose(sock->Events())){
             errFdList.push_back(fd);
             continue;
         }
-        //add fd and event to epoll
-        U32 ev = 0;
-        if(i->Readable())
+        //add fd and events to epoll
+        U32 ev = 0;     //epoll flags
+        if(Events::NeedInput(sock->Events()))
             ev |= EPOLLIN;
-        if(i->Writable())
+        if(Events::NeedOutput(sock->Events()))
             ev |= EPOLLOUT;
-        if(!epoll_.ModifyFlags(fd, ev, i->AddFlags())){
-            WARN("epoll_.ModFlags(fd="<<fd<<", ev="<<ev<<", add="<<i->AddFlags()<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
+        if(!epoll_.ModifyFlags(fd, ev)){
+            WARN("epoll_.ModFlags(fd="<<fd<<", ev="<<ev<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
             errFdList.push_back(fd);
         }
-        //update sock event flags
-        int rev = 0;
-        ev = epoll_.GetFlags(fd);
-        if(0 != (ev & EPOLLIN))
-            rev |= __FdEvent::EVENT_READ;
-        if(0 != (ev & EPOLLOUT))
-            rev |= __FdEvent::EVENT_WRITE;
-        sock->EventFlags(rev);
     }
 }
 

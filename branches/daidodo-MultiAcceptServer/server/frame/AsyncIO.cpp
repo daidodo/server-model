@@ -17,7 +17,8 @@ int CAsyncIO::doIt()
 {
     LOCAL_LOGGER(logger, "CAsyncIO::doIt");
     __SockPtrList sockList;
-    __FdEventList eventList, addingList;
+    __FdEventList eventList;
+    __FdList addingList;
     for(;;){
         //pop all events
         if(!eventQue_.PopAll(eventList)){
@@ -42,82 +43,68 @@ int CAsyncIO::doIt()
                 continue;
             }
             //handle events
-            if(i->Writable()){
-                if(!handleSend(sock, addingList))
-                    break;
-            }
-            if(i->Readable()){
-                if(!handleRecv(sock, addingList))
-                    break;
-            }
+            __Events oldEv = sock->Events();
+            bool ok = true;
+            if(ok && Events::CanOutput(i->Events()))
+                ok = handleOutput(sock);
+            if(ok && Events::CanInput(i->Events()))
+                ok = handleInput(sock, addingList);
+            //update events
+            if(oldEv != sock->Events())
+                addingList.push_back(fd);
+        }
+        //flush addingList
+        if(!addingQue_.PushAll(addingList, 500)){
+            ERROR("addingQue_.PushAll() failed, close all sockets");
+            fdSockMap_.CloseSock(addingList.begin(), addingList.end());
         }
     }
     return 0;
 }
 
-bool CAsyncIO::handleSend(__SockPtr & sock, __FdEventList & addingList)
+bool CAsyncIO::handleOutput(__SockPtr & sock)
 {
     assert(sock);
-    const int fd = sock->Fd();
-    int ret = sock->SendBuffer();
-    switch(ret){
-        case __CmdSock::RET_IO_ERROR:
-            addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_CLOSE));
-            return false;
-        case __CmdSock::RET_IO_RETRY:
-            if(!sock->WriteEvent())
-                addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_WRITE_ADD));
-            break;
-        case __CmdSock::RET_IO_COMPLETE:
-            break;
-        default:assert(0);
-    }
+    if(Events::CanSend(sock->Events()))
+        return sock->SendBuffer();
+    else if(Events::CanWrite(sock->Events()))
+        return sock->WriteData();
     return true;
 }
 
-bool CAsyncIO::handleRecv(__SockPtr & sock, __FdEventList & addingList)
+bool CAsyncIO::handleInput(__SockPtr & sock, __FdList & addingList)
 {
     assert(sock);
-    if(sock->Acceptable())
+    if(Events::CanAccept(sock->Events())){
         return handleAccept(sock, addingList);
-    const int fd = sock->Fd();
-    __CmdBase * cmd;
-    for(bool loop = true;loop;){
-        int ret = sock->RecvCmd(cmd);
-        switch(ret){
-            case __CmdSock::RET_IO_ERROR:
-                addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_CLOSE));
+    }else if(Events::CanRecv(sock->Events())){
+        for(;;){
+            __CmdBase * cmd = 0;
+            if(!sock->RecvCmd(cmd))
                 return false;
-            case __CmdSock::RET_IO_RETRY:
-                if(!sock->ReadEvent())
-                    addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_READ_ADD));
-                loop = false;
+            if(!cmd)
                 break;
-            case __CmdSock::RET_IO_COMPLETE:
-                if(!handleCmd(sock, cmd)){
-                    addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_CLOSE));
-                    return false;
-                }
-                break;
-            default:assert(0);
+            if(!handleCmd(sock, cmd))
+                return false;
         }
+    }else if(Events::CanRead(sock->Events())){
+        assert(0);
     }
     return true;
 }
 
-bool CAsyncIO::handleAccept(__SockPtr & sock, __FdEventList & addingList)
+bool CAsyncIO::handleAccept(__SockPtr & sock, __FdList & addingList)
 {
     LOCAL_LOGGER(logger, "CAsyncIO::handleAccept");
     assert(sock);
     __SockPtr client(sock->Accept());
     if(client){
         DEBUG("new client arrived "<<Tools::ToStringPtr(client));
-        client->Socket().SetLinger();
-        client->Socket().SetBlock(false);
         const int fd = client->Fd();
         DEBUG("set fdSockMap_["<<fd<<"]="<<Tools::ToStringPtr(client)<<" and push into addingList");
         fdSockMap_.SetSock(fd, client);
-        addingList.push_back(__FdEvent(fd, __FdEvent::EVENT_READ));
+        client->Events(EVENT_RECV);
+        addingList.push_back(fd);
     }
     return true;
 }
@@ -127,7 +114,7 @@ bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd)
     typedef CSharedPtr<__CmdBase, false> __CmdBasePtr;
     LOCAL_LOGGER(logger, "CAsyncIO::handleCmd");
     assert(sock && cmd);
-    __CmdBasePtr g(cmd);    //guard only
+    __CmdBasePtr g(cmd);    //guard
     if(!queryCmdQue_.Push(__CmdTriple(cmd, sock->Fd(), sock), 200)){
         WARN("queryCmdQue_.Push(cmd="<<Tools::ToStringPtr(cmd)<<") from sock="<<Tools::ToStringPtr(sock)<<" failed, destroy cmd");
     }else

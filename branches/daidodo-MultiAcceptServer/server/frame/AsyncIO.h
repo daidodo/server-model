@@ -10,7 +10,7 @@ NS_SERVER_BEGIN
 struct CAsyncIoCtorParams
 {
     size_t stackSize_;
-    __FdEventQue & addingQue_;
+    __FdQue & addingQue_;
     __FdEventQue & eventQue_;
     __FdSockMap & fdSockMap_;
     __QueryCmdQue & queryCmdQue_;
@@ -27,12 +27,12 @@ struct CAsyncIO : public CThreadPool
 protected:
     virtual int doIt();
 private:
-    bool handleSend(__SockPtr & sock, __FdEventList & addingList);
-    bool handleRecv(__SockPtr & sock, __FdEventList & addingList);
-    bool handleAccept(__SockPtr & sock, __FdEventList & addingList);
+    bool handleOutput(__SockPtr & sock);
+    bool handleInput(__SockPtr & sock, __FdList & addingList);
+    bool handleAccept(__SockPtr & sock, __FdList & addingList);
     bool handleCmd(__SockPtr & sock, __CmdBase * cmd);
     //members
-    __FdEventQue & addingQue_;
+    __FdQue & addingQue_;
     __FdEventQue & eventQue_;
     __FdSockMap & fdSockMap_;
     __QueryCmdQue & queryCmdQue_;

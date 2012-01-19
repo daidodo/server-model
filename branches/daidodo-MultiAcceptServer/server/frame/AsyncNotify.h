@@ -11,7 +11,7 @@ NS_SERVER_BEGIN
 struct CNotifyCtorParams
 {
     size_t stackSize_;
-    __FdEventQue & addingQue_;
+    __FdQue & addingQue_;
     __FdEventQue & eventQue_;
     __FdSockMap & fdSockMap_;
 };
@@ -31,9 +31,9 @@ protected:
     virtual int doIt();
 private:
     bool initEpoll(U32 maxFdNum);
-    void addFdEvent(__FdList & errFdList);
+    void addFdEvent(__FdArray & errFdList);
     //members
-    __FdEventQue & addingQue_;
+    __FdQue & addingQue_;
     __FdEventQue & eventQue_;
     __FdSockMap & fdSockMap_;
     CEpoll epoll_;
