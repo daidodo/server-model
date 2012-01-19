@@ -65,11 +65,30 @@ struct CCmdBase
 };
 
 typedef CCmdBase __CmdBase;
+typedef std::vector<char> __Buffer;
+
+struct CRecvHelper
+{
+    typedef std::pair<int, size_t> (*__OnRecv)(const __Buffer &);
+    CRecvHelper()
+        : initSz_(0)
+        , needSz_(0)
+    {}
+    void SetInitSize(size_t sz){initSz_ = 0;}
+    void AddStep(__OnRecv onRecv){steps_.push_back(onRecv);}
+    bool RecvBuf(){
+        return true;
+    }
+private:
+    std::vector<__OnRecv> steps_;
+    size_t initSz_;
+    __Buffer recvBuf_;
+    size_t needSz_;
+};
 
 struct CCmdSock
 {
     typedef std::allocator<CCmdSock> allocator_type;
-    typedef std::vector<char> buffer;
     //constants
     static const int RET_IO_ERROR = -2;     //io出错
     static const int RET_IO_RETRY = -1;     //io需要重试
@@ -78,12 +97,23 @@ struct CCmdSock
     static const int RET_CMD_SUCC = 0;      //命令处理完成
 public:
     //functions
-    static CCmdSock * GetObject(){return 0;}
+    static CCmdSock * GetObject(){
+        CCmdSock * ret = allocator_type().allocate(1);
+        return new (ret) CCmdSock;
+    }
     CCmdSock()
-        : sock_(0)
+        : fileDesc_(0)
         , ev_(0)
     {}
-    int Fd() const{return 0;}
+    int Fd() const{return fileDesc_->Fd();}
+    void Close(){fileDesc_->Close();}
+    //获取/设置事件标志
+    __Events Events() const{return ev_;}
+    void Events(__Events ev){ev_ = ev;}
+    //接收数据，decode cmd
+    //return: 是否出错
+    //解出的命令通过cmd返回
+    bool RecvCmd(__CmdBase *& cmd);
     //接受新tcp客户端
     CCmdSock * Accept(){
         //CSocket * sock = 0;
@@ -91,11 +121,6 @@ public:
         //sock->SetBlock(false);
         return 0;
     }
-    void Close(){}
-    //接收数据，decode cmd
-    //return: 是否出错
-    //解出的命令通过cmd返回
-    bool RecvCmd(__CmdBase *& cmd){cmd = 0;return RET_IO_RETRY;}
     //发送缓冲的数据
     //return: 是否出错
     bool SendBuffer(){return true;}
@@ -103,16 +128,13 @@ public:
     //return: 是否出错
     bool WriteData(){return true;}
     //将buf加入发送缓冲
-    void AddSendBuf(buffer & buf){}
+    void AddSendBuf(__Buffer & buf){}
     //处理cmd
     void Process(__CmdBase & cmd){}
-    //获取/设置事件标志
-    __Events Events() const{return ev_;}
-    void Events(__Events ev){ev_ = ev;}
     std::string ToString() const{return "";}
 private:
     //members
-    CSocket * sock_;
+    IFileDesc * fileDesc_;
     __Events ev_;
 };
 
