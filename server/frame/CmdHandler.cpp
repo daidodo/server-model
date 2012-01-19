@@ -31,18 +31,12 @@ void CCmdHandler::doIt(__Job & job)
         ERROR("before process cmd="<<Tools::ToStringPtr(cmd)<<" for fd="<<fd<<", old sock="<<Tools::ToStringPtr(job.third)<<" is replaced by new sock="<<Tools::ToStringPtr(sock)<<", abandon it");
         return;
     }
-    U32 ev = 0;
-    int ret = sock->Process(*cmd, ev);
-    switch(ret){
-        case __CmdSock::RET_CMD_ERROR:
-            ev = __FdEvent::EVENT_CLOSE;
-            break;
-        case __CmdSock::RET_CMD_SUCC:
-            break;
-        default:assert(0);
-    }
-    if(ev && !addingQue_.Push(__FdEvent(fd, ev), 200)){
-        ERROR("addingQue_.Push(fd="<<fd<<", ev="<<ev<<") failed for cmd="<<Tools::ToStringPtr(cmd)<<" from sock="<<Tools::ToStringPtr(sock));
+    __Events oldEv = sock->Events();
+    sock->Process(*cmd);
+    if(oldEv != sock->Events()){
+        if(!addingQue_.Push(fd, 200)){
+            ERROR("addingQue_.Push(fd="<<fd<<") failed for cmd="<<Tools::ToStringPtr(cmd)<<" from sock="<<Tools::ToStringPtr(sock));
+        }
     }
 }
 

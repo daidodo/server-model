@@ -10,7 +10,7 @@ NS_SERVER_BEGIN
 struct CHandlerCtorParams
 {
     size_t stackSize_;
-    __FdEventQue & addingQue_;
+    __FdQue & addingQue_;
     __FdEventQue & eventQue_;
     __FdSockMap & fdSockMap_;
     __QueryCmdQue & queryCmdQue_;
@@ -30,7 +30,7 @@ protected:
     virtual void doIt(__Job & job);
 private:
     //members
-    __FdEventQue & addingQue_;
+    __FdQue & addingQue_;
     __FdEventQue & eventQue_;
     __FdSockMap & fdSockMap_;
 };

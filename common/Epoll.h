@@ -25,8 +25,8 @@ struct CEpollEvent{
     {}
     int Fd() const{return ev_.data.fd;}
     bool Invalid() const{return ev_.data.fd < 0;}
-    bool Readable() const{return ev_.events & EPOLLIN;}
-    bool Writable() const{return ev_.events & EPOLLOUT;}
+    bool CanInput() const{return ev_.events & EPOLLIN;}
+    bool CanOutput() const{return ev_.events & EPOLLOUT;}
     bool Error() const{return (ev_.events & EPOLLERR) || (ev_.events & EPOLLHUP);}
     std::string ToString() const{
         std::ostringstream oss;
@@ -78,12 +78,12 @@ public:
     U32 GetFlags(int fd) const{return fdInfo_[fd];}
     //修改fd对应的flags
     //如果fd没有flags，则新增
-    //如果fd已有flags，则覆盖(add=false)或OR(add=true)
-    bool ModifyFlags(int fd, U32 flags, bool add)
+    //如果fd已有flags，则覆盖
+    bool ModifyFlags(int fd, U32 flags)
     {
         U32 & oldFlags = fdInfo_[fd];
         if(oldFlags)
-            return modifyFdFlags(fd, (add ? flags | oldFlags : flags));
+            return modifyFdFlags(fd, flags);
         return addFdFlags(fd, flags);
     }
     //将fd从Epoll中移除
