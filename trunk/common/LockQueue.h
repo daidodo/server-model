@@ -160,7 +160,7 @@ private:
         1   full
     //*/
     int waitNotEmpty(S32 timeMs, size_t need){
-        if(need > capacity_())
+        if(need > capacity_)
             return -1;
         while(con_.size() < need){
             if(timeMs < 0){
