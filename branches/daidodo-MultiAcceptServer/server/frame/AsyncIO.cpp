@@ -38,8 +38,8 @@ int CAsyncIO::doIt()
             const int fd = i->Fd();
             __SockPtr & sock = *sock_i;
             //validate fd and socket
-            if(!sock || sock->Fd() != fd){
-                ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" handle events, ignore it");
+            if(!sock || !sock->IsValid()){
+                ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" before handle events, ignore it");
                 continue;
             }
             //handle events
@@ -78,13 +78,13 @@ bool CAsyncIO::handleInput(__SockPtr & sock, __FdList & addingList)
     if(Events::CanAccept(sock->Events())){
         return handleAccept(sock, addingList);
     }else if(Events::CanRecv(sock->Events())){
-        for(;;){
-            __CmdBase * cmd = 0;
-            if(!sock->RecvCmd(cmd))
+        CSockAddr udpClientAddr;
+        for(__CmdBase * cmd = 0;;){
+            if(!sock->RecvCmd(cmd, udpClientAddr))
                 return false;
             if(!cmd)
                 break;
-            if(!handleCmd(sock, cmd))
+            if(!handleCmd(sock, cmd, udpClientAddr))
                 return false;
         }
     }else if(Events::CanRead(sock->Events())){
@@ -99,26 +99,25 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, __FdList & addingList)
     assert(sock);
     __SockPtr client(sock->Accept());
     if(client){
-        DEBUG("new client arrived "<<Tools::ToStringPtr(client));
         const int fd = client->Fd();
-        DEBUG("set fdSockMap_["<<fd<<"]="<<Tools::ToStringPtr(client)<<" and push into addingList");
+        DEBUG("new client="<<Tools::ToStringPtr(client)<<" arrived");
         fdSockMap_.SetSock(fd, client);
-        client->Events(EVENT_RECV);
+        client->Events(EVENT_TCP_RECV);
         addingList.push_back(fd);
     }
     return true;
 }
 
-bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd)
+bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr)
 {
-    typedef CSharedPtr<__CmdBase, false> __CmdBasePtr;
+    typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CAsyncIO::handleCmd");
     assert(sock && cmd);
-    __CmdBasePtr g(cmd);    //guard
-    if(!queryCmdQue_.Push(__CmdTriple(cmd, sock->Fd(), sock), 200)){
-        WARN("queryCmdQue_.Push(cmd="<<Tools::ToStringPtr(cmd)<<") from sock="<<Tools::ToStringPtr(sock)<<" failed, destroy cmd");
+    __CmdSessionPtr session(__CmdSession::GetObject(sock, cmd, udpClientAddr));    //guard
+    if(!queryCmdQue_.Push(&*session, 200)){
+        WARN("queryCmdQue_.Push(session="<<Tools::ToStringPtr(session)<<") failed, destroy it");
     }else
-        g.release();
+        session.release();
     return true;
 }
 

@@ -17,7 +17,7 @@ struct IFileDesc
     IFileDesc():fd_(INVALID_FD){}
     virtual ~IFileDesc() = 0;
     int Fd() const{return fd_;}
-    bool IsValid() const{return fd_ != INVALID_FD;}
+    bool IsValid() const{return fd_ >= 0;}
     bool SetBlock(bool on = true);
     void Close();
 private:

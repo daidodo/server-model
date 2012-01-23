@@ -116,7 +116,7 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
         const int fd = *i;
         const __SockPtr & sock = *sock_i;
         //validate fd and sock ptr
-        if(!sock || sock->Fd() != fd){
+        if(!sock || !sock->IsValid()){
             ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" before add to epoll, ignore it");
             continue;
         }else if(Events::NeedClose(sock->Events())){
