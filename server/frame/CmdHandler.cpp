@@ -17,28 +17,29 @@ bool CCmdHandler::Init(const CHandlerInitParams & params)
 
 void CCmdHandler::doIt(__Job & job)
 {
-    typedef CSharedPtr<__CmdBase, false> __CmdBasePtr;
+    typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CCmdHandler::doIt");
-    __CmdBasePtr cmd(job.first);    //guard
-    const int fd = job.second;
-    if(!cmd || fd < 0){
-        ERROR("fd="<<fd<<" or cmd="<<Tools::ToStringPtr(cmd)<<" is invalid");
+    __CmdSessionPtr session(job);    //guard
+    __SockPtr sock = session->SockPtr();
+    __CmdBase * cmd = session->CmdBase();
+    if(!cmd || !sock->IsValid()){
+        ERROR("cmd="<<Tools::ToStringPtr(cmd)<<" or sock="<<Tools::ToStringPtr(sock)<<" is invalid");
         return;
     }
-    __SockPtr sock;
-    fdSockMap_.GetSock(fd, sock);
-    if(!sock || sock != job.third){
-        ERROR("before process cmd="<<Tools::ToStringPtr(cmd)<<" for fd="<<fd<<", old sock="<<Tools::ToStringPtr(job.third)<<" is replaced by new sock="<<Tools::ToStringPtr(sock)<<", abandon it");
+    const int fd = sock->Fd();
+    __SockPtr newSock;
+    fdSockMap_.GetSock(fd, newSock);
+    if(!newSock || sock != newSock){
+        ERROR("before process session="<<Tools::ToStringPtr(session)<<", old sock is replaced by new sock="<<Tools::ToStringPtr(newSock)<<", abandon it");
         return;
     }
     __Events oldEv = sock->Events();
-    sock->Process(*cmd);
+    sock->Process(*cmd, session->UdpClientAddr());
     if(oldEv != sock->Events()){
         if(!addingQue_.Push(fd, 200)){
-            ERROR("addingQue_.Push(fd="<<fd<<") failed for cmd="<<Tools::ToStringPtr(cmd)<<" from sock="<<Tools::ToStringPtr(sock));
+            ERROR("addingQue_.Push(fd="<<fd<<") failed for session="<<Tools::ToStringPtr(session));
         }
     }
 }
-
 
 NS_SERVER_END

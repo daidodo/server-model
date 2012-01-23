@@ -30,7 +30,7 @@ private:
     bool handleOutput(__SockPtr & sock);
     bool handleInput(__SockPtr & sock, __FdList & addingList);
     bool handleAccept(__SockPtr & sock, __FdList & addingList);
-    bool handleCmd(__SockPtr & sock, __CmdBase * cmd);
+    bool handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
     //members
     __FdQue & addingQue_;
     __FdEventQue & eventQue_;

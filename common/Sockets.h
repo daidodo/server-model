@@ -11,10 +11,11 @@
         CUdpSocket
 //*/
 
-#include <errno.h>
 #include <sys/socket.h>     //sockaddr
+#include <errno.h>
 #include <vector>           //std::vector
 #include <string>           //std::string
+
 #include <Tools.h>          //Tools::ErrorMsg
 #include <FileDesc.h>
 
@@ -60,6 +61,7 @@ public:
     U16 GetPort(bool hostByteOrder = true) const;
     U32 GetIPv4(bool hostByteOrder = true) const;
     bool IsValid() const;
+    void swap(CSockAddr & a) __DZ_NOTHROW{sa_.swap(a.sa_);}
 private:
     socklen_t sockLen() const{return socklen_t(sa_.size());}
     socklen_t format(EAddrType at);
