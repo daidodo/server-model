@@ -10,28 +10,47 @@
 
 NS_SERVER_BEGIN
 
+enum EFileDescType
+{
+    FD_FILE,
+    FD_TCP_LISTEN,
+    FD_TCP_CONN,
+};
+
 struct IFileDesc
 {
     static const int INVALID_FD = -1;
+    //functions
+    static IFileDesc * GetObject(EFileDescType type);
+    static void PutObject(IFileDesc * p);
     static std::string ErrMsg(){return Tools::ErrorMsg(errno);}
-    IFileDesc():fd_(INVALID_FD){}
+    explicit IFileDesc(EFileDescType type)
+        : fd_(INVALID_FD)
+        , type_(type)
+    {}
     virtual ~IFileDesc() = 0;
     int Fd() const{return fd_;}
     bool IsValid() const{return fd_ >= 0;}
     bool SetBlock(bool on = true);
     void Close();
+    virtual std::string ToString() const;
 private:
     IFileDesc(const IFileDesc &);
     IFileDesc & operator =(const IFileDesc &);
 protected:
+    //members
     int fd_;
+    EFileDescType type_;
 };
 
 struct CFile : public IFileDesc
 {
+    typedef std::allocator<CFile> allocator_type;
     //functions
-    CFile(){}
-    CFile(const std::string & pathname, int flags, mode_t mode){
+    CFile():IFileDesc(FD_FILE){}
+    CFile(const std::string & pathname, int flags, mode_t mode)
+        : IFileDesc(FD_FILE)
+    {
         Open(pathname, flags, mode);
     }
     const std::string & Pathname() const{return pathname_;}
@@ -57,6 +76,7 @@ struct CFile : public IFileDesc
     ssize_t Write(const std::string & buf){
         return Write(&buf[0], buf.size());
     }
+    std::string ToString() const;
 private:
     template<class Buf>
     bool readData(Buf & buf, size_t size, bool append){
