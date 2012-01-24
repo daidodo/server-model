@@ -334,7 +334,9 @@ bool CSocket::connectAddr(const CSockAddr & addr)
 std::string CTcpConnSocket::ToString() const
 {
     std::ostringstream oss;
-    oss<<"("<<CSocket::Fd()<<","<<peerAddr_.ToString()<<")";
+    oss<<"{(CTcpConnSocket)base="<<CSocket::ToString()
+        <<", peerAddr_="<<peerAddr_.ToString()
+        <<"}";
     return oss.str();
 }
 
@@ -369,7 +371,9 @@ bool CTcpConnSocket::Reconnect()
 std::string CListenSocket::ToString() const
 {
     std::ostringstream oss;
-    oss<<"("<<CSocket::Fd()<<","<<hostAddr_.ToString()<<")";
+    oss<<"{(CListenSocket)base="<<CSocket::ToString()
+        <<", hostAddr_="<<hostAddr_.ToString()
+        <<"}";
     return oss.str();
 }
 
@@ -412,8 +416,10 @@ int CListenSocket::Accept(CTcpConnSocket & sock) const
 std::string CUdpSocket::ToString() const
 {
     std::ostringstream oss;
-    oss<<"("<<CSocket::Fd()<<",hostAddr_="<<hostAddr_.ToString()
-        <<",peerAddr_="<<peerAddr_.ToString()<<")";
+    oss<<"{(CUdpSocket)base="<<CSocket::ToString()
+        <<",hostAddr_="<<hostAddr_.ToString()
+        <<",peerAddr_="<<peerAddr_.ToString()
+        <<"}";
     return oss.str();
 }
 

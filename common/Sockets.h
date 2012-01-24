@@ -15,6 +15,7 @@
 #include <errno.h>
 #include <vector>           //std::vector
 #include <string>           //std::string
+#include <memory>
 
 #include <Tools.h>          //Tools::ErrorMsg
 #include <FileDesc.h>
@@ -81,6 +82,7 @@ struct CSocket : public IFileDesc
         UDP         //SOCK_DGRAM + IPPROTO_UDP
     };
     //functions
+    explicit CSocket(EFileDescType type):IFileDesc(type){}
     bool SetLinger(bool on = true,int timeout = 0);
     bool SetReuse(bool on = true);
     bool SetSendTimeout(U32 timeMs);
@@ -115,6 +117,8 @@ class CTcpConnSocket : public CSocket
     friend class CListenSocket;
     CSockAddr peerAddr_;
 public:
+    typedef std::allocator<CTcpConnSocket> allocator_type;
+    CTcpConnSocket():CSocket(FD_TCP_CONN){}
     std::string ToString() const;
     const CSockAddr & PeerAddr() const{return peerAddr_;}
     bool Connect(const CSockAddr & addr);
@@ -125,10 +129,12 @@ class CListenSocket : public CSocket
 {
     static const int DEFAULT_LISTEN_QUEUE = 1024;
 public:
+    typedef std::allocator<CListenSocket> allocator_type;
     //Accept()µÄ·µ»ØÖµ
     static const int RET_SUCC = 0;
     static const int RET_EAGAIN = 1;
     static const int RET_ERROR = 2;
+    CListenSocket():CSocket(FD_TCP_LISTEN){}
     std::string ToString() const;
     bool Listen(const CSockAddr & addr,bool block = true,int queueSz = DEFAULT_LISTEN_QUEUE);
     //return: RET_xxx

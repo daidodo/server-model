@@ -97,12 +97,17 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, __FdList & addingList)
 {
     LOCAL_LOGGER(logger, "CAsyncIO::handleAccept");
     assert(sock);
-    __SockPtr client(sock->Accept());
-    if(client){
+    for(__SockSession * client;;){
+        if(!sock->Accept(client)){
+            ERROR("accept error for sock="<<Tools::ToStringPtr(sock));
+            return false;
+        }
+        if(!client)
+            break;
         const int fd = client->Fd();
         DEBUG("new client="<<Tools::ToStringPtr(client)<<" arrived");
-        fdSockMap_.SetSock(fd, client);
-        client->Events(EVENT_TCP_RECV);
+        __SockPtr ptr(client);
+        fdSockMap_.SetSock(fd, ptr);
         addingList.push_back(fd);
     }
     return true;
