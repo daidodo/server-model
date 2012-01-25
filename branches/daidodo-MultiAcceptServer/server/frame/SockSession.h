@@ -11,37 +11,37 @@
 #include <Sockets.h>
 #include <FdMap.h>
 #include "Events.h"
-#include "CmdBase.h"
+#include "Command.h"
 
 NS_SERVER_BEGIN
 
 typedef std::list<__Buffer> __BufList;
 
-enum ERecvRet
+enum EHandleDataRet
 {
     RR_COMPLETE,
     RR_NEED_MORE,
     RR_ERROR
 };
-typedef std::pair<ERecvRet, size_t> __OnRecvRet;
-typedef __OnRecvRet (*__OnRecv)(const __Buffer &);
+typedef std::pair<EHandleDataRet, size_t> __OnDataArriveRet;
+typedef __OnDataArriveRet (*__OnDataArrive)(const __Buffer &);
 
 struct CRecvHelper
 {
     CRecvHelper()
-        : onRecv_(0)
+        : onArrive_(0)
         , initSz_(0)
     {}
-    bool IsValid() const{return onRecv_ && initSz_;}
+    bool IsValid() const{return onArrive_ && initSz_;}
     std::string ToString() const{return "";}
     //设置接收数据处理函数
-    void OnRecv(__OnRecv onRecv){onRecv_ = onRecv;}
-    __OnRecv OnRecv() const{return onRecv_;}
+    void OnDataArrive(__OnDataArrive onDataArrive){onArrive_ = onDataArrive;}
+    __OnDataArrive OnDataArrive() const{return onArrive_;}
     //设置初始接收字节数
     void InitRecvSize(size_t sz){initSz_ = sz;}
     size_t InitRecvSize() const{return initSz_;}
 private:
-    __OnRecv onRecv_;
+    __OnDataArrive onArrive_;
     size_t initSz_;
 };
 

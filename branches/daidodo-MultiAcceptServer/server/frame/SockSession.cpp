@@ -147,9 +147,9 @@ bool CSockSession::recvTcpCmd(__CmdBase *& cmd)
             ev_ |= EVENT_TCP_RECV;
             break;
         }else{
-            __OnRecv onRecv = recvHelper_.OnRecv();
-            assert(onRecv);
-            const __OnRecvRet ret = onRecv(recvBuf_);
+            __OnDataArrive onArrive = recvHelper_.OnDataArrive();
+            assert(onArrive);
+            const __OnDataArriveRet ret = onArrive(recvBuf_);
             switch(ret.first){
                 case RR_COMPLETE:
                     return decodeCmd(cmd);
@@ -157,7 +157,7 @@ bool CSockSession::recvTcpCmd(__CmdBase *& cmd)
                     needSz_ = ret.second;
                     break;
                 case RR_ERROR:
-                    ERROR("onRecv() failed for sock="<<ToString());
+                    ERROR("onArrive() failed for sock="<<ToString());
                     return false;
             }
         }
@@ -189,11 +189,11 @@ bool CSockSession::recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
             ERROR("RecvData(needSz_="<<needSz_<<") failed for sock="<<ToString()<<IFileDesc::ErrMsg());
             return false;
         }else{
-            __OnRecv onRecv = recvHelper_.OnRecv();
-            if(onRecv){
-                const __OnRecvRet ret = onRecv(recvBuf_);
+            __OnDataArrive onArrive = recvHelper_.OnDataArrive();
+            if(onArrive){
+                const __OnDataArriveRet ret = onArrive(recvBuf_);
                 if(ret.first == RR_ERROR){
-                    ERROR("onRecv() failed for sock="<<ToString());
+                    ERROR("onArrive() failed for sock="<<ToString());
                     return false;
                 }
             }

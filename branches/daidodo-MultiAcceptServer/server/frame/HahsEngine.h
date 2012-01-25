@@ -7,13 +7,17 @@
 //*/
 
 #include <Sockets.h>
+#include "SockSession.h"
 
 NS_SERVER_BEGIN
 
 struct CHahsEngine
 {
     //增加tcp监听socket
-    bool AddTcpListen(const CSockAddr & bindAddr);
+    bool AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & recvHelper)
+    {
+        return true;
+    }
     //增加tcp主动连接socket
     bool AddTcpConn(const CSockAddr & connectAddr);
     //增加udp socket
