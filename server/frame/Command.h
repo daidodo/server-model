@@ -12,7 +12,12 @@ typedef std::vector<char> __Buffer;
 
 struct CCmdBase
 {
+    static const int CMD_QUERY = 1;
+    static const int CMD_RESP = 2;
+    virtual ~CCmdBase() = 0;
     std::string ToString() const{return "";}
+private:
+    U16 cmdId_;
 };
 
 //从buf中解出cmd
@@ -22,6 +27,18 @@ CCmdBase * DecodeCmd(const __Buffer & buf);
 void ReleaseCmd(CCmdBase * cmd) __DZ_NOTHROW;
 
 typedef CCmdBase __CmdBase;
+
+struct CCmdQuery : public CCmdBase
+{
+    U16 ver_;
+    std::string echo_;
+};
+
+struct CCmdResp : public CCmdBase
+{
+    U16 ver_;
+    std::string result_;
+};
 
 NS_SERVER_END
 
