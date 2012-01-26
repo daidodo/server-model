@@ -97,6 +97,17 @@ std::string CCmdQuery::ToString() const
 
 //struct CCmdResp
 
+void CCmdResp::Encode(COutByteStream & out) const
+{
+    size_t from = out.Size();
+    out<<U16(0)
+        <<U8(STX)
+        <<CCmdBase::CmdId()
+        <<ver_
+        <<result_;
+    out<<Manip::offset_value(from, out.Size() - from);
+}
+
 std::string CCmdResp::ToString() const
 {
     std::ostringstream oss;

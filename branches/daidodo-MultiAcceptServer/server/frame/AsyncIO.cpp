@@ -1,16 +1,17 @@
 #include <Logger.h>
 #include <IterAdapter.h>
 
+#include "HahsEngine.h"
 #include "AsyncIO.h"
 
 NS_SERVER_BEGIN
 
-CAsyncIO::CAsyncIO(const CAsyncIoCtorParams & params)
-    : CThreadPool(1, params.stackSize_)
-    , addingQue_(params.addingQue_)
-    , eventQue_(params.eventQue_)
-    , fdSockMap_(params.fdSockMap_)
-    , queryCmdQue_(params.queryCmdQue_)
+CAsyncIO::CAsyncIO(size_t stackSz, CHahsEngine & engine)
+    : CThreadPool(1, stackSz)
+    , addingQue_(engine.addingQue_)
+    , eventQue_(engine.eventQue_)
+    , fdSockMap_(engine.fdSockMap_)
+    , queryCmdQue_(engine.queryCmdQue_)
 {}
 
 int CAsyncIO::doIt()

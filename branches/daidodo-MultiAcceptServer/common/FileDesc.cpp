@@ -12,19 +12,25 @@ NS_SERVER_BEGIN
 
 //struct IFileDesc
 
+#define __CASE_GET_OBJECT(id, type) \
+        case id:    \
+            ret = type::allocator_type().allocate(1);   \
+            return new (ret) type
+
+#define __CASE_PUT_OBJECT(id, type) \
+        case id:{   \
+            type * t = dynamic_cast<type *>(p); \
+            Tools::Destroy(t, type::allocator_type());  \
+            break;}
+
 IFileDesc * IFileDesc::GetObject(EFileDescType type)
 {
     IFileDesc * ret = 0;
     switch(type){
-        case FD_FILE:
-            ret = CFile::allocator_type().allocate(1);
-            return new (ret) CFile;
-        case FD_TCP_LISTEN:
-            ret = CListenSocket::allocator_type().allocate(1);
-            return new (ret) CListenSocket;
-        case FD_TCP_CONN:return new CTcpConnSocket;
-            ret = CTcpConnSocket::allocator_type().allocate(1);
-            return new (ret) CTcpConnSocket;
+        __CASE_GET_OBJECT(FD_FILE, CFile);
+        __CASE_GET_OBJECT(FD_TCP_LISTEN, CListenSocket);
+        __CASE_GET_OBJECT(FD_TCP_CONN, CTcpConnSocket);
+        __CASE_GET_OBJECT(FD_UDP, CUdpSocket);
     }
     throw std::runtime_error("file desc type invalid");
 }
@@ -34,20 +40,15 @@ void IFileDesc::PutObject(IFileDesc * p)
     if(!p)
         return;
     switch(p->type_){
-        case FD_FILE:{
-            CFile * t = dynamic_cast<CFile *>(p);
-            Tools::Destroy(t, CFile::allocator_type());
-            break;}
-        case FD_TCP_LISTEN:{
-            CListenSocket * t = dynamic_cast<CListenSocket *>(p);
-            Tools::Destroy(t, CListenSocket::allocator_type());
-            break;}
-        case FD_TCP_CONN:{
-            CTcpConnSocket * t = dynamic_cast<CTcpConnSocket *>(p);
-            Tools::Destroy(t, CTcpConnSocket::allocator_type());
-            break;}
+        __CASE_PUT_OBJECT(FD_FILE, CFile);
+        __CASE_PUT_OBJECT(FD_TCP_LISTEN, CListenSocket);
+        __CASE_PUT_OBJECT(FD_TCP_CONN, CTcpConnSocket);
+        __CASE_PUT_OBJECT(FD_UDP, CUdpSocket);
     }
 }
+
+#undef __CASE_GET_OBJECT
+#undef __CASE_PUT_OBJECT
 
 IFileDesc::~IFileDesc()
 {

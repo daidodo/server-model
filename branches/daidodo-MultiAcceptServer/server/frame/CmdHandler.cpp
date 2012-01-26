@@ -1,18 +1,19 @@
 #include "Command.h"
+#include "HahsEngine.h"
 #include "CmdHandler.h"
 
 NS_SERVER_BEGIN
 
-CCmdHandler::CCmdHandler(const CHandlerCtorParams & params)
-    : __MyBase(params.queryCmdQue_, params.stackSize_)
-    , addingQue_(params.addingQue_)
-    , eventQue_(params.eventQue_)
-    , fdSockMap_(params.fdSockMap_)
+CCmdHandler::CCmdHandler(size_t stackSz, CHahsEngine & engine)
+    : __MyBase(engine.queryCmdQue_, stackSz)
+    , addingQue_(engine.addingQue_)
+    , eventQue_(engine.eventQue_)
+    , fdSockMap_(engine.fdSockMap_)
 {}
 
-bool CCmdHandler::Init(const CHandlerInitParams & params)
+bool CCmdHandler::Init(int threadCountMax)
 {
-    __MyBase::ThreadCountMax(params.threadCountMax_);
+    __MyBase::ThreadCountMax(threadCountMax);
     return true;
 }
 

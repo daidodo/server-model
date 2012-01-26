@@ -62,6 +62,8 @@ public:
     typedef CThreads::__Active      __Active;
     explicit CThreadPool(size_t thread_count,size_t stack_sz = 16 << 10);
     virtual ~CThreadPool(){}
+    //启动线程服务，repeat表示此服务是否自动重启
+    //return +n(启动的线程数),-1(错误)
     virtual int StartThreads(std::string name,bool repeat = true);
     virtual void WaitAll();
     size_t ThreadCount() const{return threads_.ThreadCount();}

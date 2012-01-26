@@ -15,6 +15,7 @@ enum EFileDescType
     FD_FILE,
     FD_TCP_LISTEN,
     FD_TCP_CONN,
+    FD_UDP
 };
 
 struct IFileDesc
@@ -30,10 +31,11 @@ struct IFileDesc
     {}
     virtual ~IFileDesc() = 0;
     int Fd() const{return fd_;}
+    EFileDescType Type(){return type_;}
+    virtual std::string ToString() const;
     bool IsValid() const{return fd_ >= 0;}
     bool SetBlock(bool on = true);
     void Close();
-    virtual std::string ToString() const;
 private:
     IFileDesc(const IFileDesc &);
     IFileDesc & operator =(const IFileDesc &);

@@ -3,22 +3,23 @@
 #include <Sockets.h>
 #include <IterAdapter.h>
 
+#include "HahsEngine.h"
 #include "AsyncNotify.h"
 
 NS_SERVER_BEGIN
 
-CAsyncNotify::CAsyncNotify(const CNotifyCtorParams & params)
-    : CThreadPool(1, params.stackSize_)
-    , addingQue_(params.addingQue_)
-    , eventQue_(params.eventQue_)
-    , fdSockMap_(params.fdSockMap_)
+CAsyncNotify::CAsyncNotify(size_t stackSz, CHahsEngine & engine)
+    : CThreadPool(1, stackSz)
+    , addingQue_(engine.addingQue_)
+    , eventQue_(engine.eventQue_)
+    , fdSockMap_(engine.fdSockMap_)
 {}
 
-bool CAsyncNotify::Init(const CNotifyInitParams & params)
+bool CAsyncNotify::Init(U32 maxFdNum, int epollTimeoutMs)
 {
-    if(!initEpoll(params.maxFdNum_))
+    if(!initEpoll(maxFdNum))
         return false;
-    epoll_.EpollTimeout(params.epollTimeoutMs_);//milliseconds
+    epoll_.EpollTimeout(epollTimeoutMs);//milliseconds
     return true;
 }
 
