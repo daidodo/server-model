@@ -1,6 +1,7 @@
 #include <Logger.h>
 
 #include "SockSession.h"
+#include "Command.h"
 
 NS_SERVER_BEGIN
 
@@ -67,6 +68,13 @@ bool CSockSession::RecvCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
     return false;
 }
 
+void CSockSession::ReleaseCmd(__CmdBase * cmd)
+{
+    __ReleaseCmd releaseCmd = recvHelper_.ReleaseCmd();
+    assert(releaseCmd);
+    releaseCmd(cmd);
+}
+
 bool CSockSession::SendBuffer()
 {
     if(Events::CanTcpSend(ev_)){
@@ -115,8 +123,8 @@ bool CSockSession::recvTcpCmd(__CmdBase *& cmd)
     LOCAL_LOGGER(logger, "CSockSession::recvTcpCmd");
     assert(IsValid());
     cmd = 0;
-    if(!recvHelper_.IsValid()){
-        ERROR("recvHelper_ is invalid for sock="<<ToString());
+    if(!recvHelper_.IsTcpValid()){
+        ERROR("recvHelper_ is invalid for tcp sock="<<ToString());
         return false;
     }
     CTcpConnSocket * conn = dynamic_cast<CTcpConnSocket *>(fileDesc_);
@@ -152,7 +160,7 @@ bool CSockSession::recvTcpCmd(__CmdBase *& cmd)
             const __OnDataArriveRet ret = onArrive(recvBuf_);
             switch(ret.first){
                 case RR_COMPLETE:
-                    return decodeCmd(cmd);
+                    return decodeCmd(cmd, ret.second);
                 case RR_NEED_MORE:
                     needSz_ = ret.second;
                     break;
@@ -170,6 +178,10 @@ bool CSockSession::recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
     LOCAL_LOGGER(logger, "CSockSession::recvUdpCmd");
     assert(IsValid());
     cmd = 0;
+    if(!recvHelper_.IsUdpValid()){
+        ERROR("recvHelper_ is invalid for udp sock="<<ToString());
+        return false;
+    }
     CUdpSocket * conn = dynamic_cast<CUdpSocket *>(fileDesc_);
     if(!conn){
         ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" into CUdpSocket");
@@ -197,21 +209,27 @@ bool CSockSession::recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
                     return false;
                 }
             }
-            return decodeCmd(cmd);
+            return decodeCmd(cmd, 0);
         }
     }
     return true;
 }
 
-bool CSockSession::decodeCmd(__CmdBase *& cmd)
+bool CSockSession::decodeCmd(__CmdBase *& cmd, size_t left)
 {
     LOCAL_LOGGER(logger, "CSockSession::decodeCmd");
-    cmd = DecodeCmd(recvBuf_);
+    __DecodeCmd decodeCmd = recvHelper_.DecodeCmd();
+    assert(decodeCmd && left < recvBuf_.size());
+    size_t len = recvBuf_.size() - left;
+    cmd = decodeCmd(&recvBuf_[0], len);
     if(!cmd){
-        ERROR("__CmdBase::DecodeCmd failed for recvBuf_="<<Tools::Dump(recvBuf_)<<" for sock="<<ToString());
+        ERROR("DecodeCmd failed for recvBuf_="<<Tools::Dump(recvBuf_)<<", left="<<left<<" for sock="<<ToString());
         return false;
     }
-    recvBuf_.clear();
+    if(left)
+        recvBuf_.erase(recvBuf_.begin(), recvBuf_.begin() + len);
+    else
+        recvBuf_.clear();
     needSz_ = 0;
     return true;
 }

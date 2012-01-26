@@ -9,25 +9,21 @@
 
 NS_SERVER_BEGIN
 
-struct CCmdSession
+class CCmdSession
 {
+    typedef CSockSession::__RecvHelper __RecvHelper;
+public:
     typedef std::allocator<CCmdSession> allocator_type;
-    static CCmdSession * GetObject(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr)
-    {
-        CCmdSession * ret = allocator_type().allocate(1);
-        return new (ret) CCmdSession(sock, cmd, udpClientAddr);
-    }
-    CCmdSession(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr)
-        : sock_(sock)
-        , cmd_(cmd)
-    {
-        udpClientAddr_.swap(udpClientAddr);
-    }
+    //functions
+    static CCmdSession * GetObject(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
+    CCmdSession(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
+    ~CCmdSession();
     __SockPtr & SockPtr(){return sock_;}
     __CmdBase * CmdBase(){return cmd_;}
     const CSockAddr & UdpClientAddr() const{return udpClientAddr_;}
-    std::string ToString() const{return "";}
+    std::string ToString() const;
 private:
+    //members
     __SockPtr sock_;
     __CmdBase * cmd_;
     CSockAddr udpClientAddr_;

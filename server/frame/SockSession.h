@@ -11,49 +11,69 @@
 #include <Sockets.h>
 #include <FdMap.h>
 #include "Events.h"
-#include "Command.h"
 
 NS_SERVER_BEGIN
 
+typedef std::vector<char> __Buffer;
 typedef std::list<__Buffer> __BufList;
 
-enum EHandleDataRet
+enum ECheckDataRet
 {
     RR_COMPLETE,
     RR_NEED_MORE,
     RR_ERROR
 };
-typedef std::pair<EHandleDataRet, size_t> __OnDataArriveRet;
+
+class CCmdBase;
+typedef CCmdBase __CmdBase;
+
+typedef std::pair<ECheckDataRet, size_t> __OnDataArriveRet;
 typedef __OnDataArriveRet (*__OnDataArrive)(const __Buffer &);
+typedef __CmdBase * (*__DecodeCmd)(const char *, size_t);
+typedef void (*__ReleaseCmd)(__CmdBase * cmd);
 
 struct CRecvHelper
 {
+    //functions
     CRecvHelper()
         : onArrive_(0)
+        , decodeCmd_(0)
+        , releaseCmd_(0)
         , initSz_(0)
     {}
-    bool IsValid() const{return onArrive_ && initSz_;}
+    bool IsUdpValid() const{return decodeCmd_ && releaseCmd_;}
+    bool IsTcpValid() const{return onArrive_ && initSz_ && IsUdpValid();}
     std::string ToString() const{return "";}
-    //设置接收数据处理函数
-    void OnDataArrive(__OnDataArrive onDataArrive){onArrive_ = onDataArrive;}
-    __OnDataArrive OnDataArrive() const{return onArrive_;}
     //设置初始接收字节数
     void InitRecvSize(size_t sz){initSz_ = sz;}
     size_t InitRecvSize() const{return initSz_;}
+    //设置接收数据处理函数
+    void OnDataArrive(__OnDataArrive onDataArrive){onArrive_ = onDataArrive;}
+    __OnDataArrive OnDataArrive() const{return onArrive_;}
+    //设置解析命令处理函数
+    void DecodeCmd(__DecodeCmd decodeCmd){decodeCmd_ = decodeCmd;}
+    __DecodeCmd DecodeCmd() const{return decodeCmd_;}
+    //设置释放命令处理函数
+    void ReleaseCmd(__ReleaseCmd releaseCmd){releaseCmd_ = releaseCmd;}
+    __ReleaseCmd ReleaseCmd() const{return releaseCmd_;}
 private:
+    //members
     __OnDataArrive onArrive_;
+    __DecodeCmd decodeCmd_;
+    __ReleaseCmd releaseCmd_;
     size_t initSz_;
 };
 
 struct CSockSession
 {
     typedef std::allocator<CSockSession> allocator_type;
+    typedef CRecvHelper __RecvHelper;
     //functions
-    static CSockSession * GetObject(const CRecvHelper & recvHelper){
+    static CSockSession * GetObject(const __RecvHelper & recvHelper){
         CSockSession * ret = allocator_type().allocate(1);
         return new (ret) CSockSession(recvHelper);
     }
-    CSockSession(const CRecvHelper & recvHelper);
+    CSockSession(const __RecvHelper & recvHelper);
     ~CSockSession();
     int Fd() const{return fileDesc_->Fd();}
     bool IsValid() const{return fileDesc_ && fileDesc_->IsValid();}
@@ -71,6 +91,8 @@ struct CSockSession
     //udpClientAddr: 如果是udp连接，返回对方地址
     //return: true-正常; false-出错
     bool RecvCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr);
+    //释放cmd对象
+    void ReleaseCmd(__CmdBase * cmd);
     //发送缓冲区的数据
     //return: true-正常; false-出错
     bool SendBuffer();
@@ -83,13 +105,13 @@ struct CSockSession
 private:
     bool recvTcpCmd(__CmdBase *& cmd);
     bool recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr);
-    bool decodeCmd(__CmdBase *& cmd);
+    bool decodeCmd(__CmdBase *& cmd, size_t left);
     bool tcpSend();
     bool udpSend();
     //members
     IFileDesc * fileDesc_;
     // recv
-    const CRecvHelper & recvHelper_;
+    const __RecvHelper & recvHelper_;
     __Buffer recvBuf_;
     size_t needSz_;
     size_t stepIndex_;

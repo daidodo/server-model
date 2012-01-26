@@ -1,3 +1,4 @@
+#include "Command.h"
 #include "CmdHandler.h"
 
 NS_SERVER_BEGIN

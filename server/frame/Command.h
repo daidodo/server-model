@@ -4,38 +4,55 @@
 #include <vector>
 #include <string>
 
-#include <impl/Config.h>
+#include <DataStream.h>
+#include "SockSession.h"
 
 NS_SERVER_BEGIN
 
-typedef std::vector<char> __Buffer;
-
-struct CCmdBase
+class CCmdBase
 {
+    static const int STX = 3;
+    static const int ETX = 2;
+protected:
     static const int CMD_QUERY = 1;
     static const int CMD_RESP = 2;
-    virtual ~CCmdBase() = 0;
-    std::string ToString() const{return "";}
+public:
+    static __OnDataArriveRet OnDataArrive(const char * buf, size_t sz);
+    //从buf中解出cmd
+    static CCmdBase * DecodeCmd(const char * buf, size_t sz);
+    //释放cmd
+    static void ReleaseCmd(CCmdBase * cmd);
+    explicit CCmdBase(U16 cmdId)
+        : cmdId_(cmdId)
+    {}
+    virtual ~CCmdBase(){}
+    U16 CmdId() const{return cmdId_;}
+    virtual std::string ToString() const;
 private:
     U16 cmdId_;
 };
-
-//从buf中解出cmd
-CCmdBase * DecodeCmd(const __Buffer & buf);
-
-//释放cmd
-void ReleaseCmd(CCmdBase * cmd) __DZ_NOTHROW;
 
 typedef CCmdBase __CmdBase;
 
 struct CCmdQuery : public CCmdBase
 {
+    CCmdQuery()
+        : CCmdBase(CMD_QUERY)
+    {}
+    bool Decode(CInByteStream & in);
+    std::string ToString() const;
+private:
     U16 ver_;
     std::string echo_;
 };
 
 struct CCmdResp : public CCmdBase
 {
+    CCmdResp()
+        : CCmdBase(CMD_RESP)
+    {}
+    std::string ToString() const;
+private:
     U16 ver_;
     std::string result_;
 };
