@@ -7,23 +7,12 @@
 
 NS_SERVER_BEGIN
 
-struct CAsyncIoCtorParams
-{
-    size_t stackSize_;
-    __FdQue & addingQue_;
-    __FdEventQue & eventQue_;
-    __FdSockMap & fdSockMap_;
-    __QueryCmdQue & queryCmdQue_;
-};
-
-struct CAsyncIoInitParams
-{
-};
+class CHahsEngine;
 
 struct CAsyncIO : public CThreadPool
 {
-    explicit CAsyncIO(const CAsyncIoCtorParams & params);
-    bool Init(const CAsyncIoInitParams & params){return true;}
+    CAsyncIO(size_t stackSz, CHahsEngine & engine);
+    bool Init(){return true;}
 protected:
     virtual int doIt();
 private:

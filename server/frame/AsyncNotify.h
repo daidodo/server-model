@@ -4,29 +4,17 @@
 #include <Threads.h>
 #include <Epoll.h>
 
-#include "Structs.h"
+#include "HahsEngine.h"
 
 NS_SERVER_BEGIN
 
-struct CNotifyCtorParams
-{
-    size_t stackSize_;
-    __FdQue & addingQue_;
-    __FdEventQue & eventQue_;
-    __FdSockMap & fdSockMap_;
-};
-
-struct CNotifyInitParams
-{
-    U32 maxFdNum_;
-    int epollTimeoutMs_; //milliseconds
-};
+class CHahsEngine;
 
 struct CAsyncNotify : public CThreadPool
 {
     //functions
-    explicit CAsyncNotify(const CNotifyCtorParams & params);
-    bool Init(const CNotifyInitParams & params);
+    CAsyncNotify(size_t stackSz, CHahsEngine & engine);
+    bool Init(U32 maxFdNum, int epollTimeoutMs);
 protected:
     virtual int doIt();
 private:

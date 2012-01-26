@@ -28,7 +28,7 @@ class CCmdBase;
 typedef CCmdBase __CmdBase;
 
 typedef std::pair<ECheckDataRet, size_t> __OnDataArriveRet;
-typedef __OnDataArriveRet (*__OnDataArrive)(const __Buffer &);
+typedef __OnDataArriveRet (*__OnDataArrive)(const char *, size_t);
 typedef __CmdBase * (*__DecodeCmd)(const char *, size_t);
 typedef void (*__ReleaseCmd)(__CmdBase * cmd);
 
@@ -64,16 +64,18 @@ private:
     size_t initSz_;
 };
 
-struct CSockSession
+class CSockSession
 {
-    typedef std::allocator<CSockSession> allocator_type;
+    typedef std::list<CSockAddr> __AddrList;
+public:
     typedef CRecvHelper __RecvHelper;
+    typedef std::allocator<CSockSession> allocator_type;
     //functions
-    static CSockSession * GetObject(const __RecvHelper & recvHelper){
+    static CSockSession * GetObject(IFileDesc * fileDesc, const __RecvHelper & recvHelper){
         CSockSession * ret = allocator_type().allocate(1);
-        return new (ret) CSockSession(recvHelper);
+        return new (ret) CSockSession(fileDesc, recvHelper);
     }
-    CSockSession(const __RecvHelper & recvHelper);
+    CSockSession(IFileDesc * fileDesc, const __RecvHelper & recvHelper);
     ~CSockSession();
     int Fd() const{return fileDesc_->Fd();}
     bool IsValid() const{return fileDesc_ && fileDesc_->IsValid();}
@@ -93,6 +95,9 @@ struct CSockSession
     bool RecvCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr);
     //释放cmd对象
     void ReleaseCmd(__CmdBase * cmd);
+    //将buf加入待发送缓冲区
+    //buf会被清空
+    bool AddOutBuf(__Buffer & buf, CSockAddr & udpClientAddr);
     //发送缓冲区的数据
     //return: true-正常; false-出错
     bool SendBuffer();
@@ -101,7 +106,7 @@ struct CSockSession
     bool WriteData();
     //处理cmd
     //udpClientAddr: 如果是udp连接，表示对方地址
-    void Process(__CmdBase & cmd, const CSockAddr & udpClientAddr){}
+    void Process(__CmdBase & cmd, CSockAddr & udpClientAddr);
 private:
     bool recvTcpCmd(__CmdBase *& cmd);
     bool recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr);
@@ -116,7 +121,8 @@ private:
     size_t needSz_;
     size_t stepIndex_;
     // send
-    __BufList sendList_;
+    __BufList outList_;
+    __AddrList addrList_;
     // events
     __Events ev_;
 };

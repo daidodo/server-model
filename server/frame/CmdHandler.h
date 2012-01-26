@@ -7,25 +7,14 @@
 
 NS_SERVER_BEGIN
 
-struct CHandlerCtorParams
-{
-    size_t stackSize_;
-    __FdQue & addingQue_;
-    __FdEventQue & eventQue_;
-    __FdSockMap & fdSockMap_;
-    __QueryCmdQue & queryCmdQue_;
-};
-
-struct CHandlerInitParams
-{
-    int threadCountMax_;
-};
+class CHahsEngine;
 
 class CCmdHandler : public CThreadManager<__QueryCmdQue>
 {
     typedef CThreadManager<__QueryCmdQue> __MyBase;
-    explicit CCmdHandler(const CHandlerCtorParams & params);
-    bool Init(const CHandlerInitParams & params);
+public:
+    CCmdHandler(size_t stackSz, CHahsEngine & engine);
+    bool Init(int threadCountMax);
 protected:
     virtual void doIt(__Job & job);
 private:

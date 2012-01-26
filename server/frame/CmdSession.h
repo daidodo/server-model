@@ -4,7 +4,6 @@
 #include <memory>
 
 #include <LockQueue.h>
-#include <Sockets.h>
 #include "SockSession.h"
 
 NS_SERVER_BEGIN
@@ -20,7 +19,7 @@ public:
     ~CCmdSession();
     __SockPtr & SockPtr(){return sock_;}
     __CmdBase * CmdBase(){return cmd_;}
-    const CSockAddr & UdpClientAddr() const{return udpClientAddr_;}
+    CSockAddr & UdpClientAddr(){return udpClientAddr_;}
     std::string ToString() const;
 private:
     //members

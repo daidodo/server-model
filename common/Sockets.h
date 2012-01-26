@@ -62,7 +62,7 @@ public:
     U16 GetPort(bool hostByteOrder = true) const;
     U32 GetIPv4(bool hostByteOrder = true) const;
     bool IsValid() const;
-    void swap(CSockAddr & a) __DZ_NOTHROW{sa_.swap(a.sa_);}
+    void Swap(CSockAddr & a) __DZ_NOTHROW{sa_.swap(a.sa_);}
 private:
     socklen_t sockLen() const{return socklen_t(sa_.size());}
     socklen_t format(EAddrType at);
@@ -143,10 +143,10 @@ private:
     CSockAddr hostAddr_;
 };
 
-class CUdpSocket : public CSocket
+struct CUdpSocket : public CSocket
 {
-    CSockAddr hostAddr_,peerAddr_;
-public:
+    typedef std::allocator<CUdpSocket> allocator_type;
+    CUdpSocket():CSocket(FD_UDP){}
     std::string ToString() const;
     bool Socket(const CSockAddr & addr);
     bool Bind(const CSockAddr & addr);      //指定本机地址hostAddr_
@@ -155,11 +155,12 @@ public:
     const CSockAddr & PeerAddr() const{return peerAddr_;}
     //from返回谁发送了数据,如果不需要,请使用CSocket::RecvData
     ssize_t RecvData(CSockAddr & from,std::vector<char> & buf,size_t sz,bool block = false);
-    bool SendData(const CSockAddr & to,const std::vector<char> & buf,U32 timeoutMs);
+    bool SendData(const CSockAddr & to,const std::vector<char> & buf,U32 timeoutMs = 0);
     using CSocket::RecvData;
     using CSocket::SendData;
 private:
     bool ensureSock(const CSockAddr & addr);
+    CSockAddr hostAddr_,peerAddr_;
 };
 
 NS_SERVER_END

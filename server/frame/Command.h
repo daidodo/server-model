@@ -11,9 +11,9 @@ NS_SERVER_BEGIN
 
 class CCmdBase
 {
+protected:
     static const int STX = 3;
     static const int ETX = 2;
-protected:
     static const int CMD_QUERY = 1;
     static const int CMD_RESP = 2;
 public:
@@ -39,6 +39,7 @@ struct CCmdQuery : public CCmdBase
     CCmdQuery()
         : CCmdBase(CMD_QUERY)
     {}
+    U16 Ver() const{return ver_;}
     bool Decode(CInByteStream & in);
     std::string ToString() const;
 private:
@@ -48,9 +49,12 @@ private:
 
 struct CCmdResp : public CCmdBase
 {
-    CCmdResp()
+    explicit CCmdResp(const CCmdQuery & query)
         : CCmdBase(CMD_RESP)
+        , ver_(query.Ver())
     {}
+    void Result(){result_ = "this is result";}
+    void Encode(COutByteStream & out) const;
     std::string ToString() const;
 private:
     U16 ver_;

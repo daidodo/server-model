@@ -12,7 +12,7 @@ CCmdSession::CCmdSession(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClien
     : sock_(sock)
     , cmd_(cmd)
 {
-    udpClientAddr_.swap(udpClientAddr);
+    udpClientAddr_.Swap(udpClientAddr);
 }
 
 CCmdSession::~CCmdSession()
