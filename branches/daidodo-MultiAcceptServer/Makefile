@@ -22,7 +22,7 @@ cleanall:
 	$(MAKE) -C $(COMMONDIR) cleanall
 	$(MAKE) -C $(SERVERDIR) cleanall
 	$(MAKE) -C $(TESTDIR) cleanall
-	$(RM) tags
+	$(RM) tags log/*.log*
 
 love: clean all
 

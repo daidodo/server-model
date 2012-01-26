@@ -9,7 +9,7 @@ NS_SERVER_BEGIN
 //struct CSockSession
 
 CSockSession::CSockSession(IFileDesc * fileDesc, const CRecvHelper & recvHelper)
-    : fileDesc_(fileDesc_)
+    : fileDesc_(fileDesc)
     , recvHelper_(recvHelper)
     , needSz_(0)
     , stepIndex_(0)

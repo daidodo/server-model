@@ -97,7 +97,8 @@ bool CHahsEngine::Run(const CHahsEnginParams & params)
         FATAL("start notify thread failed");
         exit(1);
     }
-    return false;
+    INFO("service start");
+    return true;
 }
 
 void CHahsEngine::WaitAll()

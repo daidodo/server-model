@@ -22,6 +22,7 @@ void CCmdHandler::doIt(__Job & job)
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CCmdHandler::doIt");
     __CmdSessionPtr session(job);    //guard
+    assert(session);
     __SockPtr sock = session->SockPtr();
     __CmdBase * cmd = session->CmdBase();
     if(!cmd || !sock->IsValid()){
