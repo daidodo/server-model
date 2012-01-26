@@ -34,3 +34,5 @@ endif
 endif
 
 .PHONY: all release comm commrelease clean cleanall
+
+.SECONDARY: $(OBJ)

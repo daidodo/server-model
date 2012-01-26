@@ -102,10 +102,8 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
     LOCAL_LOGGER(logger, "CAsyncNotify::addFdEvent");
     //pop all
     __FdList tmp;
-    if(!addingQue_.PopAll(tmp, 0)){
-        WARN("addingQue_.PopAll() failed");
+    if(!addingQue_.PopAll(tmp, 0))
         return;
-    }
     if(tmp.empty())
         return;
     //get sock ptr

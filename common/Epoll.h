@@ -45,7 +45,8 @@ class CEpoll
     typedef CEpollEvent::__Event __Event;
 public:
     CEpoll()
-        : epollFd_(-1)
+        : fdSize_(0)
+        , epollFd_(-1)
         , maxSz_(0)
         , epollTimeoutMs_(400)
     {}
