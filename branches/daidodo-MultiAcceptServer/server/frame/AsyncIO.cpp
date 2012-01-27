@@ -26,6 +26,7 @@ int CAsyncIO::doIt()
             WARN("eventQue_.PopAll() failed");
             continue;
         }
+        TRACE("get eventList.size()="<<eventList.size());
         if(eventList.empty())
             continue;
         //get sockets
@@ -45,14 +46,17 @@ int CAsyncIO::doIt()
             }
             //handle events
             __Events oldEv = sock->Events();
+            DEBUG("handle ev="<<Events::ToString(i->Events())<<" from sock="<<Tools::ToStringPtr(sock));
             bool ok = true;
             if(ok && Events::CanOutput(i->Events()))
                 ok = handleOutput(sock);
             if(ok && Events::CanInput(i->Events()))
                 ok = handleInput(sock, addingList);
             //update events
-            if(oldEv != sock->Events())
+            if(oldEv != sock->Events()){
+                DEBUG("add fd="<<fd<<", ev="<<Events::ToString(sock->Events())<<" into addingList, oldEv="<<oldEv);
                 addingList.push_back(fd);
+            }
         }
         //flush addingList
         if(!addingQue_.PushAll(addingList, 500)){
@@ -106,9 +110,10 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, __FdList & addingList)
         if(!client)
             break;
         const int fd = client->Fd();
-        DEBUG("new client="<<Tools::ToStringPtr(client)<<" arrived");
+        INFO("new client="<<Tools::ToStringPtr(client)<<" arrived");
         __SockPtr ptr(client);
         fdSockMap_.SetSock(fd, ptr);
+        TRACE("add fd="<<fd<<", client="<<Tools::ToStringPtr(client)<<" into addingList");
         addingList.push_back(fd);
     }
     return true;
@@ -120,6 +125,7 @@ bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClien
     LOCAL_LOGGER(logger, "CAsyncIO::handleCmd");
     assert(sock && cmd);
     __CmdSessionPtr session(__CmdSession::GetObject(sock, cmd, udpClientAddr));    //guard
+    TRACE("push cmd session="<<Tools::ToStringPtr(session)<<" into queryCmdQue_");
     if(!queryCmdQue_.Push(&*session, 200)){
         WARN("queryCmdQue_.Push(session="<<Tools::ToStringPtr(session)<<") failed, destroy it");
     }else

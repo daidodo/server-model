@@ -1,12 +1,15 @@
 #ifndef DOZERG_EVENTS_H_20120122
 #define DOZERG_EVENTS_H_20120122
 
+#include <string>
 #include <impl/Config.h>
 
 NS_SERVER_BEGIN
 
 //event flags
 typedef U32 __Events;
+
+#define EVENT_COUNT (sizeof(__Events) * 8)
 
 const __Events EVENT_CLOSE = 1 << 0;
 const __Events EVENT_IN = 1 << 1;
@@ -47,6 +50,7 @@ namespace Events{
         return CanSend(ev)
             || CanWrite(ev);
     }
+    std::string ToString(__Events ev);
 }//namespace Events
 
 struct CFdEvent

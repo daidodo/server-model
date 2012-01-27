@@ -1,3 +1,5 @@
+#include <sstream>
+
 #include <Logger.h>
 #include <DataStream.h>
 
@@ -6,22 +8,42 @@
 
 NS_SERVER_BEGIN
 
+//struct CRecvHelper
+
+std::string CRecvHelper::ToString() const
+{
+    std::ostringstream oss;
+    oss<<"{initSz_="<<initSz_
+        <<", onArrive_="<<onArrive_
+        <<", decodeCmd_="<<decodeCmd_
+        <<", releaseCmd_="<<releaseCmd_
+        <<"}";
+    return oss.str();
+}
+
 //struct CSockSession
 
 CSockSession::CSockSession(IFileDesc * fileDesc, const CRecvHelper & recvHelper)
     : fileDesc_(fileDesc)
     , recvHelper_(recvHelper)
     , needSz_(0)
-    , stepIndex_(0)
     , ev_(0)
 {}
 
 CSockSession::~CSockSession()
 {
-    if(fileDesc_){
+    if(fileDesc_)
         IFileDesc::PutObject(fileDesc_);
-        fileDesc_ = 0;
-    }
+}
+
+std::string CSockSession::ToString() const
+{
+    std::ostringstream oss;
+    oss<<"{fileDesc_="<<Tools::ToStringPtr(fileDesc_)
+        <<", recvHelper_="<<recvHelper_.ToString()
+        <<", ev_="<<Events::ToString(ev_)
+        <<"}";
+    return oss.str();
 }
 
 bool CSockSession::Accept(CSockSession *& client)
@@ -45,6 +67,7 @@ bool CSockSession::Accept(CSockSession *& client)
         ERROR("listen sock="<<Tools::ToStringPtr(listen)<<" accept client error"<<IFileDesc::ErrMsg());
         return false;
     }else if(CListenSocket::RET_EAGAIN == ret){
+        __Guard g(lock_);
         ev_ |= EVENT_ACCEPT;
         return true;
     }
@@ -79,23 +102,6 @@ void CSockSession::ReleaseCmd(__CmdBase * cmd)
     releaseCmd(cmd);
 }
 
-bool CSockSession::AddOutBuf(__Buffer & buf, CSockAddr & udpClientAddr)
-{
-    LOCAL_LOGGER(logger, "CSockSession::AddOutBuf");
-    assert(IsValid());
-    outList_.resize(outList_.size() + 1);
-    outList_.back().swap(buf);
-    if(FD_UDP == fileDesc_->Type()){
-        if(!udpClientAddr.IsValid()){
-            ERROR("invalid udpClientAddr="<<udpClientAddr.ToString()<<" for sock="<<ToString());
-            return false;
-        }
-        addrList_.resize(addrList_.size() + 1);
-        addrList_.back().Swap(udpClientAddr);
-    }
-    return true;
-}
-
 bool CSockSession::SendBuffer()
 {
     if(Events::CanTcpSend(ev_)){
@@ -117,24 +123,22 @@ bool CSockSession::WriteData()
         ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" into CFile");
         return false;
     }
-    for(__BufList::iterator i = outList_.begin();i != outList_.end();){
-        __Buffer & buf = *i;
-        if(!buf.empty()){
-            ssize_t sz = file->Write(buf);
-            if(sz < 0){
-                if(EAGAIN == errno || EWOULDBLOCK == errno){
-                    ev_ |= EVENT_WRITE;
-                    break;
-                }
-                ERROR("Write failed for buf="<<Tools::Dump(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
-                return false;
-            }else if(size_t(sz) < buf.size()){
-                buf.erase(buf.begin(), buf.begin() + sz);
-                ev_ |= EVENT_WRITE;
-                break;
-            }
+    __Buffer buf;
+    CSockAddr addr;
+    while(getBuf(buf, addr)){
+        assert(!buf.empty());
+        ssize_t sz = file->Write(buf);
+        if(sz < 0){
+            if(EAGAIN == errno || EWOULDBLOCK == errno)
+                return putBuf(buf, addr, true);
+            ERROR("Write failed for buf="<<Tools::DumpHex(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
+            return false;
+        }else if(size_t(sz) < buf.size()){
+            DEBUG("write half sz="<<sz<<" of buf="<<Tools::DumpHex(buf)<<" into file="<<Tools::ToStringPtr(file));
+            buf.erase(buf.begin(), buf.begin() + sz);
+            return putBuf(buf, addr, true);
         }
-        outList_.erase(i++);
+        DEBUG("write buf="<<Tools::DumpHex(buf)<<" into file="<<Tools::ToStringPtr(file));
     }
     return true;
 }
@@ -143,10 +147,10 @@ void CSockSession::Process(__CmdBase & cmd, CSockAddr & udpClientAddr)
 {
     LOCAL_LOGGER(logger, "CSockSession::Process");
     CCmdQuery & query = dynamic_cast<CCmdQuery &>(cmd);
-    INFO("process query="<<query.ToString()<<", udpClientAddr="<<udpClientAddr.ToString());
+    INFO("process query="<<query.ToString()<<", udpClientAddr="<<udpClientAddr.ToString()<<" from sock="<<ToString());
     CCmdResp resp(query);
     resp.Result();
-    INFO("resp="<<resp.ToString()<<" for query="<<query.ToString());
+    INFO("resp="<<resp.ToString()<<" for query="<<query.ToString()<<", udpClientAddr="<<udpClientAddr.ToString()<<" from sock="<<ToString());
     COutByteStream out;
     resp.Encode(out);
     __Buffer buf;
@@ -172,12 +176,13 @@ bool CSockSession::recvTcpCmd(__CmdBase *& cmd)
         needSz_ = recvHelper_.InitRecvSize();
     for(;;){
         if(!needSz_){
-            ERROR("needSz_ is invalid for sock="<<ToString());
+            ERROR("needSz_=0 is invalid for sock="<<ToString());
             return false;
         }
         ssize_t sz = conn->RecvData(recvBuf_, needSz_);
         if(sz < 0){
             if(EAGAIN == errno || EWOULDBLOCK == errno){
+                __Guard g(lock_);
                 ev_ |= EVENT_TCP_RECV;
                 break;
             }
@@ -188,6 +193,7 @@ bool CSockSession::recvTcpCmd(__CmdBase *& cmd)
             return false;
         }else if(size_t(sz) < needSz_){
             needSz_ -= sz;
+            __Guard g(lock_);
             ev_ |= EVENT_TCP_RECV;
             break;
         }else{
@@ -196,6 +202,7 @@ bool CSockSession::recvTcpCmd(__CmdBase *& cmd)
             const __OnDataArriveRet ret = onArrive(&recvBuf_[0], recvBuf_.size());
             switch(ret.first){
                 case RR_COMPLETE:
+                    DEBUG("recv buf="<<Tools::DumpHex(recvBuf_)<<" from conn="<<Tools::ToStringPtr(conn));
                     return decodeCmd(cmd, ret.second);
                 case RR_NEED_MORE:
                     needSz_ = ret.second;
@@ -231,12 +238,14 @@ bool CSockSession::recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
         ssize_t sz = conn->RecvData(udpClientAddr, recvBuf_, needSz_);
         if(sz < 0){
             if(EAGAIN == errno || EWOULDBLOCK == errno){
+                __Guard g(lock_);
                 ev_ |= EVENT_UDP_RECV;
                 break;
             }
             ERROR("RecvData(needSz_="<<needSz_<<") failed for sock="<<ToString()<<IFileDesc::ErrMsg());
             return false;
         }else{
+            DEBUG("recv buf="<<Tools::DumpHex(recvBuf_)<<" from udpClientAddr="<<udpClientAddr.ToString()<<", conn="<<Tools::ToStringPtr(conn));
             __OnDataArrive onArrive = recvHelper_.OnDataArrive();
             if(onArrive){
                 const __OnDataArriveRet ret = onArrive(&recvBuf_[0], recvBuf_.size());
@@ -254,14 +263,15 @@ bool CSockSession::recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
 bool CSockSession::decodeCmd(__CmdBase *& cmd, size_t left)
 {
     LOCAL_LOGGER(logger, "CSockSession::decodeCmd");
-    __DecodeCmd decodeCmd = recvHelper_.DecodeCmd();
-    assert(decodeCmd && left < recvBuf_.size());
+    __DecodeCmd decoder = recvHelper_.DecodeCmd();
+    assert(decoder && left < recvBuf_.size());
     size_t len = recvBuf_.size() - left;
-    cmd = decodeCmd(&recvBuf_[0], len);
+    cmd = decoder(&recvBuf_[0], len);
     if(!cmd){
-        ERROR("DecodeCmd failed for recvBuf_="<<Tools::Dump(recvBuf_)<<", left="<<left<<" for sock="<<ToString());
+        ERROR("decode failed for recvBuf_="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
         return false;
     }
+    TRACE("decode cmd="<<Tools::ToStringPtr(cmd)<<" from buf="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
     if(left)
         recvBuf_.erase(recvBuf_.begin(), recvBuf_.begin() + len);
     else
@@ -274,31 +284,27 @@ bool CSockSession::tcpSend()
 {
     LOCAL_LOGGER(logger, "CSockSession::tcpSend");
     assert(IsValid());
-    if(outList_.empty())
-        return true;
     CTcpConnSocket * conn = dynamic_cast<CTcpConnSocket *>(fileDesc_);
     if(!conn){
-        ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" into CTcpConnSocket");
+        ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" to CTcpConnSocket in sock="<<ToString());
         return false;
     }
-    for(__BufList::iterator i = outList_.begin();i != outList_.end();){
-        __Buffer & buf = *i;
-        if(!buf.empty()){
-            ssize_t sz = conn->SendData(buf);
-            if(sz < 0){
-                if(EAGAIN == errno || EWOULDBLOCK == errno){
-                    ev_ |= EVENT_TCP_SEND;
-                    break;
-                }
-                ERROR("SendData failed for buf="<<Tools::Dump(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
-                return false;
-            }else if(size_t(sz) < buf.size()){
-                buf.erase(buf.begin(), buf.begin() + sz);
-                ev_ |= EVENT_TCP_SEND;
-                break;
-            }
+    __Buffer buf;
+    CSockAddr addr;
+    while(getBuf(buf, addr)){
+        assert(!buf.empty());
+        ssize_t sz = conn->SendData(buf);
+        if(sz < 0){
+            if(EAGAIN == errno || EWOULDBLOCK == errno)
+                return putBuf(buf, addr, true);
+            ERROR("SendData failed for buf="<<Tools::DumpHex(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
+            return false;
+        }else if(size_t(sz) < buf.size()){
+            DEBUG("send half sz="<<sz<<" of buf="<<Tools::DumpHex(buf)<<" to conn="<<Tools::ToStringPtr(conn));
+            buf.erase(buf.begin(), buf.begin() + sz);
+            return putBuf(buf, addr, true);
         }
-        outList_.erase(i++);
+        DEBUG("send buf="<<Tools::DumpHex(buf)<<" to conn="<<Tools::ToStringPtr(conn));
     }
     return true;
 }
@@ -307,36 +313,72 @@ bool CSockSession::udpSend()
 {
     LOCAL_LOGGER(logger, "CSockSession::udpSend");
     assert(IsValid());
-    if(outList_.empty())
-        return true;
     CUdpSocket * conn = dynamic_cast<CUdpSocket *>(fileDesc_);
     if(!conn){
-        ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" into CUdpSocket");
+        ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" to CUdpSocket in sock="<<ToString());
         return false;
     }
-    __BufList::iterator i = outList_.begin();
-    __AddrList::iterator a = addrList_.begin();
-    for(;i != outList_.end();){
-        __Buffer & buf = *i;
-        if(a == addrList_.end()){
-            ERROR("no addr for buf="<<Tools::Dump(buf)<<" in sock="<<ToString());
+    __Buffer buf;
+    CSockAddr addr;
+    while(getBuf(buf, addr)){
+        assert(!buf.empty());
+        if(addr.IsValid()){
+            ERROR("invalid addr="<<addr.ToString()<<" for buf="<<Tools::DumpHex(buf));
             return false;
         }
-        CSockAddr & addr = *a;
-        if(!buf.empty()){
-            ssize_t sz = conn->SendData(addr, buf);
-            if(sz < 0){
-                if(EAGAIN == errno || EWOULDBLOCK == errno){
-                    ev_ |= EVENT_UDP_SEND;
-                    break;
-                }
-                ERROR("SendData failed for buf="<<Tools::Dump(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
-                return false;
-            }
+        ssize_t sz = conn->SendData(addr, buf);
+        if(sz < 0){
+            if(EAGAIN == errno || EWOULDBLOCK == errno)
+                return putBuf(buf, addr, true);
+            ERROR("SendData failed for buf="<<Tools::DumpHex(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
+            return false;
         }
-        outList_.erase(i++);
-        addrList_.erase(a++);
+        DEBUG("send buf="<<Tools::DumpHex(buf)<<" to addr="<<addr.ToString()<<", conn="<<Tools::ToStringPtr(conn));
     }
+    return true;
+}
+
+bool CSockSession::getBuf(__Buffer & buf, CSockAddr & addr)
+{
+    buf.clear();
+    addr.Reset();
+    __Guard g(lock_);
+    if(outList_.empty())
+        return false;
+    __BufList::iterator i = outList_.begin();
+    __AddrList::iterator j = addrList_.begin();
+    while(i != outList_.end()){
+        buf.swap(*i);
+        outList_.erase(i++);
+        if(j != addrList_.end()){    //buf & addr mismatch
+            addr.Swap(*j);
+            addrList_.erase(j++);
+        }
+        if(!buf.empty())
+            break;
+    }
+    return true;
+}
+
+bool CSockSession::putBuf(__Buffer & buf, CSockAddr & addr, bool front)
+{
+    LOCAL_LOGGER(logger, "CSockSession::putBuf");
+    assert(IsValid());
+    DEBUG("add buf="<<Tools::DumpHex(buf)<<", addr="<<addr.ToString()<<" to send list, front="<<front);
+    bool isUdp = (FD_UDP == fileDesc_->Type());
+    if(isUdp && !addr.IsValid()){
+        ERROR("invalid addr="<<addr.ToString()<<" for sock="<<ToString());
+        return false;
+    }
+    __Guard g(lock_);
+    __BufList::iterator i = outList_.insert((front ? outList_.begin() : outList_.end()), __Buffer());
+    i->swap(buf);
+    if(isUdp){
+        __AddrList::iterator j = addrList_.insert((front ? addrList_.begin() : addrList_.end()), CSockAddr());
+        j->Swap(addr);
+        ev_ |= EVENT_UDP_SEND;
+    }else
+        ev_ |= EVENT_TCP_SEND;
     return true;
 }
 

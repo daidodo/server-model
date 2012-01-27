@@ -43,7 +43,7 @@ struct CRecvHelper
     {}
     bool IsUdpValid() const{return decodeCmd_ && releaseCmd_;}
     bool IsTcpValid() const{return onArrive_ && initSz_ && IsUdpValid();}
-    std::string ToString() const{return "";}
+    std::string ToString() const;
     //设置初始接收字节数
     void InitRecvSize(size_t sz){initSz_ = sz;}
     size_t InitRecvSize() const{return initSz_;}
@@ -66,6 +66,8 @@ private:
 
 class CSockSession
 {
+    typedef CMutex __LockType;
+    typedef CGuard<__LockType> __Guard;
     typedef std::list<CSockAddr> __AddrList;
 public:
     typedef CRecvHelper __RecvHelper;
@@ -80,7 +82,7 @@ public:
     int Fd() const{return fileDesc_->Fd();}
     bool IsValid() const{return fileDesc_ && fileDesc_->IsValid();}
     void Close(){fileDesc_->Close();}
-    std::string ToString() const{return "";}
+    std::string ToString() const;
     //获取/设置事件标志
     __Events Events() const{return ev_;}
     void Events(__Events events){ev_ = events;}
@@ -97,7 +99,9 @@ public:
     void ReleaseCmd(__CmdBase * cmd);
     //将buf加入待发送缓冲区
     //buf会被清空
-    bool AddOutBuf(__Buffer & buf, CSockAddr & udpClientAddr);
+    bool AddOutBuf(__Buffer & buf, CSockAddr & udpClientAddr){
+        return putBuf(buf, udpClientAddr, false);
+    }
     //发送缓冲区的数据
     //return: true-正常; false-出错
     bool SendBuffer();
@@ -113,13 +117,15 @@ private:
     bool decodeCmd(__CmdBase *& cmd, size_t left);
     bool tcpSend();
     bool udpSend();
+    bool getBuf(__Buffer & buf, CSockAddr & addr);
+    bool putBuf(__Buffer & buf, CSockAddr & addr, bool front);
     //members
-    IFileDesc * fileDesc_;
+    __LockType lock_;
+    IFileDesc * const fileDesc_;
     // recv
     const __RecvHelper & recvHelper_;
     __Buffer recvBuf_;
     size_t needSz_;
-    size_t stepIndex_;
     // send
     __BufList outList_;
     __AddrList addrList_;

@@ -22,6 +22,7 @@ void CCmdHandler::doIt(__Job & job)
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CCmdHandler::doIt");
     __CmdSessionPtr session(job);    //guard
+    DEBUG("process cmd session="<<Tools::ToStringPtr(session));
     assert(session);
     __SockPtr sock = session->SockPtr();
     __CmdBase * cmd = session->CmdBase();
@@ -39,6 +40,14 @@ void CCmdHandler::doIt(__Job & job)
     __Events oldEv = sock->Events();
     sock->Process(*cmd, session->UdpClientAddr());
     if(oldEv != sock->Events()){
+/*
+        __Events ev = (~oldEv & sock->Events());
+        TRACE("push fd="<<fd<<", ev="<<Events::ToString(ev)<<" into eventQue_, oldEv="<<Events::ToString(oldEv));
+        if(!eventQue_.Push(__FdEvent(fd, oldEv), 200)){
+            ERROR("eventQue_.Push(fd="<<fd<<", ev="<<Events::ToString(ev)<<") failed for session="<<Tools::ToStringPtr(session));
+        }
+/*/
+        TRACE("push fd="<<fd<<" into addingQue_ for sock="<<Tools::ToStringPtr(sock)<<", oldEv="<<Events::ToString(oldEv));
         if(!addingQue_.Push(fd, 200)){
             ERROR("addingQue_.Push(fd="<<fd<<") failed for session="<<Tools::ToStringPtr(session));
         }

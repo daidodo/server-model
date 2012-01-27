@@ -1,3 +1,7 @@
+#include <sstream>
+
+#include <Tools.h>
+#include "Command.h"
 #include "CmdSession.h"
 
 NS_SERVER_BEGIN
@@ -27,7 +31,12 @@ CCmdSession::~CCmdSession()
 
 std::string CCmdSession::ToString() const
 {
-    return "";
+    std::ostringstream oss;
+    oss<<"{sock_="<<Tools::ToStringPtr(sock_)
+        <<", cmd_="<<Tools::ToStringPtr(cmd_)
+        <<", udpClientAddr_="<<udpClientAddr_.ToString()
+        <<"}";
+    return oss.str();
 }
 
 NS_SERVER_END

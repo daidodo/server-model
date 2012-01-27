@@ -63,6 +63,7 @@ public:
     U32 GetIPv4(bool hostByteOrder = true) const;
     bool IsValid() const;
     void Swap(CSockAddr & a) __DZ_NOTHROW{sa_.swap(a.sa_);}
+    void Reset(){sa_.clear();}
 private:
     socklen_t sockLen() const{return socklen_t(sa_.size());}
     socklen_t format(EAddrType at);

@@ -22,8 +22,8 @@ CHahsEngine::~CHahsEngine()
 bool CHahsEngine::AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & recvHelper)
 {
     typedef CSharedPtr<CListenSocket, false> __TcpListenPtr;
-    LOCAL_LOGGER(logger, "CHahsEngin::AddTcpListen");
-    INFO("bindAddr="<<bindAddr.ToString()<<", recvHelper="<<recvHelper.ToString());
+    LOCAL_LOGGER(logger, "CHahsEngine::AddTcpListen");
+    DEBUG("bindAddr="<<bindAddr.ToString()<<", recvHelper="<<recvHelper.ToString());
     __TcpListenPtr listen = dynamic_cast<CListenSocket *>(IFileDesc::GetObject(FD_TCP_LISTEN));
     if(!listen){
         ERROR("cannot get CListenSocket object for bindAddr="<<bindAddr.ToString());
@@ -33,7 +33,7 @@ bool CHahsEngine::AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & r
         ERROR("cannot listen bindAddr="<<bindAddr.ToString()<<IFileDesc::ErrMsg());
         return false;
     }
-    INFO("listen="<<Tools::ToStringPtr(listen));
+    DEBUG("listen="<<Tools::ToStringPtr(listen));
     __SockPtr sock = CSockSession::GetObject(&*listen, recvHelper);
     if(!sock){
         ERROR("cannot get sock session for listen="<<Tools::ToStringPtr(listen));
@@ -41,13 +41,14 @@ bool CHahsEngine::AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & r
     }
     sock->Events(EVENT_ACCEPT);
     const int fd = sock->Fd();
-    INFO("fd="<<fd<<", sock="<<Tools::ToStringPtr(sock));
+    INFO("add sock="<<Tools::ToStringPtr(sock)<<" to engine");
     assert(fd >= 0);
     fdSockMap_.SetSock(fd, sock);
     if(!addingQue_.Push(fd, 500)){
         ERROR("addingQue_.Push(fd="<<fd<<") failed for sock="<<Tools::ToStringPtr(sock));
         return false;
     }
+    listen.release();
     return true;
 }
 
