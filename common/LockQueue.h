@@ -134,7 +134,7 @@ public:
     bool PopAll(container_type & con, S32 timeMs = -1){
         con.clear();
         guard_type guard(lock_);
-        const int sig = waitNotEmpty(timeMs, con_.size());
+        const int sig = waitNotEmpty(timeMs, (con_.empty() ? capacity_ : con_.size()));
         if(sig < 0)
             return false;
         con_.swap(con);
@@ -168,7 +168,7 @@ private:
             }else if(!timeMs || !not_empty_.TimeWait(lock_, timeMs))
                 return -1;
         }
-        need = con_.size() - need; //size after pop
+        need = (con_.size() <= need ? 0 : con_.size() - need); //size after pop
         return (con_.size() >= capacity_ && need < capacity_ ? 1 : 0);
     }
     /*
@@ -178,6 +178,7 @@ private:
         1   empty
     //*/
     int waitNotFull(S32 timeMs, size_t need){
+        assert(need > 0);
         if(need > capacity_)
             return -1;
         while(con_.size() + need > capacity_){

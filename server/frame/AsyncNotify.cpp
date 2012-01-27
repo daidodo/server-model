@@ -53,7 +53,7 @@ int CAsyncNotify::doIt()
                     DEBUG("epoll_["<<i<<"]="<<event.ToString()<<" can output");
                     revents |= EVENT_OUT;
                 }
-                DEBUG("push epoll_["<<i<<"]="<<event.ToString()<<", revents="<<revents<<" into fdEventList");
+                TRACE("push epoll_["<<i<<"]="<<event.ToString()<<", revents="<<Events::ToString(revents)<<" into fdEventList");
                 fdEventList.push_back(__FdEvent(fd, revents));
             }
         }
@@ -119,6 +119,7 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
             ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" before add to epoll, ignore it");
             continue;
         }else if(Events::NeedClose(sock->Events())){
+            DEBUG("push sock="<<Tools::ToStringPtr(sock)<<" into errFdList");
             errFdList.push_back(fd);
             continue;
         }
@@ -128,8 +129,9 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
             ev |= EPOLLIN;
         if(Events::NeedOutput(sock->Events()))
             ev |= EPOLLOUT;
+        TRACE("modify epoll events="<<CEpoll::EventsName(ev)<<" for sock="<<Tools::ToStringPtr(sock));
         if(!epoll_.ModifyFlags(fd, ev)){
-            WARN("epoll_.ModFlags(fd="<<fd<<", ev="<<ev<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
+            WARN("epoll_.ModFlags(fd="<<fd<<", ev="<<CEpoll::EventsName(ev)<<") failed for client="<<Tools::ToStringPtr(sock)<<", close it");
             errFdList.push_back(fd);
         }
     }

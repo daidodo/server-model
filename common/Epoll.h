@@ -4,10 +4,8 @@
 #include <sys/epoll.h>
 #include <vector>
 #include <set>
-#include <sstream>
 #include <cstring>   //memset
 #include <FdMap.h>   //CFdMap
-#include <Tools.h>   //CFdMap
 
 /*
     epoll操作封装,采用ET模式
@@ -17,24 +15,17 @@
 
 NS_SERVER_BEGIN
 
-struct CEpollEvent{
+struct CEpollEvent
+{
     typedef struct epoll_event __Event;
     //functions
-    explicit CEpollEvent(const __Event & ev)
-        : ev_(ev)
-    {}
+    explicit CEpollEvent(const __Event & ev):ev_(ev){}
     int Fd() const{return ev_.data.fd;}
     bool Invalid() const{return ev_.data.fd < 0;}
     bool CanInput() const{return ev_.events & EPOLLIN;}
     bool CanOutput() const{return ev_.events & EPOLLOUT;}
     bool Error() const{return (ev_.events & EPOLLERR) || (ev_.events & EPOLLHUP);}
-    std::string ToString() const{
-        std::ostringstream oss;
-        oss<<"{fd="<<ev_.data.fd
-            <<", events=0x"<<std::hex<<ev_.events<<std::dec
-            <<"}";
-        return oss.str();
-    }
+    std::string ToString() const;
 private:
     //members
     const __Event & ev_;
@@ -44,12 +35,8 @@ class CEpoll
 {
     typedef CEpollEvent::__Event __Event;
 public:
-    CEpoll()
-        : fdSize_(0)
-        , epollFd_(-1)
-        , maxSz_(0)
-        , epollTimeoutMs_(400)
-    {}
+    static std::string EventsName(U32 events);
+    CEpoll();
     ~CEpoll(){Destroy();}
     bool IsValid() const{return epollFd_ >= 0;}
     //设置/获取epoll wait的时间(毫妙)
@@ -80,8 +67,7 @@ public:
     //修改fd对应的flags
     //如果fd没有flags，则新增
     //如果fd已有flags，则覆盖
-    bool ModifyFlags(int fd, U32 flags)
-    {
+    bool ModifyFlags(int fd, U32 flags){
         U32 & oldFlags = fdInfo_[fd];
         if(oldFlags)
             return modifyFdFlags(fd, flags);
@@ -126,34 +112,10 @@ public:
 private:
     //将fd加入到epoll中
     //flags将被加上EPOLLET
-    bool addFdFlags(int fd, U32 flags){
-        __Event ev;
-        memset(&ev, 0, sizeof ev);
-        ev.events = flags | EPOLLET;
-        ev.data.fd = fd;
-        if(epoll_ctl(epollFd_, EPOLL_CTL_ADD, fd, &ev) < 0)
-            return false;
-        assert(0 == fdInfo_[fd]);
-        fdInfo_[fd] = flags;
-        ++fdSize_;
-        return true;
-    }
+    bool addFdFlags(int fd, U32 flags);
     //改变fd的flags
     //flags将被加上EPOLLET，并覆盖原flags
-    bool modifyFdFlags(int fd, U32 flags){
-        U32 & oldFlags = fdInfo_[fd];
-        assert(0 != oldFlags);
-        if(flags != oldFlags){
-            __Event ev;
-            memset(&ev, 0, sizeof ev);
-            ev.events = flags | EPOLLET;
-            ev.data.fd = fd;
-            if(epoll_ctl(epollFd_, EPOLL_CTL_MOD, fd, &ev) != 0)
-                return false;
-            oldFlags = flags;
-        }
-        return true;
-    }
+    bool modifyFdFlags(int fd, U32 flags);
     //members
     size_t                  fdSize_;
     int                     epollFd_;

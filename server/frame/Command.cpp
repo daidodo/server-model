@@ -67,7 +67,8 @@ void CCmdBase::ReleaseCmd(CCmdBase * cmd)
     }
 }
 
-std::string CCmdBase::ToString() const{
+std::string CCmdBase::ToString() const
+{
     std::ostringstream oss;
     switch(cmdId_){
         case CMD_QUERY:oss<<"CMD_QUERY";break;
@@ -81,8 +82,7 @@ std::string CCmdBase::ToString() const{
 
 bool CCmdQuery::Decode(CInByteStream & in)
 {
-    return (in>>ver_
-        >>echo_);
+    return (in>>ver_>>echo_);
 }
 
 std::string CCmdQuery::ToString() const
@@ -100,12 +100,13 @@ std::string CCmdQuery::ToString() const
 void CCmdResp::Encode(COutByteStream & out) const
 {
     size_t from = out.Size();
-    out<<U16(0)
+    out<<U16(0)     //total len
         <<U8(STX)
         <<CCmdBase::CmdId()
         <<ver_
-        <<result_;
-    out<<Manip::offset_value(from, out.Size() - from);
+        <<result_
+        <<U8(ETX);
+    out<<Manip::offset_value(from, U16(out.Size() - from));
 }
 
 std::string CCmdResp::ToString() const
