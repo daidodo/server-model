@@ -18,10 +18,11 @@ CAsyncIO::CAsyncIO(size_t stackSz, CHahsEngine & engine)
 int CAsyncIO::doIt()
 {
     LOCAL_LOGGER(logger, "CAsyncIO::doIt");
-    __SockPtrList sockList;
-    __FdEventList eventList;
-    __FdList addingList;
-    __QueryCmdList queryCmdList;
+    CListParams listParams;
+    __SockPtrList & sockList = listParams.sockList_;
+    __FdEventList & eventList = listParams.eventList_;
+    __FdList & addingList = listParams.addingList_;
+    __QueryCmdList & queryCmdList = listParams.queryCmdList_;
     for(;;){
         //pop all events
         if(!eventQue_.PopAll(eventList)){
@@ -53,7 +54,7 @@ int CAsyncIO::doIt()
             if(ok && Events::CanOutput(i->Events()))
                 ok = handleOutput(sock);
             if(ok && Events::CanInput(i->Events()))
-                ok = handleInput(sock, addingList, queryCmdList);
+                ok = handleInput(sock, listParams);
             if(!ok)
                 sock->Events(EVENT_CLOSE);
             //update events
@@ -95,14 +96,14 @@ bool CAsyncIO::handleOutput(__SockPtr & sock)
     return false;
 }
 
-bool CAsyncIO::handleInput(__SockPtr & sock, __FdList & addingList, __QueryCmdList & queryCmdList)
+bool CAsyncIO::handleInput(__SockPtr & sock, CListParams & listParams)
 {
     assert(sock);
     switch(sock->FileType()){
         case FD_FILE:assert(0);break;   //-------not implemented
-        case FD_TCP_LISTEN:return handleAccept(sock, addingList);
-        case FD_TCP_CONN:return handleRecv(sock, queryCmdList, false);
-        case FD_UDP:return handleRecv(sock, queryCmdList, true);
+        case FD_TCP_LISTEN:return handleAccept(sock, listParams);
+        case FD_TCP_CONN:return handleRecv(sock, listParams, false);
+        case FD_UDP:return handleRecv(sock, listParams, true);
         default:;
     }
     LOCAL_LOGGER(logger, "CAsyncIO::handleInput");
@@ -110,7 +111,7 @@ bool CAsyncIO::handleInput(__SockPtr & sock, __FdList & addingList, __QueryCmdLi
     return false;
 }
 
-bool CAsyncIO::handleRecv(__SockPtr & sock, __QueryCmdList & queryCmdList, bool isUdp)
+bool CAsyncIO::handleRecv(__SockPtr & sock, CListParams & listParams, bool isUdp)
 {
     assert(sock);
     CSockAddr udpClientAddr;
@@ -121,41 +122,44 @@ bool CAsyncIO::handleRecv(__SockPtr & sock, __QueryCmdList & queryCmdList, bool 
             return false;
         if(!cmd)
             break;
-        if(!handleCmd(sock, cmd, udpClientAddr, queryCmdList))
+        if(!handleCmd(sock, cmd, udpClientAddr, listParams))
             return false;
     }
     return true;
 }
 
-bool CAsyncIO::handleAccept(__SockPtr & sock, __FdList & addingList)
+bool CAsyncIO::handleAccept(__SockPtr & sock, CListParams & listParams)
 {
     LOCAL_LOGGER(logger, "CAsyncIO::handleAccept");
     assert(sock);
-    for(__SockSession * client;;){
-        if(!sock->Accept(client)){
+    for(;;){
+        __SockSession * client = 0;
+        __Events ev = 0;
+        if(!sock->Accept(client, ev)){
             ERROR("accept error for sock="<<Tools::ToStringPtr(sock));
             return false;
         }
         if(!client)
             break;
+        INFO("new client="<<Tools::ToStringPtr(client)<<" arrived, ev="<<Events::ToString(ev));
         const int fd = client->Fd();
-        INFO("new client="<<Tools::ToStringPtr(client)<<" arrived");
         __SockPtr ptr(client);
         fdSockMap_.SetSock(fd, ptr);
-        TRACE("add fd="<<fd<<", client="<<Tools::ToStringPtr(client)<<" into addingList");
-        addingList.push_back(fd);
+        TRACE("add fd="<<fd<<", ev="<<Events::ToString(ev)<<" into eventList for client="<<Tools::ToStringPtr(client));
+        listParams.eventList_.push_back(__FdEvent(fd, ev));
+        listParams.sockList_.push_back(ptr);
     }
     return true;
 }
 
-bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, __QueryCmdList & queryCmdList)
+bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, CListParams & listParams)
 {
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CAsyncIO::handleCmd");
     assert(sock && cmd);
     __CmdSessionPtr session(__CmdSession::GetObject(sock, cmd, udpClientAddr));    //guard
     DEBUG("push cmd session="<<Tools::ToStringPtr(session)<<" into queryCmdList");
-    queryCmdList.push_back(&*session);
+    listParams.queryCmdList_.push_back(&*session);
     session.release();
     return true;
 }

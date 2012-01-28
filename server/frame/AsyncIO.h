@@ -9,18 +9,25 @@ NS_SERVER_BEGIN
 
 class CHahsEngine;
 
-struct CAsyncIO : public CThreadPool
+class CAsyncIO : public CThreadPool
 {
+    struct CListParams{
+        __SockPtrList sockList_;
+        __FdEventList eventList_;
+        __FdList addingList_;
+        __QueryCmdList queryCmdList_;
+    };
+public:
     CAsyncIO(size_t stackSz, CHahsEngine & engine);
     bool Init(){return true;}
 protected:
     virtual int doIt();
 private:
     bool handleOutput(__SockPtr & sock);
-    bool handleInput(__SockPtr & sock, __FdList & addingList, __QueryCmdList & queryCmdList);
-    bool handleAccept(__SockPtr & sock, __FdList & addingList);
-    bool handleRecv(__SockPtr & sock, __QueryCmdList & queryCmdList, bool isUdp);
-    bool handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, __QueryCmdList & queryCmdList);
+    bool handleInput(__SockPtr & sock, CListParams & listParams);
+    bool handleAccept(__SockPtr & sock, CListParams & listParams);
+    bool handleRecv(__SockPtr & sock, CListParams & listParams, bool isUdp);
+    bool handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, CListParams & listParams);
     //members
     __FdQue & addingQue_;
     __FdEventQue & eventQue_;

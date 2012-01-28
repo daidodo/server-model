@@ -47,7 +47,7 @@ std::string CSockSession::ToString() const
     return oss.str();
 }
 
-bool CSockSession::Accept(CSockSession *& client)
+bool CSockSession::Accept(CSockSession *& client, __Events & events)
 {
     typedef CSharedPtr<CTcpConnSocket, false> __TcpConnPtr;
     LOCAL_LOGGER(logger, "CSockSession::Accept");
@@ -78,8 +78,8 @@ bool CSockSession::Accept(CSockSession *& client)
         ERROR("no memory for sock session of clientSock="<<Tools::ToStringPtr(clientSock)<<", close it");
         return false;
     }
-    client->ev_ = EVENT_TCP_RECV;   //---------要根据process状态机决定
     clientSock.release();
+    events = EVENT_IN;   //---------要根据process状态机决定
     return true;
 }
 
