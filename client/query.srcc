@@ -2,17 +2,20 @@
 
 TCP("127.0.0.1", 12345)
 
-DEBUG
+#DEBUG
 
 CMD Query SEND
-  DEF U16 len
-  BEGIN(len)
-  U16 totalLen = len
+BEGIN ARRAY(1000)
+#  DEF U16 len
+#  BEGIN(len)
+  U16 totalLen := 0xF	#len
   U8 stx := 3
   U16 cmdId := 1
   U16 ver := 1
   STR echo := "12345"
   U8 etx := 2
+#  END(len)
+END ARRAY
 END CMD
 
 CMD Resp RECV
@@ -23,3 +26,5 @@ CMD Resp RECV
   STR result
   U8 etx == 2
 END CMD
+
+SLEEP(3)
