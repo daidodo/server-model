@@ -29,7 +29,7 @@ int main(int argc,const char ** argv)
     param.notifyStackSz_ = 16 << 10;
     param.ioStackSz_ = 16 << 10;
     param.handlerStackSz_ = 16 << 10;
-    param.maxFdNum_ = 1000;
+    param.maxFdNum_ = 1023;
     param.epollTimeoutMs_ = 500;
     param.handlerThreadMax_ = 4;
     if(!engine.Run(param)){

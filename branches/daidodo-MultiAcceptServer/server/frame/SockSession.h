@@ -9,11 +9,14 @@
 #include <FileDesc.h>
 #include <SharedPtr.h>
 #include <Sockets.h>
+#include <LockQueue.h>
 #include <FdMap.h>
 #include "Events.h"
 
 NS_SERVER_BEGIN
 
+typedef CLockQueue<int> __FdQue;
+typedef __FdQue::container_type __FdList;
 typedef std::vector<char> __Buffer;
 typedef std::list<__Buffer> __BufList;
 
@@ -25,8 +28,12 @@ enum ECheckDataRet
 };
 
 class CCmdBase;
+class CCmdSession;
 typedef CCmdBase __CmdBase;
+typedef CCmdSession __CmdSession;
 
+typedef CLockQueue<__CmdSession *> __QueryCmdQue;
+typedef __QueryCmdQue::container_type __QueryCmdList;
 typedef std::pair<ECheckDataRet, size_t> __OnDataArriveRet;
 typedef __OnDataArriveRet (*__OnDataArrive)(const char *, size_t);
 typedef __CmdBase * (*__DecodeCmd)(const char *, size_t);
@@ -80,6 +87,7 @@ public:
     CSockSession(IFileDesc * fileDesc, const __RecvHelper & recvHelper);
     ~CSockSession();
     int Fd() const{return fileDesc_->Fd();}
+    EFileDescType FileType() const{return fileDesc_->Type();}
     bool IsValid() const{return fileDesc_ && fileDesc_->IsValid();}
     void Close(){fileDesc_->Close();}
     std::string ToString() const;
@@ -93,34 +101,30 @@ public:
     //接收数据，decode cmd
     //cmd: 返回成功解码的cmd
     //udpClientAddr: 如果是udp连接，返回对方地址
-    //return: true-正常; false-出错
-    bool RecvCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr);
+    bool RecvTcpCmd(__CmdBase *& cmd);
+    bool RecvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr);
+    //发送缓冲区的数据
+    bool SendTcpData();
+    bool SendUdpData();
+    //将缓冲区的数据写入文件
+    bool WriteData();
+    //处理cmd
+    //udpClientAddr: 如果是udp连接，表示对方地址
+    //return: EVENT_OUT-需要output; EVENT_IN-需要input
+    __Events Process(__CmdBase & cmd, CSockAddr & udpClientAddr);
     //释放cmd对象
-    void ReleaseCmd(__CmdBase * cmd);
+    void ReleaseCmd(__CmdBase * cmd){recvHelper_.ReleaseCmd()(cmd);}
     //将buf加入待发送缓冲区
     //buf会被清空
     bool AddOutBuf(__Buffer & buf, CSockAddr & udpClientAddr){
         return putBuf(buf, udpClientAddr, false);
     }
-    //发送缓冲区的数据
-    //return: true-正常; false-出错
-    bool SendBuffer();
-    //将缓冲区的数据写入文件
-    //return: true-正常; false-出错
-    bool WriteData();
-    //处理cmd
-    //udpClientAddr: 如果是udp连接，表示对方地址
-    void Process(__CmdBase & cmd, CSockAddr & udpClientAddr);
 private:
-    bool recvTcpCmd(__CmdBase *& cmd);
-    bool recvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr);
     bool decodeCmd(__CmdBase *& cmd, size_t left);
-    bool tcpSend();
-    bool udpSend();
+    //增加/获取待发送的buf和addr
     bool getBuf(__Buffer & buf, CSockAddr & addr);
     bool putBuf(__Buffer & buf, CSockAddr & addr, bool front);
     //members
-    __LockType lock_;
     IFileDesc * const fileDesc_;
     // recv
     const __RecvHelper & recvHelper_;

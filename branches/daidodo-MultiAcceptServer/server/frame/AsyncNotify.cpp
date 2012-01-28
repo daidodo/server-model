@@ -59,7 +59,7 @@ int CAsyncNotify::doIt()
         }
         //add events
         if(!fdEventList.empty()){
-            TRACE("eventQue_.PushAll(fdEventList.size()="<<fdEventList.size()<<")");
+            TRACE("eventQue_.PushAll(size="<<fdEventList.size()<<")");
             if(!eventQue_.PushAll(fdEventList, 500)){
                 errFdList.insert(errFdList.end()
                         , const_iter_adapt_fun<int>(fdEventList.begin(), __FdEvent::ExtractFd)
@@ -112,7 +112,7 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
         return;
     if(tmp.empty())
         return;
-    TRACE("after addingQue_.PopAll(), size="<<tmp.size());
+    TRACE("addingQue_.PopAll() size="<<tmp.size());
     //get sock ptr
     __SockPtrList sockList(tmp.size());
     fdSockMap_.GetSock(tmp.begin(), tmp.end(), sockList.begin());
