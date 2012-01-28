@@ -80,6 +80,7 @@ bool CSockSession::Accept(CSockSession *& client, __Events & events)
     }
     clientSock.release();
     events = EVENT_IN;   //---------要根据process状态机决定
+    client->Events(EVENT_TCP_RECV);     //---------debug
     return true;
 }
 
