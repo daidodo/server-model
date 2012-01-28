@@ -29,7 +29,6 @@ private:
 };
 
 typedef CCmdSession __CmdSession;
-typedef CLockQueue<__CmdSession *> __QueryCmdQue;
 
 NS_SERVER_END
 

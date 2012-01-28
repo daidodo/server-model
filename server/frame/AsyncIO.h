@@ -17,9 +17,10 @@ protected:
     virtual int doIt();
 private:
     bool handleOutput(__SockPtr & sock);
-    bool handleInput(__SockPtr & sock, __FdList & addingList);
+    bool handleInput(__SockPtr & sock, __FdList & addingList, __QueryCmdList & queryCmdList);
     bool handleAccept(__SockPtr & sock, __FdList & addingList);
-    bool handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
+    bool handleRecv(__SockPtr & sock, __QueryCmdList & queryCmdList, bool isUdp);
+    bool handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, __QueryCmdList & queryCmdList);
     //members
     __FdQue & addingQue_;
     __FdEventQue & eventQue_;
