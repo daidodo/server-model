@@ -96,8 +96,9 @@ public:
     void Events(__Events events){ev_ = events;}
     //接受新tcp客户端
     //client: 返回成功接受的client
+    //events: 返回client的下一个事件(EVENT_OUT, EVENT_IN)
     //return: true-正常; false-出错
-    bool Accept(CSockSession *& client);
+    bool Accept(CSockSession *& client, __Events & events);
     //接收数据，decode cmd
     //cmd: 返回成功解码的cmd
     //udpClientAddr: 如果是udp连接，返回对方地址
