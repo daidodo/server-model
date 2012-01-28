@@ -52,6 +52,8 @@ int CAsyncIO::doIt()
                 ok = handleOutput(sock);
             if(ok && Events::CanInput(i->Events()))
                 ok = handleInput(sock, addingList);
+            if(!ok)
+                sock->Events(EVENT_CLOSE);
             //update events
             if(oldEv != sock->Events()){
                 DEBUG("add fd="<<fd<<", ev="<<Events::ToString(sock->Events())<<" into addingList, oldEv="<<oldEv);
@@ -59,9 +61,12 @@ int CAsyncIO::doIt()
             }
         }
         //flush addingList
-        if(!addingQue_.PushAll(addingList, 500)){
-            ERROR("addingQue_.PushAll() failed, close all sockets");
-            fdSockMap_.CloseSock(addingList.begin(), addingList.end());
+        if(!addingList.empty()){
+            TRACE("addingQue_.PushAll(size="<<addingList.size()<<")");
+            if(!addingQue_.PushAll(addingList, 500)){
+                ERROR("addingQue_.PushAll() failed, close all sockets");
+                fdSockMap_.CloseSock(addingList.begin(), addingList.end());
+            }
         }
     }
     return 0;

@@ -58,18 +58,24 @@ int CAsyncNotify::doIt()
             }
         }
         //add events
-        if(!eventQue_.PushAll(fdEventList, 500)){
-            errFdList.insert(errFdList.end()
-                    , const_iter_adapt_fun<int>(fdEventList.begin(), __FdEvent::ExtractFd)
-                    , const_iter_adapt_fun<int>(fdEventList.end(), __FdEvent::ExtractFd));
+        if(!fdEventList.empty()){
+            TRACE("eventQue_.PushAll(fdEventList.size()="<<fdEventList.size()<<")");
+            if(!eventQue_.PushAll(fdEventList, 500)){
+                errFdList.insert(errFdList.end()
+                        , const_iter_adapt_fun<int>(fdEventList.begin(), __FdEvent::ExtractFd)
+                        , const_iter_adapt_fun<int>(fdEventList.end(), __FdEvent::ExtractFd));
+            }
+            fdEventList.clear();
         }
-        fdEventList.clear();
         //add sockets
         addFdEvent(errFdList);
         //close sockets
-        fdSockMap_.CloseSock(errFdList.begin(), errFdList.end());
-        epoll_.RemoveFd(errFdList.begin(), errFdList.end());
-        errFdList.clear();
+        if(!errFdList.empty()){
+            TRACE("close sockets in errFdList, size="<<errFdList.size());
+            fdSockMap_.CloseSock(errFdList.begin(), errFdList.end());
+            epoll_.RemoveFd(errFdList.begin(), errFdList.end());
+            errFdList.clear();
+        }
     }
     return 0;
 }
@@ -106,6 +112,7 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
         return;
     if(tmp.empty())
         return;
+    TRACE("after addingQue_.PopAll(), size="<<tmp.size());
     //get sock ptr
     __SockPtrList sockList(tmp.size());
     fdSockMap_.GetSock(tmp.begin(), tmp.end(), sockList.begin());
@@ -114,6 +121,7 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
     for(;i != tmp.end();++i, ++sock_i){
         const int fd = *i;
         const __SockPtr & sock = *sock_i;
+        TRACE("get fd="<<fd<<", sock="<<Tools::ToStringPtr(sock)<<" from addingQue_");
         //validate fd and sock ptr
         if(!sock || !sock->IsValid()){
             ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" before add to epoll, ignore it");

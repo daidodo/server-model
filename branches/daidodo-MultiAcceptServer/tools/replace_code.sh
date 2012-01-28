@@ -56,3 +56,4 @@ for file in $* ; do
       ;;
   esac
 done
+
