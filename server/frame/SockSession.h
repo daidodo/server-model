@@ -111,7 +111,7 @@ public:
     bool WriteData();
     //处理cmd
     //udpClientAddr: 如果是udp连接，表示对方地址
-    //return: EVENT_OUT-需要output; EVENT_IN-需要input
+    //return: EVENT_OUT-需要output; EVENT_IN-需要input; EVENT_CLOSE-需要close
     __Events Process(__CmdBase & cmd, CSockAddr & udpClientAddr);
     //释放cmd对象
     void ReleaseCmd(__CmdBase * cmd){recvHelper_.ReleaseCmd()(cmd);}

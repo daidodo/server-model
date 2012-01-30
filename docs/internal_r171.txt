@@ -24,7 +24,7 @@ fd=6 can recv
 push event list
 		pop event list
     		handle fd=6 recv
-		fd=6 close
+		fd=6 peer close
 		add adding list
 pop adding list
 close fd=6
