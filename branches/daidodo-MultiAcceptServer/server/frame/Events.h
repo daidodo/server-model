@@ -2,14 +2,12 @@
 #define DOZERG_EVENTS_H_20120122
 
 #include <string>
-#include <impl/Config.h>
+#include <Tools.h>
 
 NS_SERVER_BEGIN
 
 //event flags
 typedef U32 __Events;
-
-#define EVENT_COUNT (sizeof(__Events) * 8)
 
 const __Events EVENT_CLOSE = 1 << 0;
 const __Events EVENT_IN = 1 << 1;
@@ -50,7 +48,21 @@ namespace Events{
         return CanSend(ev)
             || CanWrite(ev);
     }
-    std::string ToString(__Events ev);
+    inline std::string ToString(__Events ev){
+        const char * const BIT_NAME[] = {
+            "CLOSE",
+            "IN",
+            "OUT",
+            "ACCEPT",
+            "TCP_RECV",
+            "UDP_RECV",
+            "TCP_SEND",
+            "UDP_SEND",
+            "READ",
+            "WRITE",
+        };
+        return Tools::ToStringBits(ev, BIT_NAME, Tools::ArraySize(BIT_NAME));
+    }
 }//namespace Events
 
 struct CFdEvent

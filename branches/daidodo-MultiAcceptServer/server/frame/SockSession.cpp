@@ -317,6 +317,7 @@ bool CSockSession::getBuf(__Buffer & buf, CSockAddr & addr)
 {
     buf.clear();
     addr.Reset();
+    __Guard g(sendLock_);
     if(outList_.empty())
         return false;
     __BufList::iterator i = outList_.begin();
@@ -324,7 +325,7 @@ bool CSockSession::getBuf(__Buffer & buf, CSockAddr & addr)
     while(i != outList_.end()){
         buf.swap(*i);
         outList_.erase(i++);
-        if(j != addrList_.end()){    //buf & addr mismatch
+        if(j != addrList_.end()){
             addr.Swap(*j);
             addrList_.erase(j++);
         }
@@ -344,6 +345,7 @@ bool CSockSession::putBuf(__Buffer & buf, CSockAddr & addr, bool front)
         ERROR("invalid addr="<<addr.ToString()<<" for sock="<<ToString());
         return false;
     }
+    __Guard g(sendLock_);
     __BufList::iterator i = outList_.insert((front ? outList_.begin() : outList_.end()), __Buffer());
     i->swap(buf);
     if(isUdp){

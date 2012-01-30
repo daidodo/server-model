@@ -41,12 +41,14 @@
         ProgramName
         ExtractArg
         ToStringPtr
+        ToStringBits
         ErrorMsg
         Daemon
         GetHost
         UrlEncode
         UrlDecode
         IsTimeout
+        ArraySize
         MEM_OFFSET
         iterator_traits
 //*/
@@ -459,6 +461,12 @@ namespace Tools
         return (p ? p->ToString() : "NULL");
     }
 
+    //将U32类型的v及每个bit的name显示出来
+    //name: 指定每个bit的名称，为0时不显示
+    //name_len: name数组的长度
+    //return示例: 3(IN | OUT)
+    std::string ToStringBits(U32 v, const char * const * name, size_t name_len);
+
     //得到错误码error_no对应的系统错误信息
     std::string ErrorMsg(int error_no);
 
@@ -476,6 +484,9 @@ namespace Tools
     //通用的检验是否超时的逻辑
     //jumping: 可以容忍的时间跳变
     bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping = 0);
+
+    template<class T, size_t S>
+    size_t ArraySize(T (&)[S]){return S;}
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits

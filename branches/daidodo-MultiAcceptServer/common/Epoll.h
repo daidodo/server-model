@@ -35,7 +35,16 @@ class CEpoll
 {
     typedef CEpollEvent::__Event __Event;
 public:
-    static std::string EventsName(U32 events);
+    static std::string EventsName(U32 events){
+        const char * const NAME[] = {
+            "EPOLLIN",
+            "EPOLLPRI",
+            "EPOLLOUT",
+            "EPOLLERR",
+            "EPOLLHUP",
+        };
+        return Tools::ToStringBits(events, NAME, Tools::ArraySize(NAME));
+    }
     CEpoll();
     ~CEpoll(){Destroy();}
     bool IsValid() const{return epollFd_ >= 0;}

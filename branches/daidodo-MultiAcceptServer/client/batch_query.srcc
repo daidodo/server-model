@@ -3,7 +3,7 @@
 TCP("127.0.0.1", 12345)
 
 CMD Query SEND
-  BEGIN ARRAY(1000)
+  BEGIN ARRAY(10000)
     U16 totalLen := 0xF
     U8 stx := 3
     U16 cmdId := 1
@@ -14,7 +14,18 @@ CMD Query SEND
 END CMD
 
 CMD Resp RECV
-  BEGIN ARRAY(1000)
+  U16 totalLen
+  U8 stx == 3
+  U16 cmdId
+  U16 ver
+  STR result
+  U8 etx == 2
+END CMD
+
+SLEEP(1)
+
+CMD Resp2 RECV
+  BEGIN ARRAY(9999)
     U16 totalLen
     U8 stx == 3
     U16 cmdId

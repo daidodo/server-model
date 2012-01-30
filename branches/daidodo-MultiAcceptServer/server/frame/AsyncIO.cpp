@@ -66,7 +66,7 @@ int CAsyncIO::doIt()
             }
             //update events
             if(add){
-                DEBUG("add fd="<<fd<<", ev="<<Events::ToString(sock->Events())<<" into addingList, oldEv="<<oldEv);
+                DEBUG("add fd="<<fd<<", ev="<<Events::ToString(sock->Events())<<" into addingList, oldEv="<<oldEv<<", sock="<<Tools::ToStringPtr(sock));
                 addingList.push_back(fd);
             }
         }
