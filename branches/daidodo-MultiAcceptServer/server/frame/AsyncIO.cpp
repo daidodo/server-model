@@ -146,9 +146,9 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, CListParams & listParams)
         __SockPtr ptr(client);
         fdSockMap_.SetSock(fd, ptr);
         TRACE("add fd="<<fd<<", ev="<<Events::ToString(ev)<<" into eventList for client="<<Tools::ToStringPtr(client));
-        //listParams.eventList_.push_back(__FdEvent(fd, ev));
-        //listParams.sockList_.push_back(ptr);
-        listParams.addingList_.push_back(fd);   //---------debug
+        listParams.eventList_.push_back(__FdEvent(fd, ev));
+        listParams.sockList_.push_back(ptr);
+        TRACE("eventList_.size()="<<listParams.eventList_.size()<<", sockList_.size()="<<listParams.sockList_.size());
     }
     return true;
 }
