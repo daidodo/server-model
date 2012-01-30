@@ -125,12 +125,14 @@ private:
     //增加/获取待发送的buf和addr
     bool getBuf(__Buffer & buf, CSockAddr & addr);
     bool putBuf(__Buffer & buf, CSockAddr & addr, bool front);
+    //增加evetns
+    void addEvents(__Events ev){ev_ |= ev;}
     //members
     IFileDesc * const fileDesc_;
     // recv
     const __RecvHelper & recvHelper_;
-    __Buffer recvBuf_;
-    size_t needSz_;
+    __Buffer recvBuf_;  //operated only in AsyncIO
+    size_t needSz_;     //operated only in AsyncIO
     // send
     __BufList outList_;
     __AddrList addrList_;

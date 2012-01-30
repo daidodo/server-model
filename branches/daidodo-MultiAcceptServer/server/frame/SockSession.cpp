@@ -68,7 +68,7 @@ bool CSockSession::Accept(CSockSession *& client, __Events & events)
         ERROR("listen sock="<<Tools::ToStringPtr(listen)<<" accept client error"<<IFileDesc::ErrMsg());
         return false;
     }else if(CListenSocket::RET_EAGAIN == ret){
-        ev_ |= EVENT_ACCEPT;
+        addEvents(EVENT_ACCEPT);
         return true;
     }
     clientSock->SetLinger();
@@ -99,7 +99,7 @@ bool CSockSession::WriteData()
         ssize_t sz = file->Write(buf);
         if(sz < 0){
             if(EAGAIN == errno || EWOULDBLOCK == errno){
-                ev_ |= EVENT_WRITE;
+                addEvents(EVENT_WRITE);
                 return putBuf(buf, addr, true);
             }
             ERROR("Write failed for buf="<<Tools::DumpHex(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
@@ -107,7 +107,7 @@ bool CSockSession::WriteData()
         }else if(size_t(sz) < buf.size()){
             DEBUG("write half sz="<<sz<<" of buf="<<Tools::DumpHex(buf)<<" into file="<<Tools::ToStringPtr(file));
             buf.erase(buf.begin(), buf.begin() + sz);
-            ev_ |= EVENT_WRITE;
+            addEvents(EVENT_WRITE);
             return putBuf(buf, addr, true);
         }
         DEBUG("write buf="<<Tools::DumpHex(buf)<<" into file="<<Tools::ToStringPtr(file));
@@ -155,7 +155,7 @@ bool CSockSession::RecvTcpCmd(__CmdBase *& cmd)
         ssize_t sz = conn->RecvData(recvBuf_, needSz_);
         if(sz < 0){
             if(EAGAIN == errno || EWOULDBLOCK == errno){
-                ev_ |= EVENT_TCP_RECV;
+                addEvents(EVENT_TCP_RECV);
                 break;
             }
             ERROR("RecvData(needSz_="<<needSz_<<") failed for sock="<<ToString()<<IFileDesc::ErrMsg());
@@ -165,7 +165,7 @@ bool CSockSession::RecvTcpCmd(__CmdBase *& cmd)
             return false;
         }else if(size_t(sz) < needSz_){
             needSz_ -= sz;
-            ev_ |= EVENT_TCP_RECV;
+            addEvents(EVENT_TCP_RECV);
             break;
         }else{
             __OnDataArrive onArrive = recvHelper_.OnDataArrive();
@@ -209,7 +209,7 @@ bool CSockSession::RecvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
         ssize_t sz = conn->RecvData(udpClientAddr, recvBuf_, needSz_);
         if(sz < 0){
             if(EAGAIN == errno || EWOULDBLOCK == errno){
-                ev_ |= EVENT_UDP_RECV;
+                addEvents(EVENT_UDP_RECV);
                 break;
             }
             ERROR("RecvData(needSz_="<<needSz_<<") failed for sock="<<ToString()<<IFileDesc::ErrMsg());
@@ -266,7 +266,7 @@ bool CSockSession::SendTcpData()
         ssize_t sz = conn->SendData(buf);
         if(sz < 0){
             if(EAGAIN == errno || EWOULDBLOCK == errno){
-                ev_ |= EVENT_TCP_SEND;
+                addEvents(EVENT_TCP_SEND);
                 return putBuf(buf, addr, true);
             }
             ERROR("SendData failed for buf="<<Tools::DumpHex(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
@@ -274,7 +274,7 @@ bool CSockSession::SendTcpData()
         }else if(size_t(sz) < buf.size()){
             DEBUG("send half sz="<<sz<<" of buf="<<Tools::DumpHex(buf)<<" to conn="<<Tools::ToStringPtr(conn));
             buf.erase(buf.begin(), buf.begin() + sz);
-            ev_ |= EVENT_TCP_SEND;
+            addEvents(EVENT_TCP_SEND);
             return putBuf(buf, addr, true);
         }
         DEBUG("send buf="<<Tools::DumpHex(buf)<<" to conn="<<Tools::ToStringPtr(conn));
@@ -302,7 +302,7 @@ bool CSockSession::SendUdpData()
         ssize_t sz = conn->SendData(addr, buf);
         if(sz < 0){
             if(EAGAIN == errno || EWOULDBLOCK == errno){
-                ev_ |= EVENT_UDP_SEND;
+                addEvents(EVENT_UDP_SEND);
                 return putBuf(buf, addr, true);
             }
             ERROR("SendData failed for buf="<<Tools::DumpHex(buf)<<" for sock="<<ToString()<<IFileDesc::ErrMsg());
