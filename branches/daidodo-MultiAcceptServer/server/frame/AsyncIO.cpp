@@ -50,15 +50,22 @@ int CAsyncIO::doIt()
             //handle events
             __Events oldEv = sock->Events();
             DEBUG("handle ev="<<Events::ToString(i->Events())<<" from sock="<<Tools::ToStringPtr(sock));
-            bool ok = true;
-            if(ok && Events::CanOutput(i->Events()))
-                ok = handleOutput(sock);
-            if(ok && Events::CanInput(i->Events()))
-                ok = handleInput(sock, listParams);
-            if(!ok)
-                sock->Events(EVENT_CLOSE);
+            bool add = false;
+            if(Events::NeedClose(oldEv))
+                add = true;
+            else{
+                bool ok = true;
+                if(ok && Events::CanOutput(oldEv))
+                    ok = handleOutput(sock);
+                if(ok && Events::CanInput(oldEv))
+                    ok = handleInput(sock, listParams);
+                if(!ok)
+                    sock->Events(EVENT_CLOSE);
+                if(oldEv != sock->Events())
+                    add = true;
+            }
             //update events
-            if(oldEv != sock->Events()){
+            if(add){
                 DEBUG("add fd="<<fd<<", ev="<<Events::ToString(sock->Events())<<" into addingList, oldEv="<<oldEv);
                 addingList.push_back(fd);
             }
