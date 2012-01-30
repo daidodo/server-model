@@ -1,12 +1,10 @@
+#include <sys/ioctl.h>      //ioctl,SIOCGIFADDR
 #include <arpa/inet.h>      //inet_ntop,sockaddr_in
-#include <sys/poll.h>       //poll
+#include <net/if.h>         //ifreq
 #include <netdb.h>          //getaddrinfo,freeaddrinfo,gai_strerror
 #include <fcntl.h>          //fcntl
-#include <sys/ioctl.h>      //ioctl,SIOCGIFADDR
-#include <net/if.h>         //ifreq
 #include <unistd.h>
 #include <sstream>
-#include <cstring>          //memset
 #include <cassert>
 #include "Sockets.h"
 
@@ -237,20 +235,6 @@ ssize_t CSocket::RecvData(char * buf,size_t sz,bool block)
     return ret;
 }
 
-ssize_t CSocket::RecvData(std::vector<char> & buf,size_t sz,bool block)
-{
-    if(!CSocket::IsValid())
-        return -1;
-    size_t oldsz = buf.size();
-    buf.resize(oldsz + sz);
-    ssize_t ret = recv(CSocket::Fd(),&buf[oldsz],sz,(block ? MSG_WAITALL : 0));
-    if(ret <= 0)
-        buf.resize(oldsz);
-    else if(size_t(ret) < sz)
-        buf.resize(oldsz + ret);
-    return ret;
-}
-
 ssize_t CSocket::RecvData(std::string & buf,size_t sz,bool block)
 {
     if(!CSocket::IsValid())
@@ -289,14 +273,6 @@ bool CSocket::SendData(const char * buf,size_t size,U32 timeoutMs)
             return false;
     }
     return true;
-}
-
-ssize_t CSocket::SendData(const std::vector<char> & buf)
-{
-    ssize_t ret = send(CSocket::Fd(),&buf[0],buf.size(),MSG_NOSIGNAL);
-    if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
-        ret = 0;
-    return ret;
 }
 
 bool CSocket::getSock(int family,ESockType socktype)
@@ -446,50 +422,6 @@ bool CUdpSocket::Connect(const CSockAddr & addr)
         return true;
     }
     return false;
-}
-
-ssize_t CUdpSocket::RecvData(CSockAddr & from,std::vector<char> & buf,size_t sz,bool block)
-{
-    if(!CSocket::IsValid())
-        return -1;
-    size_t oldsz = buf.size();
-    buf.resize(oldsz + sz);
-    socklen_t len = from.format(CSockAddr::ADDR_SS);
-    ssize_t ret = recvfrom(CSocket::Fd(),&buf[oldsz],sz,
-        (block ? MSG_WAITALL : 0),from.SA(),&len);
-    if(ret < 0)
-        buf.resize(oldsz);
-    else{
-        from.sa_.resize(len);
-        if(size_t(ret) < sz)
-            buf.resize(oldsz + ret);
-    }
-    return ret;
-}
-
-bool CUdpSocket::SendData(const CSockAddr & to,const std::vector<char> & buf,U32 timeoutMs)
-{
-    if(!CSocket::IsValid() || !to.IsValid())
-        return false;
-    if(!timeoutMs)
-        return sendto(CSocket::Fd(),&buf[0],buf.size(),MSG_NOSIGNAL,to.SA(),to.sockLen()) == int(buf.size());
-    for(size_t sz = 0,total = buf.size();sz < total;){
-        int n = sendto(CSocket::Fd(),&buf[sz],total - sz,MSG_NOSIGNAL,to.SA(),to.sockLen());
-        if(n >= 0)
-            sz += n;
-        else if(errno == EAGAIN || errno == EWOULDBLOCK){
-            struct pollfd poll_fd;
-            memset(&poll_fd, 0,sizeof poll_fd);
-            poll_fd.fd = CSocket::Fd();
-            poll_fd.events = POLLOUT | POLLWRNORM;
-            poll_fd.revents = 0;
-            if(poll(&poll_fd,1,timeoutMs) != 1)
-                return false;
-            timeoutMs >>= 1;
-        }else
-            return false;
-    }
-    return true;
 }
 
 bool CUdpSocket::ensureSock(const CSockAddr & addr)

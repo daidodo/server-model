@@ -9,6 +9,7 @@
 #include <FileDesc.h>
 #include <SharedPtr.h>
 #include <Sockets.h>
+#include <LockInt.h>
 #include <LockQueue.h>
 #include <FdMap.h>
 #include "Events.h"
@@ -17,7 +18,7 @@ NS_SERVER_BEGIN
 
 typedef CLockQueue<int> __FdQue;
 typedef __FdQue::container_type __FdList;
-typedef std::vector<char> __Buffer;
+typedef std::string __Buffer;
 typedef std::list<__Buffer> __BufList;
 
 enum ECheckDataRet
@@ -75,6 +76,7 @@ class CSockSession
 {
     typedef CMutex __LockType;
     typedef CGuard<__LockType> __Guard;
+    typedef CLockInt<__Events> __LockEvents;
     typedef std::list<CSockAddr> __AddrList;
 public:
     typedef CRecvHelper __RecvHelper;
@@ -134,10 +136,11 @@ private:
     __Buffer recvBuf_;  //operated only in AsyncIO
     size_t needSz_;     //operated only in AsyncIO
     // send
+    __LockType sendLock_;
     __BufList outList_;
     __AddrList addrList_;
     // events
-    __Events ev_;
+    __LockEvents ev_;
 };
 
 typedef CSockSession __SockSession;

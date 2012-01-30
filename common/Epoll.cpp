@@ -17,33 +17,6 @@ std::string CEpollEvent::ToString() const
 
 //class CEpoll
 
-std::string CEpoll::EventsName(U32 events)
-{
-    const U32 BITS[4] = {EPOLLIN, EPOLLOUT, EPOLLERR, EPOLLHUP};
-    const char * const NAMES[4] = {
-        "EPOLLIN",
-        "EPOLLOUT",
-        "EPOLLERR",
-        "EPOLLHUP"
-    };
-    std::ostringstream oss;
-    oss<<events;
-    bool empty = true;
-    for(int i = 0;i < 4;++i){
-        if(0 == (events & BITS[i]))
-            continue;
-        if(empty){
-            oss<<"(";
-            empty = false;
-        }else
-            oss<<" | ";
-        oss<<NAMES[i];
-    }
-    if(!empty)
-        oss<<")";
-    return oss.str();
-}
-
 CEpoll::CEpoll()
     : fdSize_(0)
     , epollFd_(-1)

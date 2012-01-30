@@ -12,7 +12,10 @@
 //*/
 
 #include <sys/socket.h>     //sockaddr
+#include <sys/types.h>
+#include <sys/poll.h>       //poll
 #include <errno.h>
+#include <cstring>          //memset
 #include <vector>           //std::vector
 #include <string>           //std::string
 #include <memory>
@@ -93,20 +96,36 @@ struct CSocket : public IFileDesc
     size_t GetSendSize() const;
     size_t GetRecvSize() const;
     ssize_t RecvData(char * buf,size_t sz,bool block = false);
-    ssize_t RecvData(std::vector<char> & buf,size_t sz,bool block = false);
+    template<class Buffer>
+    ssize_t RecvData(Buffer & buf,size_t sz,bool block = false){
+        if(!CSocket::IsValid())
+            return -1;
+        size_t oldsz = buf.size();
+        buf.resize(oldsz + sz);
+        ssize_t ret = recv(CSocket::Fd(),&buf[oldsz],sz,(block ? MSG_WAITALL : 0));
+        if(ret <= 0)
+            buf.resize(oldsz);
+        else if(size_t(ret) < sz)
+            buf.resize(oldsz + ret);
+        return ret;
+    }
     ssize_t RecvData(std::string & buf,size_t sz,bool block = false);
     //在指定的时间timeoutMs内发送数据buf,必须是非阻塞模式
     //返回是否发送完成
     bool SendData(const char * buf,size_t sz,U32 timeoutMs);
-    bool SendData(const std::vector<char> & buf,U32 timeoutMs){
-        return SendData(&buf[0],buf.size(),timeoutMs);
-    }
-    bool SendData(const std::string & buf,U32 timeoutMs){
+    template<class Buffer>
+    bool SendData(const Buffer & buf,U32 timeoutMs){
         return SendData(&buf[0],buf.size(),timeoutMs);
     }
     //发送数据buf,直接调用send
     //返回：+n,实际发送的字节数；0,需要重试；-n，出错
-    ssize_t SendData(const std::vector<char> & buf);
+    template<class Buffer>
+    ssize_t SendData(const Buffer & buf){
+        ssize_t ret = send(CSocket::Fd(),&buf[0],buf.size(),MSG_NOSIGNAL);
+        if(ret < 0 && (errno == EAGAIN || errno == EWOULDBLOCK))
+            ret = 0;
+        return ret;
+    }
 protected:
     bool getSock(int family,ESockType socktype);
     bool bindAddr(const CSockAddr & addr);
@@ -155,10 +174,48 @@ struct CUdpSocket : public CSocket
     const CSockAddr & HostAddr() const{return hostAddr_;}
     const CSockAddr & PeerAddr() const{return peerAddr_;}
     //from返回谁发送了数据,如果不需要,请使用CSocket::RecvData
-    ssize_t RecvData(CSockAddr & from,std::vector<char> & buf,size_t sz,bool block = false);
-    bool SendData(const CSockAddr & to,const std::vector<char> & buf,U32 timeoutMs = 0);
-    using CSocket::RecvData;
-    using CSocket::SendData;
+    template<class Buffer>
+    ssize_t RecvData(CSockAddr & from, Buffer & buf,size_t sz,bool block = false){
+        if(!CSocket::IsValid())
+            return -1;
+        size_t oldsz = buf.size();
+        buf.resize(oldsz + sz);
+        socklen_t len = from.format(CSockAddr::ADDR_SS);
+        ssize_t ret = recvfrom(CSocket::Fd(),&buf[oldsz],sz,
+                (block ? MSG_WAITALL : 0),from.SA(),&len);
+        if(ret < 0)
+            buf.resize(oldsz);
+        else{
+            from.sa_.resize(len);
+            if(size_t(ret) < sz)
+                buf.resize(oldsz + ret);
+        }
+        return ret;
+    }
+    template<class Buffer>
+    bool SendData(const CSockAddr & to,const Buffer & buf,U32 timeoutMs = 0){
+        if(!CSocket::IsValid() || !to.IsValid())
+            return false;
+        if(!timeoutMs)
+            return sendto(CSocket::Fd(),&buf[0],buf.size(),MSG_NOSIGNAL,to.SA(),to.sockLen()) == int(buf.size());
+        for(size_t sz = 0,total = buf.size();sz < total;){
+            int n = sendto(CSocket::Fd(),&buf[sz],total - sz,MSG_NOSIGNAL,to.SA(),to.sockLen());
+            if(n >= 0)
+                sz += n;
+            else if(errno == EAGAIN || errno == EWOULDBLOCK){
+                struct pollfd poll_fd;
+                memset(&poll_fd, 0,sizeof poll_fd);
+                poll_fd.fd = CSocket::Fd();
+                poll_fd.events = POLLOUT | POLLWRNORM;
+                poll_fd.revents = 0;
+                if(poll(&poll_fd,1,timeoutMs) != 1)
+                    return false;
+                timeoutMs >>= 1;
+            }else
+                return false;
+        }
+        return true;
+    }
 private:
     bool ensureSock(const CSockAddr & addr);
     CSockAddr hostAddr_,peerAddr_;

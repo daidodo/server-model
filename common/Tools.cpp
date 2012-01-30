@@ -348,6 +348,31 @@ namespace Tools{
         return true;
     }
 
+    std::string ToStringBits(U32 v, const char * const * name, size_t name_len)
+    {
+        std::ostringstream oss;
+        oss<<v;
+        if(name && name_len){
+            bool empty = true;
+            for(size_t i = 0;i < name_len;++i){
+                if(0 == (v & (1 << i)))
+                    continue;
+                if(empty){
+                    oss<<"(";
+                    empty = false;
+                }else
+                    oss<<" | ";
+                if(name[i])
+                    oss<<name[i];
+                else
+                    oss<<std::hex<<"0x"<<(1 << i);
+            }
+            if(!empty)
+                oss<<")";
+        }
+        return oss.str();
+    }
+
     std::string ErrorMsg(int error_no)
     {
         std::ostringstream os;

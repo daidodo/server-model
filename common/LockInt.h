@@ -20,7 +20,21 @@
 
 NS_SERVER_BEGIN
 
-template<typename T,class LockT = CMutex>
+#define __INT_OPERATOR(op)  \
+    T operator op(T c){ \
+        guard_type g(lock_);    \
+        return (v_ op c);   \
+    }
+
+#define __INT_MAX_OPERATOR(op)  \
+    T operator op(T c){  \
+        guard_type g(lock_);    \
+        if((v_ op c) > max_) \
+            max_ = c;   \
+        return v_;   \
+    }
+
+template<typename T,class LockT = CSpinLock>
 struct CLockInt
 {
     typedef T                   int_type;
@@ -28,14 +42,6 @@ struct CLockInt
     typedef CGuard<lock_type>   guard_type;
     CLockInt(T c = 0):v_(c){}
     CLockInt(const CLockInt & c):v_(c.operator T()){}
-    operator T() const{
-        guard_type g(lock_);
-        return v_;
-    }
-    T operator =(T c){
-        guard_type g(lock_);
-        return (v_ = c);
-    }
     T operator =(const CLockInt & c){
         T ret = c.operator T();
         if(&c != this){
@@ -43,6 +49,10 @@ struct CLockInt
             v_ = ret;
         }
         return ret;
+    }
+    operator T() const{
+        guard_type g(lock_);
+        return v_;
     }
     T operator ++(){
         guard_type g(lock_);
@@ -60,14 +70,15 @@ struct CLockInt
         guard_type g(lock_);
         return v_--;
     }
-    T operator +=(T c){
-        guard_type g(lock_);
-        return v_ += c;
-    }
-    T operator -=(T c){
-        guard_type g(lock_);
-        return v_ -= c;
-    }
+    __INT_OPERATOR(=);
+    __INT_OPERATOR(+=);
+    __INT_OPERATOR(-=);
+    __INT_OPERATOR(*=);
+    __INT_OPERATOR(/=);
+    __INT_OPERATOR(%=);
+    __INT_OPERATOR(|=);
+    __INT_OPERATOR(&=);
+    __INT_OPERATOR(^=);
     T Reset(T c = 0){
         guard_type g(lock_);
         T ret = v_;
@@ -86,12 +97,6 @@ struct CLockIntMax
     typedef LockT               lock_type;
     typedef CGuard<lock_type>   guard_type;
     explicit CLockIntMax(T c = 0):v_(c),max_(c){}
-    T operator =(T c){
-        guard_type g(lock_);
-        if((v_ = c) > max_)
-            max_ = c;
-        return c;
-    }
     T operator ++(){
         guard_type g(lock_);
         if(++v_ > max_)
@@ -102,16 +107,15 @@ struct CLockIntMax
         guard_type g(lock_);
         return --v_;
     }
-    T operator +=(T c){
-        guard_type g(lock_);
-        if((v_ += c) > max_)
-            max_ = v_;
-        return v_;
-    }
-    T operator -=(T c){
-        guard_type g(lock_);
-        return v_ -= c;
-    }
+    __INT_MAX_OPERATOR(=);
+    __INT_MAX_OPERATOR(+=);
+    __INT_MAX_OPERATOR(-=);
+    __INT_MAX_OPERATOR(*=);
+    __INT_MAX_OPERATOR(/=);
+    __INT_MAX_OPERATOR(%=);
+    __INT_MAX_OPERATOR(&=);
+    __INT_MAX_OPERATOR(|=);
+    __INT_MAX_OPERATOR(^=);
     T Value() const{
         guard_type g(lock_);
         return v_;
@@ -139,6 +143,9 @@ private:
     int_type    v_,max_;
     lock_type lock_;
 };
+
+#undef __INT_OPERATOR
+#undef __INT_MAX_OPERATOR
 
 template<typename T,class LockT = CMutex>
 struct CLockIntRange
