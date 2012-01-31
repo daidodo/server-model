@@ -24,9 +24,7 @@ CCmdSession::~CCmdSession()
     if(cmd_){
         assert(sock_);
         sock_->ReleaseCmd(cmd_);
-        cmd_ = 0;
     }
-    sock_ = 0;
 }
 
 std::string CCmdSession::ToString() const

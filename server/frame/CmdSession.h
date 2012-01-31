@@ -3,28 +3,27 @@
 
 #include <memory>
 
-#include <LockQueue.h>
 #include "SockSession.h"
 
 NS_SERVER_BEGIN
 
-class CCmdSession
+struct CCmdSession
 {
-    typedef CSockSession::__RecvHelper __RecvHelper;
-public:
     typedef std::allocator<CCmdSession> allocator_type;
     //functions
     static CCmdSession * GetObject(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
-    CCmdSession(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
     ~CCmdSession();
-    __SockPtr & SockPtr(){return sock_;}
-    __CmdBase * CmdBase(){return cmd_;}
+    const __SockPtr & SockPtr() const{return sock_;}
+    __CmdBase * CmdBase() const{return cmd_;}
     CSockAddr & UdpClientAddr(){return udpClientAddr_;}
     std::string ToString() const;
 private:
+    CCmdSession(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
+	CCmdSession(const CCmdSession &);
+	CCmdSession operator =(const CCmdSession &);
     //members
-    __SockPtr sock_;
-    __CmdBase * cmd_;
+    const __SockPtr sock_;
+    __CmdBase * const cmd_;
     CSockAddr udpClientAddr_;
 };
 

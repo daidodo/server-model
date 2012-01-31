@@ -35,6 +35,8 @@ typedef CCmdSession __CmdSession;
 
 typedef CLockQueue<__CmdSession *> __QueryCmdQue;
 typedef __QueryCmdQue::container_type __QueryCmdList;
+
+//user-defined call-backs
 typedef std::pair<ECheckDataRet, size_t> __OnDataArriveRet;
 typedef __OnDataArriveRet (*__OnDataArrive)(const char *, size_t);
 typedef __CmdBase * (*__DecodeCmd)(const char *, size_t);
@@ -52,16 +54,16 @@ struct CRecvHelper
     bool IsUdpValid() const{return decodeCmd_ && releaseCmd_;}
     bool IsTcpValid() const{return onArrive_ && initSz_ && IsUdpValid();}
     std::string ToString() const;
-    //设置初始接收字节数
+    //设置/获取初始接收字节数
     void InitRecvSize(size_t sz){initSz_ = sz;}
     size_t InitRecvSize() const{return initSz_;}
-    //设置接收数据处理函数
+    //设置/获取接收数据处理函数
     void OnDataArrive(__OnDataArrive onDataArrive){onArrive_ = onDataArrive;}
     __OnDataArrive OnDataArrive() const{return onArrive_;}
-    //设置解析命令处理函数
+    //设置/获取解析命令处理函数
     void DecodeCmd(__DecodeCmd decodeCmd){decodeCmd_ = decodeCmd;}
     __DecodeCmd DecodeCmd() const{return decodeCmd_;}
-    //设置释放命令处理函数
+    //设置/获取释放命令处理函数
     void ReleaseCmd(__ReleaseCmd releaseCmd){releaseCmd_ = releaseCmd;}
     __ReleaseCmd ReleaseCmd() const{return releaseCmd_;}
 private:
@@ -78,15 +80,14 @@ class CSockSession
     typedef CGuard<__LockType> __Guard;
     typedef CLockInt<__Events> __LockEvents;
     typedef std::list<CSockAddr> __AddrList;
-public:
     typedef CRecvHelper __RecvHelper;
+public:
     typedef std::allocator<CSockSession> allocator_type;
     //functions
     static CSockSession * GetObject(IFileDesc * fileDesc, const __RecvHelper & recvHelper){
         CSockSession * ret = allocator_type().allocate(1);
         return new (ret) CSockSession(fileDesc, recvHelper);
     }
-    CSockSession(IFileDesc * fileDesc, const __RecvHelper & recvHelper);
     ~CSockSession();
     int Fd() const{return fileDesc_->Fd();}
     EFileDescType FileType() const{return fileDesc_->Type();}
@@ -123,6 +124,9 @@ public:
         return putBuf(buf, udpClientAddr, false);
     }
 private:
+    CSockSession(IFileDesc * fileDesc, const __RecvHelper & recvHelper);
+    CSockSession(const CSockSession &);
+    CSockSession & operator =(const CSockSession &);
     bool decodeCmd(__CmdBase *& cmd, size_t left);
     //增加/获取待发送的buf和addr
     bool getBuf(__Buffer & buf, CSockAddr & addr);

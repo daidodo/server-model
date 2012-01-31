@@ -1,39 +1,37 @@
-﻿                SERVER TODO:
-(DONE)1.改善消息队列，使可以一次pop出所有元素
-(DONE)2.独立出accept的线程，减少poll或epoll线程的CPU占用率
-(DONE)3.独立出send操作，专门负责发送回应
-(DONE)4.优化服务器架构
-(DONE)5.支持epoll和poll
-(DONE)6.CPoll::RemoveFd和CEpoll::RemoveFd批量版本可以继续优化
-(DONE)7.优化logsys::CLocalLogger，减少FlushStream()调用次数，例如增加CScopeLogger
-	注意：CScopeLogger只能在关键地方使用，不能作为常用日志类
-(DONE)8.为CInByteStream和COutByteStream增加manipulator
-9.增加CInBitStream和COutBitStream，实现对位的操作
-(CANCEL)10.logsys里的CWriteBuffer每次写文件固定为buf_sz_的大小，是否可以修改为自适应写入数据的大小
-	这样会导致用户的设置无效
-(DONE)11.用名字空间包裹整个代码
-(CANCLE)12.CLockHashTable代码需要改进一下
-13.CmdBase只能支持一种命令头，如果有多套命令，将会非常麻烦
-14.CmdSock与命令的耦合太强，在多套命令体系里不适用，需要优化设计
-
-                SERVER BUGS:
-(FIXED)1.在服务器fd个数满了之后，accept线程会陷入死循环，浪费CPU
-	等待1秒，不要死循环
-(FIXED)2.CFdSockMap::GetSock函数实现有线程同步问题，改为返回对象，或传引用参数
-(FIXED)3.CmdHandler线程里太频繁的执行Tools::GetTimeUs()，可能成为性能瓶颈
-	通过配置，选择是否统计命令执行时间
-(FIXED)4.CEpollServer::handleExpiredFd里没有从epoll_里删除fd
-(FIXED)5.CCmdSock::RecvCommand函数内，如果recv_left_为0，会误认为对方关闭连接
-	此时应该返回RET_COMPLETE
-6.在CTcpServer::recvCmdData内，对于解命令体失败的情况，没有通知上一级进行处理
-                SEVER TEST:
+TODO:
+HA/HS engine add new socket to event list.
+remove send lock in CSockSession for performance.
+CRecvHelper can use virtual functions
+support diff Buffer type: std::string, std::vector<char>, etc.
+support diff CmdBase type
 
 
-                BUSINESS TODO:
+BUGS:
 
+EXTERNAL:
 
-                BUSINESS BUGS:
+1. Kernel 3.0 sourcode
 
+2. Libevent 1.4.13 sourcecode
 
-                BUSINESS TEST:
+3. Memcached 1.4.5 sourcecode
 
+4. Haproxy 1.4.8 sourcecode
+
+5. Nginx 0.8.28 sourcecode
+
+6. ��Half Sync/Half Async��
+
+7. ��Leader/Followers:A Design Pattern for Ef?cient Multi-threaded I/O Demultiplexing and Dispatching��
+
+8. ��Understanding Linux Network Internals��
+
+9.  http://lkml.indiana.edu/hypermail/linux/kernel/0106.2/0405.html
+
+10. seanxue.��epoll�ܽᡷ
+
+11. Layer-to-layer flow control
+
+12. boost/asio
+
+13. ace
