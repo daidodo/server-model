@@ -8,19 +8,6 @@
 
 NS_SERVER_BEGIN
 
-//struct CRecvHelper
-
-std::string CRecvHelper::ToString() const
-{
-    std::ostringstream oss;
-    oss<<"{initSz_="<<initSz_
-        <<", onArrive_="<<onArrive_
-        <<", decodeCmd_="<<decodeCmd_
-        <<", releaseCmd_="<<releaseCmd_
-        <<"}";
-    return oss.str();
-}
-
 //struct CSockSession
 
 CSockSession::CSockSession(IFileDesc * fileDesc, const CRecvHelper & recvHelper)
@@ -168,9 +155,7 @@ bool CSockSession::RecvTcpCmd(__CmdBase *& cmd)
             addEvents(EVENT_TCP_RECV);
             break;
         }else{
-            __OnDataArrive onArrive = recvHelper_.OnDataArrive();
-            assert(onArrive);
-            const __OnDataArriveRet ret = onArrive(&recvBuf_[0], recvBuf_.size());
+            const __OnDataArriveRet ret = recvHelper_.OnDataArrive(&recvBuf_[0], recvBuf_.size());
             switch(ret.first){
                 case RR_COMPLETE:
                     DEBUG("recv buf="<<Tools::DumpHex(recvBuf_)<<" from conn="<<Tools::ToStringPtr(conn));
@@ -192,10 +177,6 @@ bool CSockSession::RecvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
     LOCAL_LOGGER(logger, "CSockSession::RecvUdpCmd");
     assert(IsValid());
     cmd = 0;
-    if(!recvHelper_.IsUdpValid()){
-        ERROR("recvHelper_ is invalid for udp sock="<<ToString());
-        return false;
-    }
     CUdpSocket * conn = dynamic_cast<CUdpSocket *>(fileDesc_);
     if(!conn){
         ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" into CUdpSocket");
@@ -216,13 +197,10 @@ bool CSockSession::RecvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
             return false;
         }else{
             DEBUG("recv buf="<<Tools::DumpHex(recvBuf_)<<" from udpClientAddr="<<udpClientAddr.ToString()<<", conn="<<Tools::ToStringPtr(conn));
-            __OnDataArrive onArrive = recvHelper_.OnDataArrive();
-            if(onArrive){
-                const __OnDataArriveRet ret = onArrive(&recvBuf_[0], recvBuf_.size());
-                if(ret.first == RR_ERROR){
-                    ERROR("onArrive() failed for sock="<<ToString());
-                    return false;
-                }
+            const __OnDataArriveRet ret = recvHelper_.OnDataArrive(&recvBuf_[0], recvBuf_.size());
+            if(ret.first == RR_ERROR){
+                ERROR("onArrive() failed for sock="<<ToString());
+                return false;
             }
             return decodeCmd(cmd, 0);
         }
@@ -236,11 +214,12 @@ bool CSockSession::decodeCmd(__CmdBase *& cmd, size_t left)
     __DecodeCmd decoder = recvHelper_.DecodeCmd();
     assert(decoder && left < recvBuf_.size());
     size_t len = recvBuf_.size() - left;
-    cmd = decoder(&recvBuf_[0], len);
-    if(!cmd){
+    void * ret = decoder(&recvBuf_[0], len);
+    if(!ret){
         ERROR("decode failed for recvBuf_="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
         return false;
     }
+    cmd = reinterpret_cast<__CmdBase *>(ret);
     TRACE("decode cmd="<<Tools::ToStringPtr(cmd)<<" from buf="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
     if(left)
         recvBuf_.erase(recvBuf_.begin(), recvBuf_.begin() + len);
