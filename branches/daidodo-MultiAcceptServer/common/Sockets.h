@@ -39,8 +39,6 @@ class CSockAddr
     typedef struct sockaddr         __SA;
     typedef struct sockaddr_in      __SA4;
     typedef struct sockaddr_in6     __SA6;
-    typedef struct sockaddr_storage __SS;
-    typedef struct addrinfo         __AI;
     enum EAddrType{ADDR_SS,ADDR_SA4,ADDR_SA6};
     static int gai_errno;
     std::vector<char> sa_;
