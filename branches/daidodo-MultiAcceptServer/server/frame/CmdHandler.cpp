@@ -1,3 +1,4 @@
+#include "CmdSession.h"
 #include "Command.h"
 #include "HahsEngine.h"
 #include "CmdHandler.h"
@@ -19,6 +20,8 @@ bool CCmdHandler::Init(int threadCountMax)
 
 void CCmdHandler::doIt(__Job & job)
 {
+    typedef CHahsEngine::__SockPtr __SockPtr;
+    typedef CHahsEngine::__CmdSession __CmdSession;
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CCmdHandler::doIt");
     //check args
@@ -50,7 +53,7 @@ void CCmdHandler::doIt(__Job & job)
     TRACE("process returns ev="<<Events::ToString(ev)<<" for session="<<Tools::ToStringPtr(session));
     if(ev){
         TRACE("push fd="<<fd<<", ev="<<Events::ToString(ev)<<" into eventQue_ for session="<<Tools::ToStringPtr(session));
-        if(!eventQue_.Push(__FdEvent(fd, ev), 200)){
+        if(!eventQue_.Push(CFdEvent(fd, ev), 200)){
             ERROR("eventQue_.Push(fd="<<fd<<", ev="<<Events::ToString(ev)<<") failed for session="<<Tools::ToStringPtr(session));
         }
     }

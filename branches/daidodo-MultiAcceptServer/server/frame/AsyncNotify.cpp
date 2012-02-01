@@ -25,6 +25,7 @@ bool CAsyncNotify::Init(U32 maxFdNum, int epollTimeoutMs)
 
 int CAsyncNotify::doIt()
 {
+    typedef __FdEventQue::container_type __FdEventList;
     LOCAL_LOGGER(logger, "CAsyncNotify::doIt");
     __FdEventList fdEventList;
     __FdArray errFdList;
@@ -54,7 +55,7 @@ int CAsyncNotify::doIt()
                     revents |= EVENT_OUT;
                 }
                 TRACE("push epoll_["<<i<<"]="<<event.ToString()<<", revents="<<Events::ToString(revents)<<" into fdEventList");
-                fdEventList.push_back(__FdEvent(fd, revents));
+                fdEventList.push_back(CFdEvent(fd, revents));
             }
         }
         //add events
@@ -62,8 +63,8 @@ int CAsyncNotify::doIt()
             TRACE("eventQue_.PushAll(size="<<fdEventList.size()<<")");
             if(!eventQue_.PushAll(fdEventList, 500)){
                 errFdList.insert(errFdList.end()
-                        , const_iter_adapt_fun<int>(fdEventList.begin(), __FdEvent::ExtractFd)
-                        , const_iter_adapt_fun<int>(fdEventList.end(), __FdEvent::ExtractFd));
+                        , const_iter_adapt_fun<int>(fdEventList.begin(), CFdEvent::ExtractFd)
+                        , const_iter_adapt_fun<int>(fdEventList.end(), CFdEvent::ExtractFd));
             }
             fdEventList.clear();
         }
@@ -105,6 +106,9 @@ bool CAsyncNotify::initEpoll(U32 maxFdNum)
 
 void CAsyncNotify::addFdEvent(__FdArray & errFdList)
 {
+    typedef CHahsEngine::__SockPtr __SockPtr;
+    typedef std::vector<__SockPtr> __SockPtrList;
+    typedef __FdQue::container_type __FdList;
     LOCAL_LOGGER(logger, "CAsyncNotify::addFdEvent");
     //pop all
     __FdList tmp;

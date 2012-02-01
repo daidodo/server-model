@@ -1,6 +1,7 @@
 #include <Logger.h>
 #include <IterAdapter.h>
 
+#include "CmdSession.h"
 #include "Command.h"
 #include "HahsEngine.h"
 #include "AsyncIO.h"
@@ -34,8 +35,8 @@ int CAsyncIO::doIt()
             continue;
         //get sockets
         sockList.resize(eventList.size());
-        fdSockMap_.GetSock(const_iter_adapt_fun<int>(eventList.begin(), __FdEvent::ExtractFd)
-                , const_iter_adapt_fun<int>(eventList.end(), __FdEvent::ExtractFd)
+        fdSockMap_.GetSock(const_iter_adapt_fun<int>(eventList.begin(), CFdEvent::ExtractFd)
+                , const_iter_adapt_fun<int>(eventList.end(), CFdEvent::ExtractFd)
                 , sockList.begin());
         __FdEventList::const_iterator i = eventList.begin();
         __SockPtrList::iterator sock_i = sockList.begin();
@@ -137,6 +138,7 @@ bool CAsyncIO::handleRecv(__SockPtr & sock, CListParams & listParams, bool isUdp
 
 bool CAsyncIO::handleAccept(__SockPtr & sock, CListParams & listParams)
 {
+    typedef CHahsEngine::__SockSession __SockSession;
     LOCAL_LOGGER(logger, "CAsyncIO::handleAccept");
     assert(sock);
     for(;;){
@@ -153,7 +155,7 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, CListParams & listParams)
         __SockPtr ptr(client);
         fdSockMap_.SetSock(fd, ptr);
         TRACE("add fd="<<fd<<", ev="<<Events::ToString(ev)<<" into eventList for client="<<Tools::ToStringPtr(client));
-        listParams.eventList_.push_back(__FdEvent(fd, ev));
+        listParams.eventList_.push_back(CFdEvent(fd, ev));
         listParams.sockList_.push_back(ptr);
     }
     return true;
@@ -161,6 +163,7 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, CListParams & listParams)
 
 bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, CListParams & listParams)
 {
+    typedef CHahsEngine::__CmdSession __CmdSession;
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CAsyncIO::handleCmd");
     assert(sock && cmd);

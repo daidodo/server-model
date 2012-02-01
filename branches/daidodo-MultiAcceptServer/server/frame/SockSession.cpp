@@ -2,6 +2,8 @@
 #include <sstream>
 
 #include <Logger.h>
+#include <Sockets.h>
+#include <SharedPtr.h>
 #include <DataStream.h>
 
 #include "Command.h"

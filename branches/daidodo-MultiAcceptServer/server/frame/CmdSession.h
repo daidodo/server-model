@@ -7,6 +7,7 @@
 
 NS_SERVER_BEGIN
 
+class CCmdBase;
 class CRecvHelper;
 
 struct CCmdSession
