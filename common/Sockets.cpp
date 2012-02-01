@@ -46,6 +46,7 @@ std::string CSockAddr::ToString() const
 
 bool CSockAddr::SetAddr(const std::string & ip,const std::string & port)
 {
+    typedef struct addrinfo __AI;
     __AI hints;
     memset(&hints,0,sizeof hints);
     //hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
@@ -130,6 +131,7 @@ U32 CSockAddr::GetIPv4(bool hostByteOrder) const
 
 socklen_t CSockAddr::format(EAddrType at)
 {
+    typedef struct sockaddr_storage __SS;
     U16 port = GetPort(false);
     switch(at){
         case ADDR_SA4:   //IPv4
