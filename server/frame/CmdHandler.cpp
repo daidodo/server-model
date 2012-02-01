@@ -25,26 +25,25 @@ void CCmdHandler::doIt(__Job & job)
     __CmdSessionPtr session(job);    //guard
     DEBUG("process cmd session="<<Tools::ToStringPtr(session));
     assert(session);
-    __SockPtr sock = session->SockPtr();
     __CmdBase * cmd = session->CmdBase();
-    if(!cmd || !sock->IsValid()){
-        ERROR("cmd="<<Tools::ToStringPtr(cmd)<<" or sock="<<Tools::ToStringPtr(sock)<<" is invalid");
+    if(!cmd){
+        ERROR("cmd="<<Tools::ToStringPtr(cmd)<<" is invalid");
         return;
     }
     //check socket
-    const int fd = sock->Fd();
-    __SockPtr newSock;
-    fdSockMap_.GetSock(fd, newSock);
-    if(!newSock || sock != newSock){
-        ERROR("before process session="<<Tools::ToStringPtr(session)<<", old sock is replaced by new sock="<<Tools::ToStringPtr(newSock)<<", abandon it");
+    const int fd = session->Fd();
+    __SockPtr sock;
+    fdSockMap_.GetSock(fd, sock);
+    if(!sock || !sock->IsValid() || sock->FingerPrint() != session->FingerPrint()){
+        ERROR("before process session="<<Tools::ToStringPtr(session)<<", old sock is replaced by new sock="<<Tools::ToStringPtr(sock)<<", abandon it");
         return;
     }
     //process
     const __Events ev = sock->Process(*cmd, session->UdpClientAddr());
     //check socket again
-    fdSockMap_.GetSock(fd, newSock);
-    if(!newSock || sock != newSock){
-        ERROR("after process session="<<Tools::ToStringPtr(session)<<", old sock is replaced by new sock="<<Tools::ToStringPtr(newSock)<<", abandon it");
+    fdSockMap_.GetSock(fd, sock);
+    if(!sock || !sock->IsValid() || sock->FingerPrint() != session->FingerPrint()){
+        ERROR("after process session="<<Tools::ToStringPtr(session)<<", old sock is replaced by new sock="<<Tools::ToStringPtr(sock)<<", abandon it");
         return;
     }
     //add events

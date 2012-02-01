@@ -23,7 +23,7 @@ bool CHahsEngine::AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & r
 {
     typedef CSharedPtr<CListenSocket, false> __TcpListenPtr;
     LOCAL_LOGGER(logger, "CHahsEngine::AddTcpListen");
-    DEBUG("bindAddr="<<bindAddr.ToString()<<", recvHelper="<<recvHelper.ToString());
+    DEBUG("bindAddr="<<bindAddr.ToString()<<", recvHelper=@"<<&recvHelper);
     __TcpListenPtr listen = dynamic_cast<CListenSocket *>(IFileDesc::GetObject(FD_TCP_LISTEN));
     if(!listen){
         ERROR("cannot get CListenSocket object for bindAddr="<<bindAddr.ToString());

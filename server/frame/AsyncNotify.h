@@ -4,7 +4,7 @@
 #include <Threads.h>
 #include <Epoll.h>
 
-#include "HahsEngine.h"
+#include "Structs.h"
 
 NS_SERVER_BEGIN
 

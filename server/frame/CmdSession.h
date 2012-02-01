@@ -3,31 +3,34 @@
 
 #include <memory>
 
-#include "SockSession.h"
+#include <Sockets.h>
 
 NS_SERVER_BEGIN
+
+class CRecvHelper;
 
 struct CCmdSession
 {
     typedef std::allocator<CCmdSession> allocator_type;
     //functions
-    static CCmdSession * GetObject(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
+    static CCmdSession * GetObject(int fd, U32 fingerPrint, CCmdBase * cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr);
     ~CCmdSession();
-    const __SockPtr & SockPtr() const{return sock_;}
-    __CmdBase * CmdBase() const{return cmd_;}
+    int Fd() const{return fd_;}
+    U32 FingerPrint() const{return finger_;}
+    CCmdBase * CmdBase() const{return cmd_;}
     CSockAddr & UdpClientAddr(){return udpClientAddr_;}
     std::string ToString() const;
 private:
-    CCmdSession(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr);
+    CCmdSession(int fd, U32 fingerPrint, CCmdBase * cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr);
 	CCmdSession(const CCmdSession &);
 	CCmdSession operator =(const CCmdSession &);
     //members
-    const __SockPtr sock_;
-    __CmdBase * const cmd_;
+    const int fd_;
+    const U32 finger_;
+    CCmdBase * const cmd_;
+    const CRecvHelper & recvHelper_;
     CSockAddr udpClientAddr_;
 };
-
-typedef CCmdSession __CmdSession;
 
 NS_SERVER_END
 

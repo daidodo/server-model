@@ -5,19 +5,19 @@
 #include <string>
 
 #include <DataStream.h>
-#include "SockSession.h"
+#include "RecvHelper.h"
 
 NS_SERVER_BEGIN
 
+const int STX = 3;
+const int ETX = 2;
+
+const int CMD_QUERY = 1;
+const int CMD_RESP = 2;
+
 class CCmdBase
 {
-protected:
-    static const int STX = 3;
-    static const int ETX = 2;
-    static const int CMD_QUERY = 1;
-    static const int CMD_RESP = 2;
 public:
-    static __OnDataArriveRet OnDataArrive(const char * buf, size_t sz);
     //从buf中解出cmd
     static void * DecodeCmd(const char * buf, size_t sz);
     //释放cmd
@@ -32,7 +32,13 @@ private:
     U16 cmdId_;
 };
 
-typedef CCmdBase __CmdBase;
+struct CCmdRecvHelper : public CRecvHelper
+{
+    size_t InitRecvSize() const{return 5;}
+    __OnDataArriveRet OnDataArrive(const char * buf, size_t sz) const;
+    CCmdBase * DecodeCmd(const char * buf, size_t sz) const;
+    void ReleaseCmd(CCmdBase * cmd) const;
+};
 
 struct CCmdQuery : public CCmdBase
 {
@@ -60,6 +66,8 @@ private:
     U16 ver_;
     std::string result_;
 };
+
+typedef CCmdBase __CmdBase;
 
 NS_SERVER_END
 
