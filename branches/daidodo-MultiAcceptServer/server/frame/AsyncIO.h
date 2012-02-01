@@ -27,7 +27,7 @@ private:
     bool handleInput(__SockPtr & sock, CListParams & listParams);
     bool handleAccept(__SockPtr & sock, CListParams & listParams);
     bool handleRecv(__SockPtr & sock, CListParams & listParams, bool isUdp);
-    bool handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, CListParams & listParams);
+    bool handleCmd(__SockPtr & sock, CCmdBase * cmd, CSockAddr & udpClientAddr, CListParams & listParams);
     //members
     __FdQue & addingQue_;
     __FdEventQue & eventQue_;

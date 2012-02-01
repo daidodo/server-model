@@ -5,9 +5,22 @@
 
 NS_SERVER_BEGIN
 
-//struct CCmdBase
+//class CCmdBase
 
-__OnDataArriveRet CCmdBase::OnDataArrive(const char * buf, size_t sz)
+std::string CCmdBase::ToString() const
+{
+    std::ostringstream oss;
+    switch(cmdId_){
+        case CMD_QUERY:oss<<"CMD_QUERY";break;
+        case CMD_RESP:oss<<"CMD_RESP";break;
+        default:oss<<"UNKNOWN["<<cmdId_<<"]";break;
+    }
+    return oss.str();
+}
+
+//struct CCmdRecvHelper
+
+CCmdRecvHelper::__OnDataArriveRet CCmdRecvHelper::OnDataArrive(const char * buf, size_t sz) const
 {
     assert(buf);
     if(sz < 5)
@@ -23,7 +36,7 @@ __OnDataArriveRet CCmdBase::OnDataArrive(const char * buf, size_t sz)
 }
 
 //wLen cStx wCmdId body cEtx
-void * CCmdBase::DecodeCmd(const char * buf, size_t sz)
+CCmdBase * CCmdRecvHelper::DecodeCmd(const char * buf, size_t sz) const
 {
     LOCAL_LOGGER(logger, "CCmdBase::DecodeCmd");
     assert(buf && sz);
@@ -58,25 +71,13 @@ void * CCmdBase::DecodeCmd(const char * buf, size_t sz)
     return 0;
 }
 
-void CCmdBase::ReleaseCmd(void * p)
+void CCmdRecvHelper::ReleaseCmd(CCmdBase * cmd) const
 {
-    assert(p);
-    CCmdBase * cmd = reinterpret_cast<CCmdBase *>(p);
+    assert(cmd);
     switch(cmd->CmdId()){
         case CMD_QUERY:delete cmd;break;
         default:break;
     }
-}
-
-std::string CCmdBase::ToString() const
-{
-    std::ostringstream oss;
-    switch(cmdId_){
-        case CMD_QUERY:oss<<"CMD_QUERY";break;
-        case CMD_RESP:oss<<"CMD_RESP";break;
-        default:oss<<"UNKNOWN["<<cmdId_<<"]";break;
-    }
-    return oss.str();
 }
 
 //struct CCmdQuery

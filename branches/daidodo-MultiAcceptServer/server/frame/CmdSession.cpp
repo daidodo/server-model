@@ -6,31 +6,32 @@
 
 NS_SERVER_BEGIN
 
-CCmdSession * CCmdSession::GetObject(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr)
+CCmdSession * CCmdSession::GetObject(int fd, U32 fingerPrint, __CmdBase * cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr)
 {
     CCmdSession * ret = allocator_type().allocate(1);
-    return new (ret) CCmdSession(sock, cmd, udpClientAddr);
+    return new (ret) CCmdSession(fd, fingerPrint, cmd, recvHelper, udpClientAddr);
 }
 
-CCmdSession::CCmdSession(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr)
-    : sock_(sock)
+CCmdSession::CCmdSession(int fd, U32 fingerPrint, __CmdBase * cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr)
+    : fd_(fd)
+    , finger_(fingerPrint)
     , cmd_(cmd)
+    , recvHelper_(recvHelper)
 {
     udpClientAddr_.Swap(udpClientAddr);
 }
 
 CCmdSession::~CCmdSession()
 {
-    if(cmd_){
-        assert(sock_);
-        sock_->ReleaseCmd(cmd_);
-    }
+    if(cmd_)
+        recvHelper_.ReleaseCmd(cmd_);
 }
 
 std::string CCmdSession::ToString() const
 {
     std::ostringstream oss;
-    oss<<"{sock_="<<Tools::ToStringPtr(sock_)
+    oss<<"{fd_="<<fd_
+        <<", finger_="<<finger_
         <<", cmd_="<<Tools::ToStringPtr(cmd_)
         <<", udpClientAddr_="<<udpClientAddr_.ToString()
         <<"}";

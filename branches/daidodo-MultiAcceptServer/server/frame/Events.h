@@ -2,6 +2,7 @@
 #define DOZERG_EVENTS_H_20120122
 
 #include <string>
+
 #include <Tools.h>
 
 NS_SERVER_BEGIN

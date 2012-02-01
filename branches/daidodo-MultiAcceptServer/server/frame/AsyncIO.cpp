@@ -164,7 +164,13 @@ bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClien
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CAsyncIO::handleCmd");
     assert(sock && cmd);
-    __CmdSessionPtr session(__CmdSession::GetObject(sock, cmd, udpClientAddr));    //guard
+    const int fd = sock->Fd();
+    U32 fingerPrint = sock->FingerPrint();
+    if(!sock->IsValid()){
+        ERROR("sock="<<Tools::ToStringPtr(sock)<<" is invalid before push cmd="<<Tools::ToStringPtr(cmd));
+        return false;
+    }
+    __CmdSessionPtr session(__CmdSession::GetObject(fd, fingerPrint, cmd, sock->RecvHelper(), udpClientAddr));    //guard
     DEBUG("push cmd session="<<Tools::ToStringPtr(session)<<" into queryCmdList");
     listParams.queryCmdList_.push_back(&*session);
     session.release();
