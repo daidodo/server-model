@@ -6,8 +6,11 @@
         CHahsEngine
 //*/
 
-#include <Sockets.h>
-#include "Structs.h"
+#include <SharedPtr.h>
+#include <FdMap.h>
+#include <LockQueue.h>
+
+#include "SockSession.h"
 
 NS_SERVER_BEGIN
 
@@ -25,12 +28,22 @@ struct CHahsEnginParams
     int handlerThreadMax_;
 };
 
+class CCmdSession;
+
 class CHahsEngine
 {
     friend class CAsyncNotify;
     friend class CAsyncIO;
     friend class CCmdHandler;
 public:
+    typedef CSockSession __SockSession;
+    typedef CSharedPtr<__SockSession> __SockPtr;
+    typedef CCmdSession __CmdSession;
+    typedef CFdSockMap<__SockSession, __SockPtr> __FdSockMap;
+    typedef CLockQueue<int> __FdQue;
+    typedef CLockQueue<CFdEvent> __FdEventQue;
+    typedef CLockQueue<__CmdSession *> __QueryCmdQue;
+    //functions
     CHahsEngine();
     ~CHahsEngine();
     //Ôö¼Ótcp¼àÌýsocket

@@ -3,14 +3,16 @@
 
 #include <Threads.h>
 
-#include "Structs.h"
+#include "HahsEngine.h"
 
 NS_SERVER_BEGIN
 
-class CHahsEngine;
-
-class CCmdHandler : public CThreadManager<__QueryCmdQue>
+class CCmdHandler : public CThreadManager<CHahsEngine::__QueryCmdQue>
 {
+    typedef CHahsEngine::__FdSockMap __FdSockMap;
+    typedef CHahsEngine::__FdQue __FdQue;
+    typedef CHahsEngine::__FdEventQue __FdEventQue;
+    typedef CHahsEngine::__QueryCmdQue __QueryCmdQue;
     typedef CThreadManager<__QueryCmdQue> __MyBase;
 public:
     CCmdHandler(size_t stackSz, CHahsEngine & engine);

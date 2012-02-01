@@ -6,11 +6,9 @@
 #include <list>
 
 #include <FileDesc.h>
-#include <SharedPtr.h>
 #include <Sockets.h>
 #include <LockInt.h>
-#include <LockQueue.h>
-#include <FdMap.h>
+
 #include "Events.h"
 
 NS_SERVER_BEGIN
