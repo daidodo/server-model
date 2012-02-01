@@ -13,66 +13,21 @@
 #include <LockQueue.h>
 #include <FdMap.h>
 #include "Events.h"
+#include "RecvHelper.h"
 
 NS_SERVER_BEGIN
 
-typedef CLockQueue<int> __FdQue;
-typedef __FdQue::container_type __FdList;
-typedef std::string __Buffer;
-typedef std::list<__Buffer> __BufList;
-
-enum ECheckDataRet
-{
-    RR_COMPLETE,
-    RR_NEED_MORE,
-    RR_ERROR
-};
-
-class CCmdBase;
 class CCmdSession;
-typedef CCmdBase __CmdBase;
 typedef CCmdSession __CmdSession;
 
 typedef CLockQueue<__CmdSession *> __QueryCmdQue;
 typedef __QueryCmdQue::container_type __QueryCmdList;
 
-//user-defined call-backs
-typedef std::pair<ECheckDataRet, size_t> __OnDataArriveRet;
-typedef __OnDataArriveRet (*__OnDataArrive)(const char *, size_t);
-typedef __CmdBase * (*__DecodeCmd)(const char *, size_t);
-typedef void (*__ReleaseCmd)(__CmdBase * cmd);
+class CCmdBase;
+typedef CCmdBase __CmdBase;
 
-struct CRecvHelper
-{
-    //functions
-    CRecvHelper()
-        : onArrive_(0)
-        , decodeCmd_(0)
-        , releaseCmd_(0)
-        , initSz_(0)
-    {}
-    bool IsUdpValid() const{return decodeCmd_ && releaseCmd_;}
-    bool IsTcpValid() const{return onArrive_ && initSz_ && IsUdpValid();}
-    std::string ToString() const;
-    //设置/获取初始接收字节数
-    void InitRecvSize(size_t sz){initSz_ = sz;}
-    size_t InitRecvSize() const{return initSz_;}
-    //设置/获取接收数据处理函数
-    void OnDataArrive(__OnDataArrive onDataArrive){onArrive_ = onDataArrive;}
-    __OnDataArrive OnDataArrive() const{return onArrive_;}
-    //设置/获取解析命令处理函数
-    void DecodeCmd(__DecodeCmd decodeCmd){decodeCmd_ = decodeCmd;}
-    __DecodeCmd DecodeCmd() const{return decodeCmd_;}
-    //设置/获取释放命令处理函数
-    void ReleaseCmd(__ReleaseCmd releaseCmd){releaseCmd_ = releaseCmd;}
-    __ReleaseCmd ReleaseCmd() const{return releaseCmd_;}
-private:
-    //members
-    __OnDataArrive onArrive_;
-    __DecodeCmd decodeCmd_;
-    __ReleaseCmd releaseCmd_;
-    size_t initSz_;
-};
+typedef std::string __Buffer;
+typedef std::list<__Buffer> __BufList;
 
 class CSockSession
 {
@@ -94,6 +49,8 @@ public:
     bool IsValid() const{return fileDesc_ && fileDesc_->IsValid();}
     void Close(){fileDesc_->Close();}
     std::string ToString() const;
+    //获取recv helper
+    const CRecvHelper & RecvHelper() const{return recvHelper_;}
     //获取/设置事件标志
     __Events Events() const{return ev_;}
     void Events(__Events events){ev_ = events;}
@@ -150,6 +107,9 @@ private:
 typedef CSockSession __SockSession;
 typedef CSharedPtr<__SockSession> __SockPtr;
 typedef CFdSockMap<__SockSession, __SockPtr> __FdSockMap;
+
+typedef CLockQueue<int> __FdQue;
+typedef __FdQue::container_type __FdList;
 
 NS_SERVER_END
 

@@ -19,9 +19,9 @@ protected:
 public:
     static __OnDataArriveRet OnDataArrive(const char * buf, size_t sz);
     //从buf中解出cmd
-    static CCmdBase * DecodeCmd(const char * buf, size_t sz);
+    static void * DecodeCmd(const char * buf, size_t sz);
     //释放cmd
-    static void ReleaseCmd(CCmdBase * cmd);
+    static void ReleaseCmd(void * cmd);
     explicit CCmdBase(U16 cmdId)
         : cmdId_(cmdId)
     {}

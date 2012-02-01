@@ -18,9 +18,7 @@ int main(int argc,const char ** argv)
         FATAL("cannot init addr "<<LISTEN_IP<<":"<<LISTEN_PORT);
         return 1;
     }
-    CRecvHelper recvHelper;
-    recvHelper.InitRecvSize(5);
-    recvHelper.OnDataArrive(CCmdBase::OnDataArrive);
+    CRecvHelper recvHelper(5);
     recvHelper.DecodeCmd(CCmdBase::DecodeCmd);
     recvHelper.ReleaseCmd(CCmdBase::ReleaseCmd);
     engine.AddTcpListen(addr, recvHelper);

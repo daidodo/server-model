@@ -23,7 +23,7 @@ __OnDataArriveRet CCmdBase::OnDataArrive(const char * buf, size_t sz)
 }
 
 //wLen cStx wCmdId body cEtx
-CCmdBase * CCmdBase::DecodeCmd(const char * buf, size_t sz)
+void * CCmdBase::DecodeCmd(const char * buf, size_t sz)
 {
     LOCAL_LOGGER(logger, "CCmdBase::DecodeCmd");
     assert(buf && sz);
@@ -58,9 +58,10 @@ CCmdBase * CCmdBase::DecodeCmd(const char * buf, size_t sz)
     return 0;
 }
 
-void CCmdBase::ReleaseCmd(CCmdBase * cmd)
+void CCmdBase::ReleaseCmd(void * p)
 {
-    assert(cmd);
+    assert(p);
+    CCmdBase * cmd = reinterpret_cast<CCmdBase *>(p);
     switch(cmd->CmdId()){
         case CMD_QUERY:delete cmd;break;
         default:break;
