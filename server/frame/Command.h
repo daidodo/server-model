@@ -35,7 +35,8 @@ private:
 struct CCmdRecvHelper : public CRecvHelper
 {
     size_t InitRecvSize() const{return 5;}
-    __OnDataArriveRet OnDataArrive(const char * buf, size_t sz) const;
+    virtual __OnDataArriveRet OnDataArrive(const char * buf, size_t sz) const;
+    virtual bool HandleData(const char * buf, size_t sz) const{return true;}
     CCmdBase * DecodeCmd(const char * buf, size_t sz) const;
     void ReleaseCmd(CCmdBase * cmd) const;
 };
