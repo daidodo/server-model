@@ -35,23 +35,23 @@ class CHahsEngine
     friend class CAsyncNotify;
     friend class CAsyncIO;
     friend class CCmdHandler;
-public:
     typedef CSockSession __SockSession;
     typedef CSharedPtr<__SockSession> __SockPtr;
     typedef CCmdSession __CmdSession;
     typedef CFdSockMap<__SockSession, __SockPtr> __FdSockMap;
     typedef CLockQueue<int> __FdQue;
     typedef CLockQueue<CFdEvent> __FdEventQue;
+public:
     typedef CLockQueue<__CmdSession *> __QueryCmdQue;
     //functions
     CHahsEngine();
-    ~CHahsEngine();
+    ~CHahsEngine(){uninit();}
     //增加tcp监听socket
     bool AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & recvHelper);
     //增加tcp主动连接socket
-    bool AddTcpConn(const CSockAddr & connectAddr);
+    bool AddTcpConn(const CSockAddr & connectAddr, const CRecvHelper & recvHelper);
     //增加udp socket
-    bool AddUdpConn(const CSockAddr & bindAddr, const CSockAddr & connectAddr);
+    bool AddUdpConn(const CSockAddr & bindAddr, const CSockAddr & connectAddr, const CRecvHelper & recvHelper);
     //增加文件，flags指定读或者写
     bool AddFile(const std::string & pathname, int flags, mode_t mode);
     //创建线程，开始运行
@@ -60,6 +60,7 @@ public:
     void WaitAll();
 private:
     void uninit();
+    bool addSock(__SockPtr & sock, __Events ev);
     //members
     __FdQue addingQue_;
     __FdEventQue eventQue_;

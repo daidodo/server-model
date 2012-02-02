@@ -1,4 +1,5 @@
 #include <Logger.h>
+
 #include "AsyncNotify.h"
 #include "AsyncIO.h"
 #include "CmdHandler.h"
@@ -14,42 +15,86 @@ CHahsEngine::CHahsEngine()
     , handler_(0)
 {}
 
-CHahsEngine::~CHahsEngine()
-{
-    uninit();
-}
-
 bool CHahsEngine::AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & recvHelper)
 {
-    typedef CSharedPtr<CListenSocket, false> __TcpListenPtr;
+    typedef CSharedPtr<CListenSocket, false> __FileGuard;
     LOCAL_LOGGER(logger, "CHahsEngine::AddTcpListen");
+    assert(bindAddr.IsValid());
     DEBUG("bindAddr="<<bindAddr.ToString()<<", recvHelper=@"<<&recvHelper);
-    __TcpListenPtr listen = dynamic_cast<CListenSocket *>(IFileDesc::GetObject(FD_TCP_LISTEN));
-    if(!listen){
-        ERROR("cannot get CListenSocket object for bindAddr="<<bindAddr.ToString());
+    __FileGuard file = dynamic_cast<__FileGuard::pointer>(IFileDesc::GetObject(FD_TCP_LISTEN));
+    if(!file){
+        ERROR("cannot get file object for bindAddr="<<bindAddr.ToString());
         return false;
     }
-    if(!listen->Listen(bindAddr, false)){
+    if(!file->Listen(bindAddr, false)){
         ERROR("cannot listen bindAddr="<<bindAddr.ToString()<<IFileDesc::ErrMsg());
         return false;
     }
-    DEBUG("listen="<<Tools::ToStringPtr(listen));
-    __SockPtr sock = CSockSession::GetObject(&*listen, recvHelper);
+    DEBUG("file="<<Tools::ToStringPtr(file));
+    __SockPtr sock = CSockSession::GetObject(&*file, recvHelper);
     if(!sock){
-        ERROR("cannot get sock session for listen="<<Tools::ToStringPtr(listen));
+        ERROR("cannot get sock session for file="<<Tools::ToStringPtr(file));
         return false;
     }
-    sock->Events(EVENT_ACCEPT);
-    const int fd = sock->Fd();
-    INFO("add sock="<<Tools::ToStringPtr(sock)<<" to engine");
-    assert(fd >= 0);
-    fdSockMap_.SetSock(fd, sock);
-    if(!addingQue_.Push(fd, 500)){
-        ERROR("addingQue_.Push(fd="<<fd<<") failed for sock="<<Tools::ToStringPtr(sock));
+    file.release();
+    return addSock(sock, EVENT_IN);
+}
+
+bool CHahsEngine::AddTcpConn(const CSockAddr & connectAddr, const CRecvHelper & recvHelper)
+{
+    typedef CSharedPtr<CTcpConnSocket, false> __FileGuard;
+    LOCAL_LOGGER(logger, "CHahsEngine::AddTcpConn");
+    assert(connectAddr.IsValid());
+    DEBUG("connectAddr="<<connectAddr.ToString()<<", recvHelper=@"<<&recvHelper);
+    __FileGuard file = dynamic_cast<__FileGuard::pointer>(IFileDesc::GetObject(FD_TCP_CONN));
+    if(!file){
+        ERROR("cannot get file object for connectAddr="<<connectAddr.ToString());
         return false;
     }
-    listen.release();
-    return true;
+    if(!file->Connect(connectAddr)){
+        ERROR("cannot connect addr="<<connectAddr.ToString()<<IFileDesc::ErrMsg());
+        return false;
+    }
+    DEBUG("file="<<Tools::ToStringPtr(file));
+    __SockPtr sock = CSockSession::GetObject(&*file, recvHelper);
+    if(!sock){
+        ERROR("cannot get sock session for file="<<Tools::ToStringPtr(file));
+        return false;
+    }
+    file.release();
+    return addSock(sock, EVENT_IN);     //根据sock的处理步骤决定
+}
+
+bool CHahsEngine::AddUdpConn(const CSockAddr & bindAddr, const CSockAddr & connectAddr, const CRecvHelper & recvHelper)
+{
+    typedef CSharedPtr<CUdpSocket, false> __FileGuard;
+    LOCAL_LOGGER(logger, "CHahsEngine::AddUdpConn");
+    DEBUG("bindAddr="<<bindAddr.ToString()<<", connectAddr="<<connectAddr.ToString()<<", recvHelper=@"<<&recvHelper);
+    __FileGuard file = dynamic_cast<__FileGuard::pointer>(IFileDesc::GetObject(FD_UDP));
+    if(!file){
+        ERROR("cannot get file object for connectAddr="<<connectAddr.ToString());
+        return false;
+    }
+    if(bindAddr.IsValid()){
+        if(!file->Bind(bindAddr)){
+            ERROR("cannot bind addr="<<bindAddr.ToString()<<IFileDesc::ErrMsg());
+            return false;
+        }
+    }
+    if(connectAddr.IsValid()){
+        if(!file->Connect(connectAddr)){
+            ERROR("cannot connect addr="<<connectAddr.ToString()<<IFileDesc::ErrMsg());
+            return false;
+        }
+    }
+    DEBUG("file="<<Tools::ToStringPtr(file));
+    __SockPtr sock = CSockSession::GetObject(&*file, recvHelper);
+    if(!sock){
+        ERROR("cannot get sock session for file="<<Tools::ToStringPtr(file));
+        return false;
+    }
+    file.release();
+    return addSock(sock, EVENT_IN);     //根据sock的处理步骤决定
 }
 
 bool CHahsEngine::Run(const CHahsEnginParams & params)
@@ -118,6 +163,27 @@ void CHahsEngine::uninit()
     notify_ = 0;
     io_ = 0;
     handler_ = 0;
+}
+
+bool CHahsEngine::addSock(__SockPtr & sock, __Events ev)
+{
+    LOCAL_LOGGER(logger, "CHahsEngine::addSock");
+    assert(sock);
+    if(!sock->IsValid()){
+        ERROR("invalid sock="<<Tools::ToStringPtr(sock)<<", ev="<<Events::ToString(ev));
+        return false;
+    }
+    INFO("add sock="<<Tools::ToStringPtr(sock)<<", ev="<<Events::ToString(ev)<<" to engine");
+    const int fd = sock->Fd();
+    assert(fd >= 0);
+    fdSockMap_.SetSock(fd, sock);
+    if(ev){
+        if(!eventQue_.Push(CFdEvent(fd, ev), 500)){
+            ERROR("eventQue_.Push(fd="<<fd<<", ev="<<Events::ToString(ev)<<") failed for sock="<<Tools::ToStringPtr(sock));
+            return false;
+        }
+    }
+    return true;
 }
 
 NS_SERVER_END

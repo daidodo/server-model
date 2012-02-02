@@ -27,7 +27,7 @@ CRYPTO         := -lcrypto
     #------use epoll(-DUSEEPOLL) or poll
 EPOLL          := -DUSEEPOLL
     #------use mt_alloc or not
-MT_ALLOC       := -I$(COMMON)/alloc
+#MT_ALLOC       := -I$(COMMON)/alloc
 
 
 ifneq ($(findstring release, $(MAKECMDGOALS)), release)
