@@ -4,6 +4,7 @@ remove send lock in CSockSession for performance.
 CRecvHelper can use virtual functions
 support diff Buffer type: std::string, std::vector<char>, etc.
 support diff CmdBase type
+reconnect process
 
 
 BUGS:

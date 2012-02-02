@@ -30,6 +30,10 @@ bool CHahsEngine::AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & r
         ERROR("cannot listen bindAddr="<<bindAddr.ToString()<<IFileDesc::ErrMsg());
         return false;
     }
+    if(!file->SetBlock(false)){
+        ERROR("set non-blocking failed for file="<<Tools::ToStringPtr(file));
+        return false;
+    }
     DEBUG("file="<<Tools::ToStringPtr(file));
     __SockPtr sock = CSockSession::GetObject(&*file, recvHelper);
     if(!sock){
@@ -53,6 +57,10 @@ bool CHahsEngine::AddTcpConn(const CSockAddr & connectAddr, const CRecvHelper & 
     }
     if(!file->Connect(connectAddr)){
         ERROR("cannot connect addr="<<connectAddr.ToString()<<IFileDesc::ErrMsg());
+        return false;
+    }
+    if(!file->SetBlock(false)){
+        ERROR("set non-blocking failed for file="<<Tools::ToStringPtr(file));
         return false;
     }
     DEBUG("file="<<Tools::ToStringPtr(file));
@@ -86,6 +94,10 @@ bool CHahsEngine::AddUdpConn(const CSockAddr & bindAddr, const CSockAddr & conne
             ERROR("cannot connect addr="<<connectAddr.ToString()<<IFileDesc::ErrMsg());
             return false;
         }
+    }
+    if(!file->SetBlock(false)){
+        ERROR("set non-blocking failed for file="<<Tools::ToStringPtr(file));
+        return false;
     }
     DEBUG("file="<<Tools::ToStringPtr(file));
     __SockPtr sock = CSockSession::GetObject(&*file, recvHelper);
