@@ -34,7 +34,7 @@ bool CHahsEngine::AddTcpListen(const CSockAddr & bindAddr, const CRecvHelper & r
         ERROR("set non-blocking failed for file="<<Tools::ToStringPtr(file));
         return false;
     }
-    DEBUG("file="<<Tools::ToStringPtr(file));
+    TRACE("file="<<Tools::ToStringPtr(file));
     __SockPtr sock = CSockSession::GetObject(&*file, recvHelper);
     if(!sock){
         ERROR("cannot get sock session for file="<<Tools::ToStringPtr(file));
@@ -156,7 +156,7 @@ bool CHahsEngine::Run(const CHahsEnginParams & params)
         FATAL("start io thread failed");
         exit(1);
     }
-    INFO("service start");
+    WARN("service start");
     return true;
 }
 

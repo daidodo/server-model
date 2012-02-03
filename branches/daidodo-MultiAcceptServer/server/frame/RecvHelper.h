@@ -37,8 +37,7 @@ struct CRecvHelper
     virtual ~CRecvHelper(){}
     //获取初始接收字节数(>0)
     virtual size_t InitRecvSize() const = 0;
-    //检查input的数据是否正确和完整
-    //不做数据处理
+    //检查input的数据是否正确和完整, 不做数据处理
     //return:   first                       second
     //          RR_COMPLETE-数据接收完整    多余数据长度
     //          RR_NEED_MORE-需要更多数据   需要数据长度
@@ -53,6 +52,7 @@ struct CRecvHelper
     //处理命令
     //cmd: 待处理的命令
     //handle: 与连接和对方地址有关的信息
+    //return: 后续事件，EVENT_CLOSE-关闭连接，EVENT_IN-input事件，EVENT_OUT-output事件
     virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockHanle & handle) const;
     //其他
     virtual std::string ToString() const;
