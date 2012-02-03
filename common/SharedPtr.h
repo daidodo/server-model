@@ -2,12 +2,12 @@
 #define DOZERG_REFERENCE_COUNT_POINTER_H_20070828
 
 /*
-    采用引用计数的智能指针CSharedPtr
-    需要与allocator一起使用
-    既可以防止内存泄漏,又减少内存碎片
-    要求所指向的对象类型实现allocator_type
-    以便正确的销毁对象
-        CSharedPtr
+        CSharedPtr  采用引用计数的智能指针CSharedPtr
+                    需要与allocator一起使用
+                    既可以防止内存泄漏,又减少内存碎片
+                    要求所指向的对象类型实现allocator_type
+                    以便正确的销毁对象
+        CAnyPtr     可以存放任何指针的类型，并保证指针转换的正确性
     History
         20070924    在_ref_imp中加入pthread_mutex_t,修正多线程下操作的错误
         20070925    把cnt_和pthread_mutex_t改成CLockInt
@@ -18,7 +18,9 @@
         20120118    增加release()
 //*/
 
-#include <algorithm>        //std::swap
+#include <algorithm>     //std::swap
+#include <typeinfo>      //std::type_info
+#include <sstream>
 #include <LockInt.h>
 #include <impl/SharedPtr_impl.h>
 
@@ -77,14 +79,60 @@ private:
     __ref_type * ref_;
 };
 
-NS_SERVER_END
+template<class T,bool B,class L>
+inline void swap(NS_SERVER::CSharedPtr<T,B,L> & a,NS_SERVER::CSharedPtr<T,B,L> & b) __DZ_NOTHROW
+{
+    a.swap(b);
+}
 
-namespace std{
-    template<class T,bool B,class L>
-    inline void swap(NS_SERVER::CSharedPtr<T,B,L> & a,NS_SERVER::CSharedPtr<T,B,L> & b) __DZ_NOTHROW
-    {
-        a.swap(b);
+class CAnyPtr
+{
+    typedef void (CAnyPtr::*safe_bool_type)() const;
+public:
+    CAnyPtr():p_(0),t_(0){}
+    template<class T>
+    explicit CAnyPtr(T * p)
+        : p_(p)
+        , t_(&typeid(T))
+    {}
+    template<class T>
+    CAnyPtr & operator =(T * p){
+        p_ = p;
+        t_ = &typeid(T);
+        return *this;
     }
-}//namespace std
+    template<class T>
+    T * CastTo() const{
+        if(!t_ || *t_ != typeid(T))
+            return 0;
+        return reinterpret_cast<T *>(p_);
+    }
+    void Reset(){
+        p_ = 0;
+        t_ = 0;
+    }
+    operator safe_bool_type() const{return (p_ ? &CAnyPtr::dummyFun : 0);}
+    std::string ToString() const{
+        std::ostringstream oss;
+        oss<<"{p_=@"<<p_
+            <<", t_=@"<<t_;
+        if(t_)
+            oss<<"["<<t_->name()<<"]";
+        oss<<"}";
+        return oss.str();
+    }
+private:
+    void dummyFun() const{}
+    void * p_;
+    const std::type_info * t_;
+};
+
+template<class T>
+inline T * PtrCast(const CAnyPtr & p)
+{
+    return p.CastTo<T>();
+}
+
+NS_SERVER_END
 
 #endif

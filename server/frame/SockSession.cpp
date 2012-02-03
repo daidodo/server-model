@@ -6,7 +6,7 @@
 #include <SharedPtr.h>
 #include <DataStream.h>
 
-#include "Command.h"
+#include "RecvHelper.h"
 #include "SockSession.h"
 
 NS_SERVER_BEGIN
@@ -32,7 +32,7 @@ std::string CSockSession::ToString() const
     std::ostringstream oss;
     oss<<"{fileDesc_="<<Tools::ToStringPtr(fileDesc_)
         <<", finger_="<<finger_
-        <<", recvHelper_=@"<<&recvHelper_
+        <<", recvHelper_="<<recvHelper_.ToString()
         <<", ev_="<<Events::ToString(ev_)
         <<", outList_.size()="<<outList_.size()
         <<"}";
@@ -107,10 +107,17 @@ bool CSockSession::WriteData()
     return true;
 }
 
-__Events CSockSession::Process(__CmdBase & cmd, CSockAddr & udpClientAddr)
+__Events CSockSession::Process(const CAnyPtr & cmd, CSockAddr & udpClientAddr)
 {
+    return recvHelper_.ProcessCmd(cmd);
+/*
     LOCAL_LOGGER(logger, "CSockSession::Process");
-    CCmdQuery & query = dynamic_cast<CCmdQuery &>(cmd);
+    CCmdBase * base = PtrCast<CCmdBase>(cmd);
+    if(!base){
+        ERROR("cmd="<<cmd.ToString()<<" is not CCmdBase, udpClientAddr="<<udpClientAddr.ToString());
+        return EVENT_CLOSE;
+    }
+    CCmdQuery & query = dynamic_cast<CCmdQuery &>(*base);
     INFO("process query="<<query.ToString()<<", udpClientAddr="<<udpClientAddr.ToString()<<" from sock="<<ToString());
     CCmdResp resp(query);
     resp.Result();
@@ -121,13 +128,14 @@ __Events CSockSession::Process(__CmdBase & cmd, CSockAddr & udpClientAddr)
     out.ExportData(buf);
     AddOutBuf(buf, udpClientAddr);
     return EVENT_OUT;
+//*/
 }
 
-bool CSockSession::RecvTcpCmd(__CmdBase *& cmd)
+bool CSockSession::RecvTcpCmd(CAnyPtr & cmd)
 {
     LOCAL_LOGGER(logger, "CSockSession::RecvTcpCmd");
     assert(IsValid());
-    cmd = 0;
+    cmd.Reset();
     CTcpConnSocket * conn = dynamic_cast<CTcpConnSocket *>(fileDesc_);
     if(!conn){
         ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" into CTcpConnSocket");
@@ -173,11 +181,11 @@ bool CSockSession::RecvTcpCmd(__CmdBase *& cmd)
     return true;
 }
 
-bool CSockSession::RecvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
+bool CSockSession::RecvUdpCmd(CAnyPtr & cmd, CSockAddr & udpClientAddr)
 {
     LOCAL_LOGGER(logger, "CSockSession::RecvUdpCmd");
     assert(IsValid());
-    cmd = 0;
+    cmd.Reset();
     CUdpSocket * conn = dynamic_cast<CUdpSocket *>(fileDesc_);
     if(!conn){
         ERROR("cannot cast fileDesc_="<<Tools::ToStringPtr(fileDesc_)<<" into CUdpSocket");
@@ -209,17 +217,19 @@ bool CSockSession::RecvUdpCmd(__CmdBase *& cmd, CSockAddr & udpClientAddr)
     return true;
 }
 
-bool CSockSession::decodeCmd(__CmdBase *& cmd, size_t left)
+bool CSockSession::decodeCmd(CAnyPtr & cmd, size_t left)
 {
     LOCAL_LOGGER(logger, "CSockSession::decodeCmd");
     assert(left < recvBuf_.size());
     size_t len = recvBuf_.size() - left;
-    cmd = recvHelper_.DecodeCmd(&recvBuf_[0], len);
-    if(!cmd){
-        ERROR("decode failed for recvBuf_="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
+    bool ret = recvHelper_.HandleData(&recvBuf_[0], len, cmd);
+    if(!ret){
+        ERROR("HandleData() failed for recvBuf_="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
         return false;
     }
-    TRACE("decode cmd="<<Tools::ToStringPtr(cmd)<<" from buf="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
+    if(cmd){
+        TRACE("decode cmd="<<cmd.ToString()<<" succ from buf="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
+    }
     if(left)
         recvBuf_.erase(recvBuf_.begin(), recvBuf_.begin() + len);
     else

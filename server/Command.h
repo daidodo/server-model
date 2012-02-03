@@ -5,7 +5,7 @@
 #include <string>
 
 #include <DataStream.h>
-#include "RecvHelper.h"
+#include "frame/RecvHelper.h"
 
 NS_SERVER_BEGIN
 
@@ -19,9 +19,9 @@ class CCmdBase
 {
 public:
     //从buf中解出cmd
-    static void * DecodeCmd(const char * buf, size_t sz);
+    static CCmdBase * DecodeCmd(const char * buf, size_t sz);
     //释放cmd
-    static void ReleaseCmd(void * cmd);
+    static void ReleaseCmd(CCmdBase * cmd);
     explicit CCmdBase(U16 cmdId)
         : cmdId_(cmdId)
     {}
@@ -34,11 +34,11 @@ private:
 
 struct CCmdRecvHelper : public CRecvHelper
 {
-    size_t InitRecvSize() const{return 5;}
+    virtual size_t InitRecvSize() const{return 5;}
     virtual __OnDataArriveRet OnDataArrive(const char * buf, size_t sz) const;
-    virtual bool HandleData(const char * buf, size_t sz) const{return true;}
-    CCmdBase * DecodeCmd(const char * buf, size_t sz) const;
-    void ReleaseCmd(CCmdBase * cmd) const;
+    virtual bool HandleData(const char * buf, size_t sz, CAnyPtr & cmd) const;
+    virtual void ReleaseCmd(const CAnyPtr & cmd) const;
+    virtual std::string ToString() const{return "CCmdRecvHelper";}
 };
 
 struct CCmdQuery : public CCmdBase

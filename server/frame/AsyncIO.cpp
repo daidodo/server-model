@@ -2,7 +2,6 @@
 #include <IterAdapter.h>
 
 #include "CmdSession.h"
-#include "Command.h"
 #include "HahsEngine.h"
 #include "AsyncIO.h"
 
@@ -123,7 +122,7 @@ bool CAsyncIO::handleRecv(__SockPtr & sock, CListParams & listParams, bool isUdp
 {
     assert(sock);
     CSockAddr udpClientAddr;
-    for(__CmdBase * cmd = 0;;){
+    for(CAnyPtr cmd;;){
         if(!(isUdp ?
                 sock->RecvUdpCmd(cmd, udpClientAddr) :
                 sock->RecvTcpCmd(cmd)))
@@ -161,7 +160,7 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, CListParams & listParams)
     return true;
 }
 
-bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClientAddr, CListParams & listParams)
+bool CAsyncIO::handleCmd(__SockPtr & sock, const CAnyPtr & cmd, CSockAddr & udpClientAddr, CListParams & listParams)
 {
     typedef CHahsEngine::__CmdSession __CmdSession;
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
@@ -170,7 +169,7 @@ bool CAsyncIO::handleCmd(__SockPtr & sock, __CmdBase * cmd, CSockAddr & udpClien
     const int fd = sock->Fd();
     U32 fingerPrint = sock->FingerPrint();
     if(!sock->IsValid()){
-        ERROR("sock="<<Tools::ToStringPtr(sock)<<" is invalid before push cmd="<<Tools::ToStringPtr(cmd));
+        ERROR("sock="<<Tools::ToStringPtr(sock)<<" is invalid before push cmd="<<cmd.ToString());
         return false;
     }
     __CmdSessionPtr session(__CmdSession::GetObject(fd, fingerPrint, cmd, sock->RecvHelper(), udpClientAddr));    //guard

@@ -13,7 +13,6 @@
 
 NS_SERVER_BEGIN
 
-class CCmdBase;
 class CRecvHelper;
 
 class CSockSession
@@ -51,8 +50,8 @@ public:
     //接收数据，decode cmd
     //cmd: 返回成功解码的cmd
     //udpClientAddr: 如果是udp连接，返回对方地址
-    bool RecvTcpCmd(CCmdBase *& cmd);
-    bool RecvUdpCmd(CCmdBase *& cmd, CSockAddr & udpClientAddr);
+    bool RecvTcpCmd(CAnyPtr & cmd);
+    bool RecvUdpCmd(CAnyPtr & cmd, CSockAddr & udpClientAddr);
     //发送缓冲区的数据
     bool SendTcpData();
     bool SendUdpData();
@@ -61,7 +60,7 @@ public:
     //处理cmd
     //udpClientAddr: 如果是udp连接，表示对方地址
     //return: EVENT_OUT-需要output; EVENT_IN-需要input; EVENT_CLOSE-需要close
-    __Events Process(CCmdBase & cmd, CSockAddr & udpClientAddr);
+    __Events Process(const CAnyPtr & cmd, CSockAddr & udpClientAddr);
     //将buf加入待发送缓冲区
     //buf会被清空
     bool AddOutBuf(__Buffer & buf, CSockAddr & udpClientAddr){
@@ -71,7 +70,7 @@ private:
     CSockSession(IFileDesc * fileDesc, const CRecvHelper & recvHelper);
     CSockSession(const CSockSession &);
     CSockSession & operator =(const CSockSession &);
-    bool decodeCmd(CCmdBase *& cmd, size_t left);
+    bool decodeCmd(CAnyPtr & cmd, size_t left);
     //增加/获取待发送的buf和addr
     bool getBuf(__Buffer & buf, CSockAddr & addr);
     bool putBuf(__Buffer & buf, CSockAddr & addr, bool front);

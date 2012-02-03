@@ -1,13 +1,10 @@
-class CAnyPtr   //like boost::shared_ptr<void>
-{
-};
-
 class CRecvHelper
 {
     virtual size_t InitRecvSize() const = 0;
     virtual __Ret OnDataArrive(const char * buf, size_t sz) const = 0;
-    virtual std::pair<bool, CAnyPtr> HandleData(const char * buf, size_t sz) const = 0;
-    virtual bool ProcessCmd(CAnyPtr cmdPtr, CSockSession & sock) = 0;
+    virtual bool HandleData(const char * buf, size_t sz, CAnyPtr & cmd) const = 0;
+    virtual void ReleaseCmd(const CAnyPtr & cmd) const{}
+    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockSession & sock){return false;}
 };
 
 //-----------------------
@@ -20,26 +17,26 @@ class CCmdResp : public CCmdBase{};
 
 class CMyRecvHelper : public CRecvHelper
 {
-    __CmdQue & cmdQue_;
-    CMyRecvHelper(__CmdQue & que):cmdQue_(que){}
-    virtual size_t InitRecvSize() const;
-    virtual __Ret OnDataArrive(const char * buf, size_t sz) const;
-    virtual std::pair<bool, CAnyPtr> HandleData(const char * buf, size_t sz, const CSockAddr & from, CSockSession & sock) const{
-        CCmdBase * cmd = DecodeCmd(buf, sz);
-        if(!cmd)
+    virtual size_t InitRecvSize() const{return 5}
+    virtual __Ret OnDataArrive(const char * buf, size_t sz) const{return __Ret(COMPLETE, 0);}
+    virtual bool HandleData(const char * buf, size_t sz, CAnyPtr & cmd) const{
+        CCmdBase * base = DecodeCmd(buf, sz);
+        if(!base)
             return false;
-        return std::make_pair(true, CAnyPtr(cmd));
+        cmd = base;
+        return true;
     }
-    virtual bool ProcessCmd(CAnyPtr cmdPtr, CSockSession & sock){
-        CCmdQuery * cmd = PtrCast<CCmdBase *>(cmdPtr);  //ptr_cast + dynamic_cast
+    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockSession & sock){
+        CCmdBase * base = PtrCast<CCmdBase>(cmd);
         if(!cmd)
-            return false;
-        //process cmd...
-        CCmdResp resp(*cmd);
-        std::string buf;
-        resp.Encode(buf);
-        sock.Send(buf);
-        sock.SendTo(CSockAddr("1.2.3.4", 5678), buf);
+            return EVENT_CLOSE; //error
+        std::string respdata;
+        process(*base, respdata); //process cmd...
+        if(!respdata.empty()){
+            sock.Send(buf);
+            return EVENT_OUT;   //output event
+        }
+        return 0;   //no event
     }
 };
 
