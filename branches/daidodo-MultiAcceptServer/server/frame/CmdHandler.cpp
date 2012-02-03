@@ -1,6 +1,4 @@
 #include "CmdSession.h"
-#include "Command.h"
-#include "HahsEngine.h"
 #include "CmdHandler.h"
 
 NS_SERVER_BEGIN
@@ -28,9 +26,9 @@ void CCmdHandler::doIt(__Job & job)
     __CmdSessionPtr session(job);    //guard
     DEBUG("process cmd session="<<Tools::ToStringPtr(session));
     assert(session);
-    __CmdBase * cmd = session->CmdBase();
+    const CAnyPtr & cmd = session->CmdPtr();
     if(!cmd){
-        ERROR("cmd="<<Tools::ToStringPtr(cmd)<<" is invalid");
+        ERROR("cmd="<<cmd.ToString()<<" is invalid");
         return;
     }
     //check socket
@@ -42,7 +40,7 @@ void CCmdHandler::doIt(__Job & job)
         return;
     }
     //process
-    const __Events ev = sock->Process(*cmd, session->UdpClientAddr());
+    const __Events ev = sock->Process(cmd, session->UdpClientAddr());
     //check socket again
     fdSockMap_.GetSock(fd, sock);
     if(!sock || !sock->IsValid() || sock->FingerPrint() != session->FingerPrint()){

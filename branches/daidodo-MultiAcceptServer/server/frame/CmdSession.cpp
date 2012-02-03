@@ -1,18 +1,18 @@
 #include <sstream>
 
 #include <Tools.h>
-#include "Command.h"
+#include "RecvHelper.h"
 #include "CmdSession.h"
 
 NS_SERVER_BEGIN
 
-CCmdSession * CCmdSession::GetObject(int fd, U32 fingerPrint, __CmdBase * cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr)
+CCmdSession * CCmdSession::GetObject(int fd, U32 fingerPrint, const CAnyPtr & cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr)
 {
     CCmdSession * ret = allocator_type().allocate(1);
     return new (ret) CCmdSession(fd, fingerPrint, cmd, recvHelper, udpClientAddr);
 }
 
-CCmdSession::CCmdSession(int fd, U32 fingerPrint, __CmdBase * cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr)
+CCmdSession::CCmdSession(int fd, U32 fingerPrint, const CAnyPtr & cmd, const CRecvHelper & recvHelper, CSockAddr & udpClientAddr)
     : fd_(fd)
     , finger_(fingerPrint)
     , cmd_(cmd)
@@ -32,7 +32,7 @@ std::string CCmdSession::ToString() const
     std::ostringstream oss;
     oss<<"{fd_="<<fd_
         <<", finger_="<<finger_
-        <<", cmd_="<<Tools::ToStringPtr(cmd_)
+        <<", cmd_="<<cmd_.ToString()
         <<", udpClientAddr_="<<udpClientAddr_.ToString()
         <<"}";
     return oss.str();
