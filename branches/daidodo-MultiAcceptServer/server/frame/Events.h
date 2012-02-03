@@ -82,6 +82,8 @@ private:
     __Events ev_;
 };
 
+typedef std::string __Buffer;
+
 NS_SERVER_END
 
 #endif

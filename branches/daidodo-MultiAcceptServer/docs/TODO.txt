@@ -1,10 +1,12 @@
 TODO:
-HA/HS engine add new socket to event list.
+(DONE)HA/HS engine add new socket to event list.
+(DONE)CRecvHelper can use virtual functions
+(DONE)support diff CmdBase type
 remove send lock in CSockSession for performance.
-CRecvHelper can use virtual functions
-support diff Buffer type: std::string, std::vector<char>, etc.
-support diff CmdBase type
-reconnect process
+support diff Buffer types: std::string, std::vector<char>, etc.
+reconnect when network lost
+cmd state machine per socket
+socket & state timeout
 
 
 BUGS:

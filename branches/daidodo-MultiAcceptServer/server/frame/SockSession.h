@@ -5,6 +5,7 @@
 #include <string>
 #include <list>
 
+#include <SharedPtr.h>
 #include <FileDesc.h>
 #include <Sockets.h>
 #include <LockInt.h>
@@ -17,7 +18,6 @@ class CRecvHelper;
 
 class CSockSession
 {
-    typedef std::string __Buffer;
     typedef std::list<__Buffer> __BufList;
     typedef CMutex __LockType;
     typedef CGuard<__LockType> __Guard;
@@ -63,8 +63,9 @@ public:
     __Events Process(const CAnyPtr & cmd, CSockAddr & udpClientAddr);
     //将buf加入待发送缓冲区
     //buf会被清空
-    bool AddOutBuf(__Buffer & buf, CSockAddr & udpClientAddr){
-        return putBuf(buf, udpClientAddr, false);
+    bool AddOutBuf(__Buffer & buf, const CSockAddr & udpClientAddr){
+        CSockAddr addr(udpClientAddr);
+        return putBuf(buf, addr, false);
     }
 private:
     CSockSession(IFileDesc * fileDesc, const CRecvHelper & recvHelper);

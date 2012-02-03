@@ -34,11 +34,12 @@ private:
 
 struct CCmdRecvHelper : public CRecvHelper
 {
+    //virtual std::string ToString() const{return "CCmdRecvHelper";}
     virtual size_t InitRecvSize() const{return 5;}
     virtual __OnDataArriveRet OnDataArrive(const char * buf, size_t sz) const;
     virtual bool HandleData(const char * buf, size_t sz, CAnyPtr & cmd) const;
     virtual void ReleaseCmd(const CAnyPtr & cmd) const;
-    virtual std::string ToString() const{return "CCmdRecvHelper";}
+    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockHanle & handle) const;
 };
 
 struct CCmdQuery : public CCmdBase

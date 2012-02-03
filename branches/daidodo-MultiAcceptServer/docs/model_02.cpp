@@ -26,6 +26,7 @@ class CMyRecvHelper : public CRecvHelper
         cmd = base;
         return true;
     }
+    virtual void ReleaseCmd(const CAnyPtr & cmd) const{}
     virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockSession & sock){
         CCmdBase * base = PtrCast<CCmdBase>(cmd);
         if(!cmd)

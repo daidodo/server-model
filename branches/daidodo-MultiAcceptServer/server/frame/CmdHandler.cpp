@@ -22,7 +22,7 @@ void CCmdHandler::doIt(__Job & job)
     typedef CHahsEngine::__CmdSession __CmdSession;
     typedef CSharedPtr<__CmdSession, false> __CmdSessionPtr;
     LOCAL_LOGGER(logger, "CCmdHandler::doIt");
-    //check args
+    //check cmd
     __CmdSessionPtr session(job);    //guard
     DEBUG("process cmd session="<<Tools::ToStringPtr(session));
     assert(session);

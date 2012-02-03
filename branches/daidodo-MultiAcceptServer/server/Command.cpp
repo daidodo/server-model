@@ -98,6 +98,27 @@ void CCmdRecvHelper::ReleaseCmd(const CAnyPtr & cmd) const
     CCmdBase::ReleaseCmd(base);
 }
 
+__Events CCmdRecvHelper::ProcessCmd(const CAnyPtr & cmd, CSockHanle & handle) const
+{
+    LOCAL_LOGGER(logger, "CCmdRecvHelper::ProcessCmd");
+    CCmdBase * base = PtrCast<CCmdBase>(cmd);
+    if(!base){
+        ERROR("cmd="<<cmd.ToString()<<" is not CCmdBase, handle="<<handle.ToString());
+        return EVENT_CLOSE;
+    }
+    CCmdQuery & query = dynamic_cast<CCmdQuery &>(*base);
+    INFO("process query="<<query.ToString()<<" from handle="<<handle.ToString());
+    CCmdResp resp(query);
+    resp.Result();
+    INFO("resp="<<resp.ToString()<<" for query="<<query.ToString()<<" from handle="<<handle.ToString());
+    COutByteStream out;
+    resp.Encode(out);
+    __Buffer buf;
+    out.ExportData(buf);
+    handle.AddOutBuf(buf);
+    return EVENT_OUT;
+}
+
 //struct CCmdQuery
 
 bool CCmdQuery::Decode(CInByteStream & in)

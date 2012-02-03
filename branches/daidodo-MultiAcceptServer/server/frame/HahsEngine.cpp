@@ -59,6 +59,7 @@ bool CHahsEngine::AddTcpConn(const CSockAddr & connectAddr, const CRecvHelper & 
         ERROR("cannot connect addr="<<connectAddr.ToString()<<IFileDesc::ErrMsg());
         return false;
     }
+    file->SetLinger();
     if(!file->SetBlock(false)){
         ERROR("set non-blocking failed for file="<<Tools::ToStringPtr(file));
         return false;
@@ -147,12 +148,12 @@ bool CHahsEngine::Run(const CHahsEnginParams & params)
         FATAL("start handler threads failed");
         exit(1);
     }
-    if(0 > io_->StartThreads("AsyncIO")){
-        FATAL("start io thread failed");
-        exit(1);
-    }
     if(0 > notify_->StartThreads("AsyncNotify")){
         FATAL("start notify thread failed");
+        exit(1);
+    }
+    if(0 > io_->StartThreads("AsyncIO")){
+        FATAL("start io thread failed");
         exit(1);
     }
     INFO("service start");

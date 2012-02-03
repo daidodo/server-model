@@ -109,26 +109,8 @@ bool CSockSession::WriteData()
 
 __Events CSockSession::Process(const CAnyPtr & cmd, CSockAddr & udpClientAddr)
 {
-    return recvHelper_.ProcessCmd(cmd);
-/*
-    LOCAL_LOGGER(logger, "CSockSession::Process");
-    CCmdBase * base = PtrCast<CCmdBase>(cmd);
-    if(!base){
-        ERROR("cmd="<<cmd.ToString()<<" is not CCmdBase, udpClientAddr="<<udpClientAddr.ToString());
-        return EVENT_CLOSE;
-    }
-    CCmdQuery & query = dynamic_cast<CCmdQuery &>(*base);
-    INFO("process query="<<query.ToString()<<", udpClientAddr="<<udpClientAddr.ToString()<<" from sock="<<ToString());
-    CCmdResp resp(query);
-    resp.Result();
-    INFO("resp="<<resp.ToString()<<" for query="<<query.ToString()<<", udpClientAddr="<<udpClientAddr.ToString()<<" from sock="<<ToString());
-    COutByteStream out;
-    resp.Encode(out);
-    __Buffer buf;
-    out.ExportData(buf);
-    AddOutBuf(buf, udpClientAddr);
-    return EVENT_OUT;
-//*/
+    CSockHanle h(*this, udpClientAddr);
+    return recvHelper_.ProcessCmd(cmd, h);
 }
 
 bool CSockSession::RecvTcpCmd(CAnyPtr & cmd)
