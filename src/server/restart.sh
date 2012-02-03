@@ -5,11 +5,11 @@ if [ $# -lt 1 ] ; then
   exit 1
 fi
 
-./kill.sh "$*"
+./kill.sh "$@"
 
 sleep 2
 
 RET=-1
-./start.sh "$*" && RET=0
+./start.sh "$@" && RET=0
 
 exit $RET

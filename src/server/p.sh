@@ -9,7 +9,8 @@ PWD=`pwd`
 
 p_server()
 {
-  CMD=${PWD}/$1
+  BIN="$1"
+  CMD="${PWD}/${BIN}"
 
   PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`
 
@@ -18,10 +19,9 @@ p_server()
   else
     echo "# ${BIN} is RUNNING"
     echo "${PS_RECORD}"
-    exit 0
   fi
 }
 
-for BIN in "$*" ; do
+for BIN in "$@" ; do
   p_server $BIN
 done

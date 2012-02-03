@@ -9,7 +9,7 @@ using namespace ServerModel;
 
 int main(int argc,const char ** argv)
 {
-    INIT_LOGGER("../conf/logger.conf");
+    INIT_LOGGER("../../scripts/conf/logger.conf");
     LOCAL_LOGGER(logger, "main");
     CHahsEngine engine;
     //add listen
