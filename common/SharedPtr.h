@@ -117,7 +117,7 @@ public:
         oss<<"{p_=@"<<p_
             <<", t_=@"<<t_;
         if(t_)
-            oss<<"["<<t_->name()<<"]";
+            oss<<"("<<t_->name()<<")";
         oss<<"}";
         return oss.str();
     }

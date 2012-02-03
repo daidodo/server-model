@@ -2,7 +2,6 @@
 #include <IterAdapter.h>
 
 #include "CmdSession.h"
-#include "HahsEngine.h"
 #include "AsyncIO.h"
 
 NS_SERVER_BEGIN
@@ -149,9 +148,12 @@ bool CAsyncIO::handleAccept(__SockPtr & sock, CListParams & listParams)
         }
         if(!client)
             break;
-        INFO("new client="<<Tools::ToStringPtr(client)<<" arrived, ev="<<Events::ToString(ev));
-        const int fd = client->Fd();
         __SockPtr ptr(client);
+        INFO("new client="<<Tools::ToStringPtr(client)<<" arrived, ev="<<Events::ToString(ev));
+        if(!ev){    //no events, only warning
+            WARN("inavlid ev="<<Events::ToString(ev)<<" for accepted client="<<Tools::ToStringPtr(client));
+        }
+        const int fd = client->Fd();
         fdSockMap_.SetSock(fd, ptr);
         TRACE("add fd="<<fd<<", ev="<<Events::ToString(ev)<<" into eventList for client="<<Tools::ToStringPtr(client));
         listParams.eventList_.push_back(CFdEvent(fd, ev));

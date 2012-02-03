@@ -1,19 +1,32 @@
 #ifndef DOZERG_RECV_HELPER_H_20120201
 #define DOZERG_RECV_HELPER_H_20120201
 
-#include <sstream>
-#include <SharedPtr.h>
+#include <SharedPtr.h>      //CAnyPtr
+#include <Sockets.h>        //CSockAddr
 #include "Events.h"
 
 NS_SERVER_BEGIN
 
-class CCmdBase;
+class CSockSession;
 
 enum ECheckDataRet
 {
     RR_COMPLETE,
     RR_NEED_MORE,
     RR_ERROR
+};
+
+class CSockHanle
+{
+    CSockSession & sock_;
+    const CSockAddr & udpClientAddr_;
+public:
+    CSockHanle(CSockSession & sock, const CSockAddr & udpClientAddr)
+        : sock_(sock)
+        , udpClientAddr_(udpClientAddr)
+    {}
+    bool AddOutBuf(__Buffer & buf);
+    std::string ToString() const;
 };
 
 struct CRecvHelper
@@ -36,15 +49,13 @@ struct CRecvHelper
     //return: true-正常; false-出错，关闭连接
     virtual bool HandleData(const char * buf, size_t sz, CAnyPtr & cmd) const = 0;
     //释放命令函数
-    virtual void ReleaseCmd(const CAnyPtr & cmd) const{};
+    virtual void ReleaseCmd(const CAnyPtr & cmd) const;
     //处理命令
-    virtual __Events ProcessCmd(const CAnyPtr & cmd) const{return 0;}
+    //cmd: 待处理的命令
+    //handle: 与连接和对方地址有关的信息
+    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockHanle & handle) const;
     //其他
-    virtual std::string ToString() const{
-        std::ostringstream oss;
-        oss<<"{@"<<this<<"}";
-        return oss.str();
-    }
+    virtual std::string ToString() const;
 };
 
 NS_SERVER_END
