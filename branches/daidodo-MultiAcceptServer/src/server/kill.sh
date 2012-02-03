@@ -6,10 +6,10 @@ if [ $# -lt 1 ] ; then
 fi
 
 PWD=`pwd`
-BIN=server.out
 
 kill_server()
 {
+  BIN="$1"
   CMD=${PWD}/$1
 
   PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`
@@ -26,7 +26,6 @@ kill_server()
     if [ "${PS_CHECK}" = "" ]; then
       echo "# ${BIN} stopped"
       echo "${PS_RECORD}"
-      exit 0
     else
       echo "# killing ${BIN} FAILED"
       echo "${PS_CHECK}"
@@ -35,6 +34,6 @@ kill_server()
   fi
 }
 
-for BIN in "$*" ; do
+for BIN in "$@" ; do
   kill_server $BIN
 done

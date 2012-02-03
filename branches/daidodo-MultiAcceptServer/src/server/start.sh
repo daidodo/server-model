@@ -9,16 +9,16 @@ PWD=`pwd`
 
 start_server()
 {
-  CMD=${PWD}/$1
+  BIN="$1"
+  CMD="${PWD}/${BIN}"
   PS_RECORD=`ps -ef | grep -v grep | grep "${CMD}"`
 
   if [ "${PS_RECORD}" != "" ]; then
     echo "# ${BIN} is RUNNING"
     echo "${PS_RECORD}"
-    exit 0
   else
     export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:../lib/
-    ulimit -n 100000
+    ulimit -n 2000
     ulimit -s unlimited
     ulimit -c unlimited
     #memory leak check
@@ -37,11 +37,10 @@ start_server()
     else
       echo "# ${BIN} started"
       echo "${PS_CHECK}"
-      exit 0
     fi
   fi
 }
 
-for $BIN in "$*" ; do
+for BIN in "$@" ; do
   start_server $BIN
 done

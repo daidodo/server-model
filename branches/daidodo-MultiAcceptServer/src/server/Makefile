@@ -31,7 +31,7 @@ clean:
 	$(RM) $(TARGET)
 
 cleanall: clean
-	$(RM) tags
+	$(RM) tags core*
 
 ifneq (${MAKECMDGOALS},clean)
 ifneq (${MAKECMDGOALS},cleanall)
