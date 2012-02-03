@@ -139,7 +139,7 @@ bool CSockSession::RecvTcpCmd(CAnyPtr & cmd)
             ERROR("RecvData(needSz_="<<needSz_<<") failed for sock="<<ToString()<<IFileDesc::ErrMsg());
             return false;
         }else if(sz == 0){
-            WARN("client closed for sock="<<ToString());
+            INFO("remote closed for sock="<<ToString());
             return false;
         }else if(size_t(sz) < needSz_){
             needSz_ -= sz;
@@ -210,7 +210,7 @@ bool CSockSession::decodeCmd(CAnyPtr & cmd, size_t left)
         return false;
     }
     if(cmd){
-        TRACE("decode cmd="<<cmd.ToString()<<" succ from buf="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
+        DEBUG("decode cmd="<<cmd.ToString()<<" succ from buf="<<Tools::DumpHex(&recvBuf_[0], len)<<" from sock="<<ToString());
     }
     if(left)
         recvBuf_.erase(recvBuf_.begin(), recvBuf_.begin() + len);
@@ -309,7 +309,7 @@ bool CSockSession::putBuf(__Buffer & buf, CSockAddr & addr, bool front)
 {
     LOCAL_LOGGER(logger, "CSockSession::putBuf");
     assert(IsValid());
-    DEBUG("add buf="<<Tools::DumpHex(buf)<<", addr="<<addr.ToString()<<" to send list, front="<<front);
+    DEBUG("add buf="<<Tools::DumpHex(buf)<<", addr="<<addr.ToString()<<" to send list, front="<<front<<", sock="<<ToString());
     bool isUdp = (FD_UDP == fileDesc_->Type());
     if(isUdp && !addr.IsValid()){
         ERROR("invalid addr="<<addr.ToString()<<" for sock="<<ToString());

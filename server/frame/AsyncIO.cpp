@@ -48,7 +48,7 @@ int CAsyncIO::doIt()
             }
             //handle events
             __Events oldEv = sock->Events();
-            DEBUG("handle ev="<<Events::ToString(i->Events())<<" from sock="<<Tools::ToStringPtr(sock));
+            TRACE("handle ev="<<Events::ToString(i->Events())<<" from sock="<<Tools::ToStringPtr(sock));
             bool add = false;
             if(Events::NeedClose(i->Events()))
                 add = true;
@@ -65,7 +65,7 @@ int CAsyncIO::doIt()
             }
             //update events
             if(add){
-                DEBUG("add fd="<<fd<<", ev="<<Events::ToString(sock->Events())<<" into addingList, oldEv="<<oldEv<<", sock="<<Tools::ToStringPtr(sock));
+                TRACE("add fd="<<fd<<", ev="<<Events::ToString(sock->Events())<<" into addingList, oldEv="<<oldEv<<", sock="<<Tools::ToStringPtr(sock));
                 addingList.push_back(fd);
             }
         }
@@ -175,7 +175,7 @@ bool CAsyncIO::handleCmd(__SockPtr & sock, const CAnyPtr & cmd, CSockAddr & udpC
         return false;
     }
     __CmdSessionPtr session(__CmdSession::GetObject(fd, fingerPrint, cmd, sock->RecvHelper(), udpClientAddr));    //guard
-    DEBUG("push cmd session="<<Tools::ToStringPtr(session)<<" into queryCmdList");
+    TRACE("push cmd session="<<Tools::ToStringPtr(session)<<" into queryCmdList");
     listParams.queryCmdList_.push_back(&*session);
     session.release();
     return true;

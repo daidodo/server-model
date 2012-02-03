@@ -47,11 +47,11 @@ int CAsyncNotify::doIt()
             }else{
                 __Events revents = 0;
                 if(epoll_[i].CanInput()){
-                    DEBUG("epoll_["<<i<<"]="<<event.ToString()<<" can input");
+                    TRACE("epoll_["<<i<<"]="<<event.ToString()<<" can input");
                     revents |= EVENT_IN;
                 }
                 if(epoll_[i].CanOutput()){
-                    DEBUG("epoll_["<<i<<"]="<<event.ToString()<<" can output");
+                    TRACE("epoll_["<<i<<"]="<<event.ToString()<<" can output");
                     revents |= EVENT_OUT;
                 }
                 TRACE("push epoll_["<<i<<"]="<<event.ToString()<<", revents="<<Events::ToString(revents)<<" into fdEventList");
@@ -131,7 +131,7 @@ void CAsyncNotify::addFdEvent(__FdArray & errFdList)
             ERROR("fd="<<fd<<" is not sock="<<Tools::ToStringPtr(sock)<<" before add to epoll, ignore it");
             continue;
         }else if(Events::NeedClose(sock->Events())){
-            DEBUG("push sock="<<Tools::ToStringPtr(sock)<<" into errFdList");
+            TRACE("push sock="<<Tools::ToStringPtr(sock)<<" into errFdList");
             errFdList.push_back(fd);
             continue;
         }
