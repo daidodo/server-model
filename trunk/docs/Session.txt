@@ -1,0 +1,50 @@
+fd -> socket session
+cmd -> cmd session
+
+1. socket session
+tcp socket recv
+	socket			+
+	recv buf		+
+	need recv sz		+
+	onDataArrive func	+
+udp socket recv
+	socket
+	recv buf
+	onDataArrive func
+read file
+	file
+	read buf
+	need read sz
+	onDataArrive func
+tcp socket send
+	socket
+	send buf list		+
+udp socket send
+	socket
+	client addr list	+
+	send buf list
+write file
+	file desc
+	send buf list
+
+2. cmd session
+tcp recv cmd
+	socket session		+
+	cmd			+
+udp recv cmd
+	socket
+	cmd
+	client addr		+
+read file
+	file desc
+	cmd			?
+tcp send socket
+	socket
+	cmd
+udp send socket
+	socket
+	cmd
+	client addr
+write file
+	file desc
+	cmd			?

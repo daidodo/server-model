@@ -1,0 +1,31 @@
+Notify		IO		CmdHandler
+------------------------------------------
+pop adding list
+add epoll accept
+fd=4 can accept
+push event list
+		pop event list
+		handle fd=4 accept
+		new client fd=6
+		handle fd=6 recv
+		decode cmd
+		no more read
+		push adding list
+		push cmd list
+				pop cmd list
+				process query & resp
+				add send buf to fd=6
+				push event list
+		pop event list
+		handle fd=6 send
+pop adding list
+add epoll recv
+fd=6 can recv
+push event list
+		pop event list
+		handle fd=6 recv
+		fd=6 remote close
+		add adding list
+pop adding list
+close fd=6
+rm epoll events

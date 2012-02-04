@@ -1,0 +1,40 @@
+TODO:
+(DONE)HA/HS engine add new socket to event list.
+(DONE)CRecvHelper can use virtual functions
+(DONE)support diff CmdBase type
+remove send lock in CSockSession for performance.
+support diff Buffer types: std::string, std::vector<char>, etc.
+reconnect when network lost
+cmd state machine per socket
+socket & state timeout
+
+
+BUGS:
+
+EXTERNAL:
+
+1. Kernel 3.0 sourcode
+
+2. Libevent 1.4.13 sourcecode
+
+3. Memcached 1.4.5 sourcecode
+
+4. Haproxy 1.4.8 sourcecode
+
+5. Nginx 0.8.28 sourcecode
+
+6. ¡¶Half Sync/Half Async¡·
+
+7. ¡¶Leader/Followers:A Design Pattern for Ef?cient Multi-threaded I/O Demultiplexing and Dispatching¡·
+
+8. ¡¶Understanding Linux Network Internals¡·
+
+9.  http://lkml.indiana.edu/hypermail/linux/kernel/0106.2/0405.html
+
+10. seanxue.¡¶epoll×Ü½á¡·
+
+11. Layer-to-layer flow control
+
+12. boost/asio
+
+13. ace
