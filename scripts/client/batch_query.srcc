@@ -1,0 +1,38 @@
+#!/usr/local/bin/srcc
+
+TCP("127.0.0.1", 12345)
+
+CMD Query SEND
+  BEGIN ARRAY(10000)
+    U16 totalLen := 0xF
+    U8 stx := 3
+    U16 cmdId := 1
+    U16 ver := 1
+    STR echo := "12345"
+    U8 etx := 2
+  END ARRAY
+END CMD
+
+CMD Resp RECV
+  U16 totalLen
+  U8 stx == 3
+  U16 cmdId
+  U16 ver
+  STR result
+  U8 etx == 2
+END CMD
+
+SLEEP(1)
+
+CMD Resp2 RECV
+  BEGIN ARRAY(9999)
+    U16 totalLen
+    U8 stx == 3
+    U16 cmdId
+    U16 ver
+    STR result
+    U8 etx == 2
+  END ARRAY
+END CMD
+
+SLEEP(3)
