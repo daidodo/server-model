@@ -49,6 +49,7 @@
         UrlDecode
         IsTimeout
         ArraySize
+        CxxDemangle
         MEM_OFFSET
         iterator_traits
 //*/
@@ -485,8 +486,12 @@ namespace Tools
     //jumping: 可以容忍的时间跳变
     bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping = 0);
 
+    //返回数组的元素个数
     template<class T, size_t S>
     size_t ArraySize(T (&)[S]){return S;}
+
+    //将std::typeinfo::name()的返回值转换成可读的类型名
+    std::string CxxDemangle(const char * name);
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits

@@ -20,11 +20,12 @@ class CCmdHandler;
 
 struct CHahsEnginParams
 {
-    size_t notifyStackSz_;
-    size_t ioStackSz_;
-    size_t handlerStackSz_;
     U32 maxFdNum_;
     int epollTimeoutMs_;
+    size_t notifyStackSz_;
+    size_t ioStackSz_;
+    bool needHandler_;
+    size_t handlerStackSz_;
     int handlerThreadMax_;
 };
 
