@@ -69,8 +69,6 @@ private:
     std::string result_;
 };
 
-typedef CCmdBase __CmdBase;
-
 NS_SERVER_END
 
 #endif

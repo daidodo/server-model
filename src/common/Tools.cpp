@@ -7,6 +7,7 @@
 #include <sys/param.h>
 #include <signal.h>
 #include <unistd.h>
+#include <cxxabi.h>         //abi::__cxa_demangle
 #include <sstream>          //std::ostringstream
 #include <cctype>           //std::isspace
 #include <algorithm>        //std::min
@@ -472,6 +473,22 @@ namespace Tools{
             return false;   //²»»á³¬Ê±
         return curtime + jumping < oldTime
             || curtime > oldTime + timeout + jumping;
+    }
+
+    std::string CxxDemangle(const char * name)
+    {
+        assert(name);
+        size_t len = 0;
+        int status = 0;
+        char * output = abi::__cxa_demangle(name, NULL, &len, &status);
+        std::string ret;
+        if(0 == status && output && len > 0)
+            ret = output;
+        else
+            ret = name;
+        if(output)
+            free(output);
+        return ret;
     }
 
 }//namespace Toos

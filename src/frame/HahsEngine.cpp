@@ -121,11 +121,18 @@ bool CHahsEngine::Run(const CHahsEnginParams & params)
     //allocate
     notify_ = new CAsyncNotify(params.notifyStackSz_, *this);
     io_ = new CAsyncIO(params.ioStackSz_, *this);
-    handler_ = new CCmdHandler(params.handlerStackSz_, *this);
-    if(!notify_ || !io_ || !handler_){
-        FATAL("cannot get CAsyncNotify/CAsyncIO/CCmdHandler objects");
+    if(!notify_ || !io_){
+        FATAL("cannot get CAsyncNotify/CAsyncIO objects");
         uninit();
         return false;
+    }
+    if(params.needHandler_){
+        handler_ = new CCmdHandler(params.handlerStackSz_, *this);
+        if(!handler_){
+            FATAL("cannot get CCmdHandler objects");
+            uninit();
+            return false;
+        }
     }
     //init
     if(!notify_->Init(params.maxFdNum_, params.epollTimeoutMs_)){
@@ -138,13 +145,13 @@ bool CHahsEngine::Run(const CHahsEnginParams & params)
         uninit();
         return false;
     }
-    if(!handler_->Init(params.handlerThreadMax_)){
+    if(handler_ && !handler_->Init(params.handlerThreadMax_)){
         FATAL("handler Init(handlerThreadMax_="<<params.handlerThreadMax_<<") failed");
         uninit();
         return false;
     }
     //start
-    if(0 > handler_->StartThreads("CmdHandler")){
+    if(handler_ && 0 > handler_->StartThreads("CmdHandler")){
         FATAL("start handler threads failed");
         exit(1);
     }
@@ -162,20 +169,23 @@ bool CHahsEngine::Run(const CHahsEnginParams & params)
 
 void CHahsEngine::WaitAll()
 {
-    assert(notify_ && io_ && handler_);
+    assert(notify_ && io_);
     notify_->WaitAll();
     io_->WaitAll();
-    handler_->WaitAll();
+    if(handler_)
+        handler_->WaitAll();
 }
 
 void CHahsEngine::uninit()
 {
     delete notify_;
     delete io_;
-    delete handler_;
     notify_ = 0;
     io_ = 0;
-    handler_ = 0;
+    if(handler_){
+        delete handler_;
+        handler_ = 0;
+    }
 }
 
 bool CHahsEngine::addSock(__SockPtr & sock, __Events ev)

@@ -24,9 +24,10 @@ int main(int argc,const char ** argv)
     CHahsEnginParams param;
     param.notifyStackSz_ = 16 << 10;
     param.ioStackSz_ = 16 << 10;
-    param.handlerStackSz_ = 16 << 10;
     param.maxFdNum_ = 1023;
     param.epollTimeoutMs_ = 500;
+    param.needHandler_ = true;
+    param.handlerStackSz_ = 16 << 10;
     param.handlerThreadMax_ = 4;
     if(!engine.Run(param)){
         FATAL("engine run failed");
