@@ -18,7 +18,7 @@
 #include <fstream>
 #include <limits>           //std::numeric_limits
 #include <cstdlib>          //atoi
-#include <Tools.h>   //Tools::Trim
+#include <Tools.h>          //Tools::Trim
 
 /*
 配置文件格式：
