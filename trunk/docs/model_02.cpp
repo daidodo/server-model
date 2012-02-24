@@ -4,7 +4,7 @@ class CRecvHelper
     virtual __Ret OnDataArrive(const char * buf, size_t sz) const = 0;
     virtual bool HandleData(const char * buf, size_t sz, CAnyPtr & cmd) const = 0;
     virtual void ReleaseCmd(const CAnyPtr & cmd) const{}
-    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockSession & sock){return false;}
+    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockHandle & handle) = 0;
 };
 
 //-----------------------
@@ -27,14 +27,14 @@ class CMyRecvHelper : public CRecvHelper
         return true;
     }
     virtual void ReleaseCmd(const CAnyPtr & cmd) const{}
-    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockSession & sock){
+    virtual __Events ProcessCmd(const CAnyPtr & cmd, CSockHandle & handle){
         CCmdBase * base = PtrCast<CCmdBase>(cmd);
         if(!cmd)
             return EVENT_CLOSE; //error
         std::string respdata;
         process(*base, respdata); //process cmd...
         if(!respdata.empty()){
-            sock.Send(buf);
+            handle.AddOutBuf(buf);
             return EVENT_OUT;   //output event
         }
         return 0;   //no event

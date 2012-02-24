@@ -21,22 +21,22 @@ tcp socket send
 	send buf list		+
 udp socket send
 	socket
-	client addr list	+
 	send buf list
+	client addr list	+
 write file
 	file desc
-	send buf list
+	write buf list
 
 2. cmd session
 tcp recv cmd
-	socket session		+
+	socket			+
 	cmd			+
 udp recv cmd
 	socket
 	cmd
 	client addr		+
 read file
-	file desc
+	file
 	cmd			?
 tcp send socket
 	socket
@@ -46,5 +46,5 @@ udp send socket
 	cmd
 	client addr
 write file
-	file desc
+	file
 	cmd			?

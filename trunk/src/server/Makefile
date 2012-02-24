@@ -7,7 +7,9 @@ SRC_DIR := .
 SRC_SUFFIX := cpp
 sinclude $(BASEDIR)/inc.mak
 
-all: comm frame $(TARGET)
+all: debug
+
+debug: comm frame $(TARGET)
 
 release: commrelease framerelease $(TARGET)
 
@@ -39,6 +41,6 @@ sinclude $(DEP)
 endif
 endif
 
-.PHONY: all release comm commrelease frame framerelease clean cleanall
+.PHONY: all debug release comm commrelease frame framerelease clean cleanall
 
 .SECONDARY: $(OBJ)

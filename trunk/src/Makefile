@@ -3,8 +3,10 @@ FRAMEDIR := frame
 SERVERDIR := server
 TESTDIR := test
 
-all:
-	$(MAKE) -C $(SERVERDIR) all
+all: debug
+
+debug:
+	$(MAKE) -C $(SERVERDIR) debug
 
 release:
 	$(MAKE) -C $(SERVERDIR) release
