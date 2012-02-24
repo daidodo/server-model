@@ -13,6 +13,7 @@
 #include <algorithm>        //std::min
 #include <cstring>
 #include <cassert>
+#include <iomanip>          //std::setw
 #include "Tools.h"
 
 NS_SERVER_BEGIN
@@ -136,6 +137,34 @@ namespace Tools{
         if(show_sz < sz)
             ret += "...";
         return ret;
+    }
+
+    std::string DumpFormat(const char * v, size_t sz)
+    {
+        if(!v || !sz)
+            return "";
+        const size_t LINE_WIDTH = 4;
+        const size_t CHARS_PER_LINE = 16;
+        size_t lines = (sz + CHARS_PER_LINE - 1) / CHARS_PER_LINE;
+        size_t lw = 0;
+        for(;lines > 0;lines >>= 8, lw += 2);
+        if(lw < LINE_WIDTH)
+            lw = LINE_WIDTH;
+        std::ostringstream oss;
+        oss.fill('0');
+        oss<<std::hex;
+        for(size_t ln = 0;ln < sz;ln += CHARS_PER_LINE){
+            oss<<std::setw(lw)<<ln<<"h: ";
+            const size_t left = std::min(CHARS_PER_LINE, sz - ln);
+            oss<<DumpHex(v + ln,left,' ',false);
+            for(size_t i = left;i < CHARS_PER_LINE;++i)
+                oss<<"   ";
+            oss<<"; ";
+            for(size_t i = 0;i < left;++i)
+                oss<<((v[ln + i] > 31 && v[ln + i] < 127) ? v[ln + i] : '.');
+            oss<<std::endl;
+        }
+        return oss.str();
     }
 
     std::string UnHex(const char * v,size_t sz)

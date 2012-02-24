@@ -20,14 +20,14 @@ NS_SERVER_BEGIN
 template<
     class Key,
     class LockT = CRWLock,
-    template<typename>class Hash = Tools::HashFn,
+    template<typename>class Hash = NS_IMPL::HashFn,
     template<typename>class EqualKey = std::equal_to,
     class Alloc = std::allocator<Key>
 >class CLockHashSet{
     //typedefs:
     typedef CLockHashSet<Key, LockT, Hash, EqualKey, Alloc> __Myt;
     typedef NS_IMPL::CLockHashTable<Key, LockT,
-        Tools::CIdentity<Key>, EqualKey, Hash, Alloc>  __HashTable;
+        NS_IMPL::CIdentity<Key>, EqualKey, Hash, Alloc>  __HashTable;
 public:
     typedef typename __HashTable::key_type          key_type;
     typedef typename __HashTable::value_type        value_type;
@@ -67,7 +67,7 @@ template<
     class Key,
     class Value,
     class LockT = CRWLock,
-    template<typename>class Hash = Tools::HashFn,
+    template<typename>class Hash = NS_IMPL::HashFn,
     template<typename>class EqualKey = std::equal_to,
     class Alloc = std::allocator<Value>
 >class CLockHashMap{
@@ -77,7 +77,7 @@ public:
     typedef Value                                   mapped_type;
     typedef std::pair<const key_type, mapped_type>  value_type;
 private:
-    typedef NS_IMPL::CLockHashTable<value_type, LockT, Tools::CSelect1st<value_type>,
+    typedef NS_IMPL::CLockHashTable<value_type, LockT, NS_IMPL::CSelect1st<value_type>,
         EqualKey, Hash, Alloc>                  __HashTable;
 public:
     typedef typename __HashTable::read_pointer      read_pointer;

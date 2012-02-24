@@ -18,7 +18,7 @@ NS_SERVER_BEGIN
 
 template<
     class Value,
-    class KeyOfValue = Tools::CIdentity<Value>,
+    class KeyOfValue = NS_IMPL::CIdentity<Value>,
     class Compare = std::less<typename KeyOfValue::result_type>,
     class Alloc = std::allocator<Value>
 >class CTree{

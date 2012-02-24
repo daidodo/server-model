@@ -3,15 +3,14 @@
 
 /*
     有用的类和函数
-        CInterTypeTag
-        CIdentity
         CTriple
-        CTypeSelector
         HashFn
         IsReadable
         DumpHex
         DumpStr
         DumpVal
+        Dump
+        DumpFormat
         UnHexChar
         UnHex
         HostByteOrder
@@ -50,37 +49,23 @@
         IsTimeout
         ArraySize
         CxxDemangle
+        Crc
         MEM_OFFSET
         iterator_traits
 //*/
 
-#include <functional>   //std::unary_function
 #include <string>
 #include <vector>
-#include <utility>      //std::pair,std::make_pair
-#include <endian.h>     //BYTE_ORDER,LITTLE_ENDIAN
+#include <functional>           //std::unary_function
+#include <utility>              //std::pair,std::make_pair
+#include <endian.h>             //BYTE_ORDER,LITTLE_ENDIAN
 #include <impl/Config.h>
-#include <impl/Tools_impl.h>
+#include <impl/Template.h>      //CTypeTraits
 
 NS_SERVER_BEGIN
 
 namespace Tools
 {
-    template<class T>
-    struct CIdentity : public std::unary_function<T,T> {
-        T & operator()(T & v) const{return v;}
-        const T & operator()(const T & v) const{return v;}
-    };
-
-    template<class Pair>
-    struct CSelect1st:public std::unary_function<Pair,typename Pair::first_type> {
-        typename Pair::first_type & operator()(Pair & p) const{
-            return p.first;
-        }
-        const typename Pair::first_type & operator()(const Pair & p) const {
-            return p.first;
-        }
-    };
 
     //三元组,类似std::pair
     template<class T1,class T2,class T3>
@@ -98,56 +83,6 @@ namespace Tools
             , third(t)
         {}
     };
-
-    //类型选择器
-    template<class T1,class T2,bool Sel>
-    struct CTypeSelector{
-        typedef T1  RType;
-    };
-    template<class T1,class T2>
-    struct CTypeSelector<T1,T2,false>{
-        typedef T2  RType;
-    };
-
-    //hash函数集合
-    inline size_t __stl_hash_string(const char * s){
-        size_t ret = 0;
-        for(;s && *s;++s)
-            ret = 5 * ret + *s;
-        return ret;
-    }
-    inline size_t __stl_hash_string(const char * s,size_t sz){
-        size_t ret = 0;
-        for(size_t i = 0;i < sz;++s,++i)
-            ret = 5 * ret + *s;
-        return ret;
-    }
-    template<class Key>struct HashFn{
-        size_t operator()(const Key & v) const{
-            return v.HashFn();
-        }
-    };
-#define TEMPLATE_INSTANCE_FOR_TYPE(TYPE,HASH)   template<>struct HashFn<TYPE>{  \
-    size_t operator()(TYPE v) const{return (HASH);}}
-    TEMPLATE_INSTANCE_FOR_TYPE(char *,__stl_hash_string(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(const char *,__stl_hash_string(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(signed char *,__stl_hash_string((const char *)v));
-    TEMPLATE_INSTANCE_FOR_TYPE(const signed char *,__stl_hash_string((const char *)v));
-    TEMPLATE_INSTANCE_FOR_TYPE(unsigned char *,__stl_hash_string((const char *)v));
-    TEMPLATE_INSTANCE_FOR_TYPE(const unsigned char *,__stl_hash_string((const char *)v));
-    TEMPLATE_INSTANCE_FOR_TYPE(char,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(signed char,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(unsigned char,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(signed short,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(unsigned short,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(signed int,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(unsigned int,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(signed long,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(unsigned long,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(signed long long,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(unsigned long long,size_t(v));
-    TEMPLATE_INSTANCE_FOR_TYPE(std::string,__stl_hash_string(v.c_str(),v.length()));
-#undef TEMPLATE_INSTANCE_FOR_TYPE
 
     //字符a是否是可读，即ASCII码属于[32,126]
     inline bool IsReadable(U8 a){
@@ -249,6 +184,9 @@ namespace Tools
         return Dump(str.c_str(),str.length(),show_sz,hasLen);
     }
 
+    //显示字符串的16进制和可视形式
+    std::string DumpFormat(const char * v, size_t sz);
+    
     //得到16进制字符a表示的10进制数值，错误时返回-1
     inline int UnHexChar(char a){
         if(a >= '0' && a <= '9')
@@ -289,8 +227,7 @@ namespace Tools
     }
 
     //得到主机的字节序,返回little endian(true)或big endian(false)
-    inline bool HostByteOrder()
-    {
+    inline bool HostByteOrder(){
 #ifdef BYTE_ORDER
 #   if BYTE_ORDER == LITTLE_ENDIAN
         return true;
@@ -492,6 +429,26 @@ namespace Tools
 
     //将std::typeinfo::name()的返回值转换成可读的类型名
     std::string CxxDemangle(const char * name);
+
+    //计算buf的crc
+    template<typename Int>
+    Int Crc(Int init, const char * buf, size_t sz){
+        const Int SIGN = (Int(1) << (NS_IMPL::CTypeTraits<Int>::MAX_BITS - 1));
+        Int add = 0;
+        for(size_t i = 0;i < sz;++i, init = (init << 1) + add)
+            add = (init & SIGN ? 1 : 0) + buf[i];
+        return init;
+    }
+
+    template<typename Int>
+    Int Crc(Int init, const std::string & buf){
+        return Crc(init, &buf[0], buf.size());
+    }
+
+    template<typename Int>
+    Int Crc(Int init, const std::vector<char> & buf){
+        return Crc(init, &buf[0], buf.size());
+    }
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits
