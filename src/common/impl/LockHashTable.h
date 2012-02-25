@@ -2,12 +2,12 @@
 #define DOZERG_LOCK_HASH_TABLE_H_20070907
 
 /*
-    对桶进行加锁的hash table,只作为其他容器的内部实现
-    建议不要直接使用
-        CLockHashTable
+    HashTable实现
+        CLockHashTable      对桶进行加锁的hash table，使用开链方式解决冲突
+        CMulRowHashTable    多行hash table，无锁
     History:
-        20090316    增加BucketSize和Iterate函数，提供遍历容器的途径
-        20111113    将Hash的模板参数去掉CV修饰
+        20090316    CLockHashTable增加BucketSize和Iterate函数，提供遍历容器的途径
+        20111113    CLockHashTable将Hash的模板参数去掉CV修饰
 //*/
 
 #include <vector>
@@ -24,7 +24,8 @@ template<
     template<typename>class EqualKey,
     template<typename>class Hash,
     class Alloc
->class CLockHashTable{
+>class CLockHashTable
+{
     //typedefs:
 	typedef CLockHashTable<Value,LockT,KeyOfValue,EqualKey,Hash,Alloc>  __Myt;
 public:
@@ -66,7 +67,9 @@ private:
     static const size_type MIN_SIZE = 101;  //桶的最小个数
 public:
     //functions:
-    CLockHashTable(size_type elem_sz,size_type lock_range) //elem_sz为预留的桶大小,lock_range为每把锁管辖的桶个数
+    //elem_sz: 预留的桶大小
+    //lock_range: 每把锁管辖的桶个数
+    CLockHashTable(size_type elem_sz,size_type lock_range)
         : lock_range_(lock_range)
         , size_(0)
     {
@@ -376,6 +379,67 @@ private:
     size_type       size_;
     std::vector<__NodePtr,__BuckAlloc>  bucket_;
     std::vector<__LockPtr,__LkPtrAlloc> lock_;
+};
+
+template<
+    class Value,
+    class KeyOfValue,
+    template<typename>class EqualKey,
+    template<typename>class Hash,
+    class Alloc
+>class CMulRowHashTable
+{
+    //typedef
+    typedef CMulRowHashTable<Value, KeyOfValue, EqualKey, Hash, Alloc> __Myt;
+public:
+    typedef Value               value_type;
+    typedef value_type *        pointer;
+    typedef value_type &        reference;
+    typedef const value_type *  const_pointer;
+    typedef const value_type &  const_reference;
+    typedef Alloc               allocator_type
+    typedef typename allocator_type::size_type  size_type;
+    typedef KeyOfValue                          extract_key;
+    typedef typename extract_key::result_type   key_type;
+	typedef EqualKey<key_type>                  key_equal;
+    typedef Hash<typename COmitCV<key_type>::result_type>   hasher;
+    //constant
+    static const size_type MAX_ROW = 100;  //最大行数(更大会影响性能)
+    //function
+    //elemSz: 预留的元素个数，实际存储量一般不会超过elemSz * 95%
+    //row: 行数，越大存储率越高，性能越低
+    //buf & sz: 如果非0，则在指定内存上初始化hash table；否则申请新内存
+    CMulRowHashTable(size_t elemSz, size_t row, char * buf = 0, size_t sz = 0)
+        : buf_(0)
+        , sz_(0)
+        , mm_(false)
+    {
+        Init(elemSz, row, buf, sz);
+    }
+    //如果buf为0，则新申请内存
+    //如果初始化失败，则返回false
+    bool Init(size_t elemSz, size_t row, char * buf, size_t sz){
+        if(buf_)
+            return false;   //re-init
+        if(!elemSz || !row || elemSz <= row)
+            return false;   //params error
+        if(row > MAX_ROW)
+            row = MAX_ROW;
+        size_t col = (elemSz + row -1) / row;
+        std::vector<size_t> prime_vec;
+        for(size_t i = 0;i < row;++i){
+            col = Tools::PrimeLess(col);
+        }
+
+        return true;
+    }
+private:
+    void Uninit(){
+    }
+    //member
+    char * buf_;
+    size_t sz_;
+    bool mm_;   //是否新申请的内存
 };
 
 NS_IMPL_END

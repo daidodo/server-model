@@ -50,6 +50,8 @@
         ArraySize
         CxxDemangle
         Crc
+        IsPrime
+        PrimeLess
         MEM_OFFSET
         iterator_traits
 //*/
@@ -449,6 +451,13 @@ namespace Tools
     Int Crc(Int init, const std::vector<char> & buf){
         return Crc(init, &buf[0], buf.size());
     }
+
+    //返回v是否素数
+    bool IsPrime(int v);
+
+    //返回小于等于v的最大素数
+    //如果没有，返回0
+    int PrimeLess(int v);
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits
