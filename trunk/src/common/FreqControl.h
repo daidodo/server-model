@@ -1,13 +1,17 @@
 #ifndef DOZERG_FREQ_CONTROL_H_20120224
 #define DOZERG_FREQ_CONTROL_H_20120224
 
+/*
+    频率控制
+        CFreqControl    使用令牌桶原理的频率控制类，线程不安全
+//*/
+
 #include <Tools.h>
 
 NS_SERVER_BEGIN
 
-class CFreqControl
+struct CFreqControl
 {
-public:
     CFreqControl():freq_(0){}
     //freq: 频率(次/s)
     //bucketSz: 令牌桶大小
@@ -52,7 +56,7 @@ public:
     ssize_t Token() const{return token_;}
     //扣除令牌
     //如果令牌数不够，不会进行扣除操作，并返回false，
-    bool Get(size_t need){
+    bool Get(size_t need = 1){
         if(token_ < need)
             return false;
         token_ -= need;

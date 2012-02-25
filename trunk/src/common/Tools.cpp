@@ -520,6 +520,24 @@ namespace Tools{
         return ret;
     }
 
+    bool IsPrime(int v)
+    {
+        if(v < 2)
+            return false;
+        for(int i = 2;i * i <= v;++i)
+            if((v % i) == 0)
+                return false;
+        return true;
+    }
+
+    int PrimeLess(int v)
+    {
+        for(;v >= 2;--v)
+            if(IsPrime(v))
+                return v;
+        return 0;
+    }
+
 }//namespace Toos
 
 NS_SERVER_END
