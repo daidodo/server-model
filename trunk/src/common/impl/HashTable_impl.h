@@ -11,10 +11,13 @@
 //*/
 
 #include <cassert>
+#include <cstring>      //memset
 #include <vector>
 #include <Mutex.h>
 
 NS_IMPL_BEGIN
+
+//for CLockHashTable
 
 //forward declaration
 template<class Value,class LockT,class KeyOfValue,template<typename>class EqualKey,template<typename>class Hash,class Alloc>
@@ -133,6 +136,60 @@ public:
         assert(__MyBase::ar_[index]);
         return __MyBase::ar_[index]->data_;
     }
+};
+
+
+//for CMulRowHashTable
+
+struct __mr_hash_table_head
+{
+    template<class Primes>
+    void Init(int ver, U64 row, U64 col, const Primes & primes)
+    {
+        assert(row > 0 && col > 0 && row == primes.size());
+        ver_ = ver;
+        reserved1_ = 0;
+        reserved2_ = 0;
+        row_ = row;
+        col_ = col;
+        sum_ = std::accumulate(primes.begin(), primes.end(), 0);
+        used_ = 0;
+        memset(reserved3_, 0, sizeof reserved3_);
+        std::copy(primes.begin(), primes.end(), primes_);
+    }
+    bool Check(int ver, U64 row, U64 col) const{
+        if(ver != ver_)
+            return false;   //version mismatch
+        if(!row)
+            row = row_;
+        if(!col)
+            col = col_;
+        if(!row || row != row_
+                || !col || col != col_)
+            return false;   //row/col mismatch
+        U64 sum = std::accumulate(primes_, primes_ + row, 0);
+        if(sum != sum_ || sum <= row)
+            return false;
+        if(used_ > sum)
+            return false;
+        return true;
+    }
+    U64 Row() const{return row_;}
+    U64 Col() const{return col_;}
+    U64 Sum() const{return sum_;}
+    U64 Used() const{return used_;}
+    void Used(ssize_t sz){used_ += sz;}
+    U64 Prime(size_t index) const{return primes_[index];}
+private:
+    U16 ver_;
+    U16 reserved1_;
+    U32 reserved2_;
+    U64 row_;
+    U64 col_;
+    U64 sum_;
+    U64 used_;
+    U64 reserved3_[11];
+    U64 primes_[];   //row_¸öËØÊý
 };
 
 NS_IMPL_END

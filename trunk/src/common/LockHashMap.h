@@ -12,7 +12,7 @@
 
 #include <functional>           //std::equal_to
 #include <utility>              //std::pair
-#include <impl/LockHashTable.h>
+#include <impl/HashTable.h>
 #include <Tools.h>       //Tools::HashFn, Tools::CIdentity, Tools::CSelect1st
 
 NS_SERVER_BEGIN
