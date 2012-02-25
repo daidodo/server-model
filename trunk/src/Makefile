@@ -32,7 +32,7 @@ cleanall:
 love: clean all
 
 lines:
-	@find . -regex ".*\.[ch]p?p?" | xargs wc -l
+	@find . -regex ".*\.[ch]p?p?" | grep -vw "lzo" | grep -vw "quicklz" | xargs wc -l #| sort -h
 
 .PHONY : all clean test cleanall love lines release
 
