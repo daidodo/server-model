@@ -11,9 +11,10 @@
 //*/
 
 #include <vector>
-#include <Tools.h>           //Tools::DestroyArray,Tools::Destroy
-#include <impl/Template.h>   //COmitCV
-#include <impl/LockHashTable_impl.h>
+#include <numeric>              //std::accumulate
+#include <Tools.h>              //Tools::DestroyArray,Tools::Destroy
+#include <impl/Template.h>      //COmitCV
+#include <impl/HashTable_impl.h>
 
 NS_IMPL_BEGIN
 
@@ -188,12 +189,12 @@ public:
     }
     void Clear() __DZ_NOTHROW{
         if(!lock_range_){
-            for(size_t b = 0;b < bucket_.size();++b)
+            for(size_type b = 0;b < bucket_.size();++b)
                 destroyBucket(bucket_[b]);
         }else{
             writeLock(lock_[0]);
-            size_t k = 0;
-            for(size_t b = 0,i = 0;b < bucket_.size();++b,++i){
+            size_type k = 0;
+            for(size_type b = 0,i = 0;b < bucket_.size();++b,++i){
                 if(i == lock_range_){
                     unlock(lock_[k++]);
                     i -= lock_range_;
@@ -326,7 +327,7 @@ private:
             elem_sz = elem_sz / lock_range_ + 1;
             lock_.resize(elem_sz);
             __LockPtr p = getLock(elem_sz);
-            for(size_t i =0;i < elem_sz;++i,++p)
+            for(size_type i =0;i < elem_sz;++i,++p)
                 lock_[i] = p;
         }
     }
@@ -397,48 +398,259 @@ public:
     typedef value_type &        reference;
     typedef const value_type *  const_pointer;
     typedef const value_type &  const_reference;
-    typedef Alloc               allocator_type
+    typedef Alloc               allocator_type;
     typedef typename allocator_type::size_type  size_type;
     typedef KeyOfValue                          extract_key;
     typedef typename extract_key::result_type   key_type;
 	typedef EqualKey<key_type>                  key_equal;
     typedef Hash<typename COmitCV<key_type>::result_type>   hasher;
+private:
+    typedef __mr_hash_table_head    __Head;
+    typedef typename allocator_type::template rebind<char>::other __BufAlloc;
+public:
     //constant
-    static const size_type MAX_ROW = 100;  //最大行数(更大会影响性能)
+    static const size_type MAX_ROW = 100;   //最大行数(更大会影响性能)
+    static const int VERSION = 1;           //内存布局版本号
     //function
-    //elemSz: 预留的元素个数，实际存储量一般不会超过elemSz * 95%
-    //row: 行数，越大存储率越高，性能越低
-    //buf & sz: 如果非0，则在指定内存上初始化hash table；否则申请新内存
-    CMulRowHashTable(size_t elemSz, size_t row, char * buf = 0, size_t sz = 0)
-        : buf_(0)
+    CMulRowHashTable()
+        : head_(0)
+        , body_(0)
         , sz_(0)
         , mm_(false)
-    {
-        Init(elemSz, row, buf, sz);
+    {}
+    ~CMulRowHashTable(){uninit();}
+    //返回是否初始化成功
+    bool IsValid() const{return head_ != 0;}
+    //创建新hash table
+    //row: 行数，越大存储率越高，性能越低
+    //col: 每行的元素个数，列数
+    //buf & sz: 如果非0，则在指定内存上初始化hash table；否则申请新内存
+    bool Create(size_type row, size_type col, char * buf = 0, size_type sz = 0){
+        return create(row, col, buf, sz);
     }
-    //如果buf为0，则新申请内存
-    //如果初始化失败，则返回false
-    bool Init(size_t elemSz, size_t row, char * buf, size_t sz){
-        if(buf_)
-            return false;   //re-init
-        if(!elemSz || !row || elemSz <= row)
+    //获取已有hash table
+    //buf & sz: 已有hash table的内存
+    //row & col: 行数和列数，如果为0，则未指定
+    bool Attach(char * buf, size_type sz, size_type row = 0, size_type col = 0){
+        return attach(buf, sz, row, col);
+    }
+    //是否为空
+    bool Empty() const{return Size() == 0;}
+    //能容纳的最多元素个数
+    size_type MaxSize() const{return head_->Sum();}
+    //已占用的元素个数
+    size_type Size() const{return head_->Used();}
+    //行数
+    size_type Row() const{return head_->Row();}
+    //列数
+    size_type Col() const{return head_->Col();}
+    //插入元素
+    //return:
+    //      <true, pointer> - 新创建节点成功，pointer为节点指针
+    //      <false, pointer> - 找到已有节点，pointer为节点指针
+    //      <false, 0> - 无法创建新节点
+    std::pair<bool, pointer> Insert(const_reference v){
+        bool succ = false;
+        pointer p = 0;
+        if(IsValid()){
+            if((succ = findKey(extract_key()(v), p, true))){
+                assert(p);
+                *p = v;
+                head_->Used(1);
+            }
+        }
+        return std::make_pair(succ, p);
+    }
+    //查找元素
+    //return:
+    //      <true, pointer> - 找到元素，pointer为节点指针
+    //      <false, 0> - 未找到元素
+    std::pair<bool, pointer> Find(const_reference v){
+        bool succ = false;
+        pointer p = 0;
+        if(IsValid())
+            succ = findKey(extract_key()(v), p, false);
+        return std::make_pair(succ, p);
+    }
+    std::pair<bool, const_pointer> Find(const_reference v) const{
+        bool succ = false;
+        const_pointer p = 0;
+        if(IsValid())
+            succ = findKey(extract_key()(v), p, false);
+        return std::make_pair(succ, p);
+    }
+    //删除元素
+    //返回是否真正删除了节点
+    bool Erase(const_reference v){
+        pointer p = 0;
+        if(IsValid()){
+            if(findKey(extract_key()(v), p, false)){
+                assert(p);
+                *p = value_type();
+                head_->Used(-1);
+                return true;
+            }
+        }
+        return false;
+    }
+    bool Erase(pointer p){
+        if(!IsValid())
+            return false;
+        if(p < body_)
+            return false;
+        size_type sz = p - body_;
+        if(sz >= head_->Sum())
+            return false;
+        if(p != body_ + sz)
+            return false;
+        if(key_equal()(extract_key()(*p), key_type()))
+            return false;
+        *p = value_type();
+        head_->Used(-1);
+        return true;
+    }
+    //遍历元素
+    //pos: [0, MaxSize())范围内的值
+    //return: 节点指针；如果节点未使用，返回0
+    pointer Iterate(size_type pos){
+        pointer p = 0;
+        if(IsValid() && pos < head_->Sum())
+            p = body_ + pos;
+        return p;
+    }
+    const_pointer Iterate(size_type pos) const{
+        const_pointer p = 0;
+        if(IsValid() && pos < head_->Sum())
+            p = body_ + pos;
+        return p;
+    }
+private:
+    //如果未找到k，且empty=true，则p需要返回未使用节点
+    bool findKey(const key_type & k, pointer & p, bool empty){
+        assert(IsValid());
+        pointer e = 0;  //empty node
+        size_type hash = hasher()(k);
+        for(size_type sum = 0, r = 0;r < head_->Row();++r){
+            const size_type prime = head_->Prime(r);
+            const pointer v = body_ + (hash % prime + sum);
+            const key_type vk = extract_key()(*v);
+            if(key_equal()(k, vk)){
+                p = v;
+                return true;
+            }
+            if(empty && !e && key_equal()(vk, key_type()))
+                e = v;
+            sum += prime;
+        }
+        p = e;
+        return false;
+    }
+    bool findKey(const key_type & k, const_pointer & p) const{
+        assert(IsValid());
+        size_type hash = hasher()(k);
+        for(size_type sum = 0, r = 0;r < head_->Row();++r){
+            const size_type prime = head_->Prime(r);
+            const const_pointer v = body_ + (hash % prime + sum);
+            const key_type vk = extract_key()(*v);
+            if(key_equal()(k, vk)){
+                p = v;
+                return true;
+            }
+            sum += prime;
+        }
+        p = 0;
+        return false;
+    }
+    bool create(size_type row, size_type col, char * buf, size_type sz){
+        //check
+        if(head_)
+            return false;   //re-create
+        if(!col || !row)
             return false;   //params error
         if(row > MAX_ROW)
             row = MAX_ROW;
-        size_t col = (elemSz + row -1) / row;
-        std::vector<size_t> prime_vec;
-        for(size_t i = 0;i < row;++i){
-            col = Tools::PrimeLess(col);
+        //primes
+        size_type p = col;
+        std::vector<size_type> vec;
+        for(size_type i = 0;i < row;++i, --p){
+            p = Tools::PrimeLess(p);
+            if(!p)
+                return false;   //params error
+            vec.push_back(p);
         }
-
+        //size
+        size_type sum = std::accumulate(vec.begin(), vec.end(), 0);
+        size_type hs = headSz(row);    //head size
+        size_type bs = bodySz(sum);    //body size
+        //alloc
+        bool mm = false;
+        if(!buf){
+            sz = hs + bs;
+            buf = __BufAlloc().allocate(sz);
+            mm = true;
+        }
+        //init
+        __Head * head = 0;
+        pointer body = 0;
+        if(sz < hs + bs)
+            return false;   //buf not enough
+        head = reinterpret_cast<__Head *>(buf);
+        body = reinterpret_cast<pointer>(buf + hs);
+        assert(head && body);
+        head->Init(VERSION, row, col, vec);
+        std::uninitialized_fill_n(body, sum, value_type());
+        //set
+        head_ = head;
+        body_ = body;
+        sz_ = sz;
+        mm_ = mm;
         return true;
     }
-private:
-    void Uninit(){
+    bool attach(char * buf, size_type sz, size_type row, size_type col){
+        //check
+        if(head_)
+            return false;   //re-attach
+        if(!buf || !sz)
+            return false;   //params error;
+        if(row > MAX_ROW)
+            row = MAX_ROW;
+        //head
+        __Head * head = reinterpret_cast<__Head *>(buf);
+        assert(head);
+        if(!head->Check(VERSION, row, col))
+            return false;   //head error
+        //size
+        size_type hs = headSz(head->Row());
+        if(sz <= hs)
+            return false;   //sz not enough
+        size_type bs = bodySz(head->Sum());
+        if(sz < hs + bs)
+            return false;   //sz not enough
+        //set
+        head_ = head;
+        body_ = reinterpret_cast<pointer>(buf + hs);
+        sz_ = sz;
+        mm_ = false;
+        return true;
+    }
+    void uninit(){
+        if(!IsValid() || !mm_)
+            return;
+        for(size_type i = 0;i < head_->Sum();++i)
+            body_[i].~value_type();
+        char * buf = reinterpret_cast<char *>(head_);
+        __BufAlloc().deallocate(buf, sz_);
+    }
+    size_type headSz(size_type row) const{
+        return sizeof(__Head) + sizeof(U64) * row;
+    }
+    size_type bodySz(size_type sum) const{
+        return sizeof(value_type) * sum;
     }
     //member
-    char * buf_;
-    size_t sz_;
+    __Head * head_;
+    pointer body_;
+    size_type sz_;
     bool mm_;   //是否新申请的内存
 };
 
