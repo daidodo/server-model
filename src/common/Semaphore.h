@@ -4,26 +4,29 @@
 /*
     对POSIX信号量进行简单的封装
     方便使用,隐藏底层实现,便于移植
-        CSemaphore      信号量
+        CUnnamedSemaphore   POSIX无名信号量
+        CSemaphore          SystemV信号量
 //*/
 
+#include <sys/types.h>
+#include <sys/ipc.h>
 #include <semaphore.h>
 #include <errno.h>
 #include <stdexcept>        //std::runtime_error
-#include <Tools.h>   //Tools::ErrorMsg, Tools::GetTimespec
+#include <Tools.h>          //Tools::ErrorMsg, Tools::GetTimespec
 
 NS_SERVER_BEGIN
 
-class CSemaphore
+class CUnnamedSemaphore
 {
-    CSemaphore(const CSemaphore &);
-    CSemaphore & operator =(const CSemaphore &);
+    CUnnamedSemaphore(const CUnnamedSemaphore &);
+    CUnnamedSemaphore & operator =(const CUnnamedSemaphore &);
 public:
-    CSemaphore(int init_val = 0,bool pshared = false) throw(std::runtime_error){
+    CUnnamedSemaphore(int init_val = 0,bool pshared = false) throw(std::runtime_error){
         if(sem_init(&sem_,pshared,init_val) < 0)
             throw std::runtime_error(Tools::ErrorMsg(errno).c_str());
     }
-    ~CSemaphore(){
+    ~CUnnamedSemaphore(){
         sem_destroy(&sem_);
     }
     void Post() throw(std::runtime_error){
@@ -54,6 +57,15 @@ public:
     }
 private:
     mutable sem_t sem_;
+};
+
+class CSemaphore
+{
+    CSemaphore(const CSemaphore &);
+    CSemaphore & operator =(const CSemaphore &);
+public:
+    CSemaphore(key_t key, int sem_count, int sem_flags){
+    }
 };
 
 NS_SERVER_END
