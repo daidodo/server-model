@@ -69,12 +69,14 @@ public:
         if(eno)
             throw std::runtime_error(Tools::ErrorMsg(eno).c_str());
     }
+#ifdef __API_HAS_MUTEX_TIMEDLOCK
     //在指定的timeMs毫秒内如果不能lock,返回false
     bool TimeLock(U32 timeMs){
         timespec ts;
         Tools::GetTimespec(timeMs, ts);
         return !pthread_mutex_timedlock(&mutex_, &ts);
     }
+#endif
 };
 
 class CAttrMutex : public CMutex
@@ -189,7 +191,7 @@ public:
     }
 };
 
-#if defined(_POSIX_SPIN_LOCKS) || defined(__DISPLAY_CODE)
+#ifdef __TYPE_HAS_SPINLOCK
 class CSpinLock
 {
     CSpinLock(const CSpinLock &);

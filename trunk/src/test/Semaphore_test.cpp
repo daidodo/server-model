@@ -2,7 +2,7 @@
 
 #include <Semaphore.h>
 
-static bool testSemOp(CUnnamedSemaphore & sem)
+static bool testSemOp(CSemaphore & sem)
 {
     int v = sem.GetVal();
     if(1 != v){
@@ -34,12 +34,12 @@ static bool testSemOp(CUnnamedSemaphore & sem)
 
 static bool testSemaphore()
 {
-    CUnnamedSemaphore sem_private(1);
+    CSemaphore sem_private(1);
     if(!testSemOp(sem_private)){
         cerr<<"testSemOp(sem_private) failed\n";
         return false;
     }
-    CUnnamedSemaphore sem_share(1, true);
+    CSemaphore sem_share(1, true);
     if(!testSemOp(sem_share)){
         cerr<<"testSemOp(sem_share) failed\n";
         return false;
