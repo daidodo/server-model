@@ -35,11 +35,14 @@ typedef unsigned int    UINT;
 #endif
 
 //use poll or epoll
+
 #if defined(USEEPOLL)
 #   define __USE_EPOLL  1
 #else
 #   define __USE_EPOLL  0
 #endif
+
+//exception support
 
 #ifdef NDEBUG
 #   define __DZ_EXCEPTION
@@ -57,6 +60,14 @@ typedef unsigned int    UINT;
 #   define __DZ_CATCH_ALL   if(0)
 #   define __DZ_RETHROW
 #   define __DZ_NOTHROW
+#endif
+
+//system support
+
+#ifdef __USE_XOPEN2K
+#   define __API_HAS_SEM_TIMEWAIT       //support sem_timedwait()
+#   define __API_HAS_MUTEX_TIMEDLOCK    //support pthread_mutex_timedlock
+#   define __TYPE_HAS_SPINLOCK          //support pthread_spinlock_t
 #endif
 
 #endif
