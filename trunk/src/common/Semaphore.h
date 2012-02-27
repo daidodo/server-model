@@ -5,6 +5,8 @@
     对POSIX信号量进行简单的封装
     方便使用,隐藏底层实现,便于移植
         CSemaphore          POSIX信号量
+        CXsiSemOperation    XSI信号量可以进行的操作
+        CXsiSemaphore       XSI信号量
         CXsiSemaphoreArray  XSI信号量集
 //*/
 
@@ -94,9 +96,21 @@ private:
     sem_t sem_;
 };
 
-struct CSxiSemOperation
+struct CXsiSemOperation
 {
-public:
+    static void GenOp(sembuf & sb, int index, int op, bool wait, bool undo){
+        sb.sem_num = index;
+        sb.sem_op = op;
+        sb.sem_flg = 0;
+        if(!wait)
+            sb.sem_flg |= IPC_NOWAIT;
+        if(undo)
+            sb.sem_flg |= SEM_UNDO;
+    }
+    size_t Size() const{return ops_.size();}
+    bool Empty() const{return ops_.empty();}
+    const sembuf & operator [](size_t i) const{return ops_[i];}
+    sembuf & operator [](size_t i){return ops_[i];}
     //add an operation
     //index: index in semaphore array
     //op: increment or decrement for semval (if ZERO, nothing will be added)
@@ -105,15 +119,9 @@ public:
     void AddOp(int index, int op, bool wait, bool undo){
         if(!op)
             return;     //ignore op == 0
-        ops_.push_back(sembuf());
-        sembuf & sb = ops_.back();
-        sb.sem_num = index;
-        sb.sem_op = op;
-        sb.sem_flg = 0;
-        if(!wait)
-            sb.sem_flg |= IPC_NOWAIT;
-        if(undo)
-            sb.sem_flg |= SEM_UNDO;
+        sembuf sb;
+        GenOp(sb, index, op, wait, undo);
+        ops_.push_back(sb);
     }
     //add waiting for semval == 0
     void AddWait(int index, bool wait){
@@ -129,22 +137,106 @@ private:
 
 struct CXsiSemaphore
 {
-    CXsiSemaphore(const int & semid, size_t index)
+    CXsiSemaphore(const int & semid, int index)
         : semid_(semid)
         , index_(index)
     {}
+    bool IsValid() const{return semid_ >= 0 && index_ >= 0;}
+    int Index() const{return index_;}
     //apply one operation on semaphore
-    bool Apply(int op, bool wait, bool undo);
+    bool Apply(int op, bool wait, bool undo){
+        if(!IsValid())
+            return false;
+        sembuf sb;
+        CXsiSemOperation::GenOp(sb, index_, op, wait, undo);
+        return (0 == semop(semid_, &sb, 1));
+    }
     //apply operations on semaphore
-    bool Apply(const CSxiSemOperation & ops);
+    bool Apply(const CXsiSemOperation & ops){
+        if(!IsValid())
+            return false;
+        if(ops.Empty())
+            return true;
+        std::vector<sembuf> sb;
+        size_t sz = 0;
+        sembuf * buf = filterOps(ops, sb, sz);
+        if(!buf)
+            return true;
+        return (0 == semop(semid_, buf, sz));
+    }
+#ifdef __API_HAS_SEM_TIMEWAIT
+    //apply one operation on semaphore in timeMs micro-seconds
+    bool TimeApply(int op, bool wait, bool undo, U32 timeMs){
+        if(!IsValid())
+            return false;
+        sembuf sb;
+        CXsiSemOperation::GenOp(sb, index_, op, wait, undo);
+        struct timespec ts;
+        Tools::GetTimespec(timeMs, ts);
+        return (0 == semtimedop(semid_, &sb, 1, &ts));
+    }
+    //apply operations on semaphore in timeMs micro-seconds
+    bool TimeApply(const CXsiSemOperation & ops, U32 timeMs){
+        if(!IsValid())
+            return false;
+        if(ops.Empty())
+            return true;
+        std::vector<sembuf> sb;
+        size_t sz = 0;
+        sembuf * buf = filterOps(ops, sb, sz);
+        if(!buf)
+            return true;
+        struct timespec ts;
+        Tools::GetTimespec(timeMs, ts);
+        return (0 == semtimedop(semid_, buf, sz, &ts));
+    }
+#endif
     //set semval = value
-    bool SetVal(int value);
+    bool SetVal(int value){
+        if(!IsValid())
+            return false;
+        struct{int val;} arg;
+        arg.val = value;
+        if(semctl(semid_, index_, SETVAL, arg) < 0)
+            return false;
+        return true;
+    }
     //get semval
-    int GetVal() const;
-
+    //return: >=0:semval; <0:error
+    int GetVal() const{
+        if(!IsValid())
+            return -1;
+        return semctl(semid_, index_, GETVAL);
+    }
 private:
+    //filter sembuf not for index_
+    sembuf * filterOps(const CXsiSemOperation & ops, std::vector<sembuf> & sb, size_t & sz) const{
+        assert(IsValid());
+        bool skip = false;
+        for(size_t i = 0;i < ops.Size();++i)
+            if(ops[i].sem_num != index_){
+                skip = true;
+                break;
+            }
+        sembuf * buf = 0;
+        sz = 0;
+        if(skip){
+            for(size_t i = 0;i < ops.Size();++i)
+                if(ops[i].sem_num == index_)
+                    sb.push_back(ops[i]);
+            if(!sb.empty()){
+                buf = &sb[0];
+                sz = sb.size();
+            }
+        }else{
+            buf = const_cast<sembuf *>(&ops[0]); //const_cast is for semop() prototype bug
+            sz = ops.Size();
+        }
+        return buf;
+    }
+    //members
     const int & semid_;
-    size_t index_;
+    int index_;
 };
 
 class CXsiSemaphoreArray
@@ -157,40 +249,86 @@ class CXsiSemaphoreArray
         unsigned short  * array;
     }arg;
 public:
-    static const int MODE_DEFAULT = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
+    static const int FLAG_DEFAULT = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | S_IROTH | S_IWOTH;
     CXsiSemaphoreArray(key_t key
             , int nsems = 0
-            , int init_val = 0
-            , int oflags = O_CREAT
-            , mode_t mode = MODE_DEFAULT)
+            , int semflg = FLAG_DEFAULT)
         throw(std::runtime_error)
         : semid_(-1)
     {
-        if(!init(key, nsems, oflags | mode, init_val))
+        if(!init(key, nsems, semflg))
             throw std::runtime_error(Tools::ErrorMsg(errno).c_str());
     }
-
     CXsiSemaphoreArray(const char * pathname
             , int project
             , int nsems = 0
-            , int init_val = 0
-            , int oflags = O_CREAT
-            , mode_t mode = MODE_DEFAULT)
+            , int semflg = FLAG_DEFAULT)
         throw(std::runtime_error)
         : semid_(-1)
     {
+        key_t key = ftok(pathname, project);
+        if(-1 == key)
+            throw std::runtime_error(Tools::ErrorMsg(errno).c_str());
+        if(!init(key, nsems, semflg))
+            throw std::runtime_error(Tools::ErrorMsg(errno).c_str());
     }
-
     bool IsValid() const{return semid_ >= 0;}
+    //get semaphore array size
+    int Size() const{return nsems_;}
+    //access for semaphore array
+    CXsiSemaphore operator [](int i){return CXsiSemaphore(semid_, i);}
     //apply one operation on semaphore
-    bool Apply(int index, int op, bool wait, bool undo);
+    bool Apply(int index, int op, bool wait, bool undo){
+        if(!IsValid())
+            return false;
+        sembuf sb;
+        CXsiSemOperation::GenOp(sb, index, op, wait, undo);
+        return (0 == semop(semid_, &sb, 1));
+    }
     //apply operations on semaphore
-    bool Apply(const CSxiSemOperation & ops);
+    bool Apply(const CXsiSemOperation & ops){
+        if(!IsValid())
+            return false;
+        if(ops.Empty())
+            return true;
+        return (0 == semop(semid_, const_cast<sembuf *>(&ops[0]), ops.Size())); //const_cast is for semop() prototype bug
+    }
+#ifdef __API_HAS_SEMTIMEDOP
+    //apply one operation on semaphore in timeMs micro-seconds
+    bool TimeApply(int index, int op, bool wait, bool undo, U32 timeMs){
+        if(!IsValid())
+            return false;
+        sembuf sb;
+        CXsiSemOperation::GenOp(sb, index, op, wait, undo);
+        struct timespec ts;
+        Tools::GetTimespec(timeMs, ts);
+        return (0 == semtimedop(semid_, &sb, 1, &ts));
+    }
+    //apply operations on semaphore in timeMs mirco-seconds
+    bool TimeApply(const CXsiSemOperation & ops, U32 timeMs){
+        if(!IsValid())
+            return false;
+        if(ops.Empty())
+            return true;
+        struct timespec ts;
+        Tools::GetTimespec(timeMs, ts);
+        return (0 == semtimedop(semid_, const_cast<sembuf *>(&ops[0]), ops.Size(), &ts)); //const_cast is for semop() prototype bug
+    }
+#endif
     //get all semvals of semaphore array
-    bool GetAll(std::vector<unsigned short> & results) const;
+    bool GetAll(std::vector<unsigned short> & results) const{
+        if(!IsValid() || !nsems_)
+            return false;
+        results.resize(nsems_);
+        struct{unsigned short * array;} arg;
+        arg.array = &results[0];
+        if(0 > semctl(semid_, 0, GETALL, arg))
+            return false;
+        return true;
+    }
     //set all semvals of semaphore array
     bool SetAll(const std::vector<unsigned short> & values){
-        if(!IsValid() || values.empty() || values.size() < nsems_)
+        if(!IsValid() || values.empty() || int(values.size()) < nsems_)
             return false;
         struct{const unsigned short * array;} arg;
         arg.array = &values[0];
@@ -205,20 +343,19 @@ public:
             semid_ = -1;
         }
     }
-    //get semaphore array size
-    size_t Size() const{return nsems_;}
-    //access for semaphore array
-    CXsiSemaphore operator [](size_t i){return CXsiSemaphore(semid_, i);}
 private:
-    bool init(key_t key, int nsems, int semflg, int init_val){
+    bool init(key_t key, int nsems, int semflg){
         assert(semid_ < 0);
-        int id = semget(key, nsems, semflg);
-        if(id < 0)
+        int semid = semget(key, nsems, semflg);
+        if(semid < 0)
             return false;
-
+        if(!(nsems = getSize()))
+            return false;
+        semid_ = semid;
+        nsems_ = nsems;
         return true;
     }
-    size_t getSize() const{
+    int getSize() const{
         assert(IsValid());
         struct semid_ds sem;
         struct{struct semid_ds * buf;} arg;
@@ -229,7 +366,7 @@ private:
     }
     //members
     int semid_;
-    size_t nsems_;
+    int nsems_;
 };
 
 NS_SERVER_END
