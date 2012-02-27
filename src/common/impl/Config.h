@@ -65,9 +65,16 @@ typedef unsigned int    UINT;
 //system support
 
 #ifdef __USE_XOPEN2K
-#   define __API_HAS_SEM_TIMEWAIT       //support sem_timedwait()
 #   define __API_HAS_MUTEX_TIMEDLOCK    //support pthread_mutex_timedlock
 #   define __TYPE_HAS_SPINLOCK          //support pthread_spinlock_t
+#endif
+
+#if _POSIX_C_SOURCE >= 200112L || _XOPEN_SOURCE >= 600
+#   define __API_HAS_SEM_TIMEWAIT       //support sem_timedwait()
+#endif
+
+#ifdef _GNU_SOURCE
+#   define __API_HAS_SEMTIMEDOP         //support semtimedop
 #endif
 
 #endif
