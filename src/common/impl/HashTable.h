@@ -13,7 +13,7 @@
 #include <vector>
 #include <numeric>              //std::accumulate
 #include <Tools.h>              //Tools::DestroyArray,Tools::Destroy
-#include <impl/Template.h>      //COmitCV
+#include <Template.h>           //COmitCV
 #include <impl/HashTable_impl.h>
 
 NS_IMPL_BEGIN

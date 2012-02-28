@@ -62,7 +62,7 @@
 #include <utility>              //std::pair,std::make_pair
 #include <endian.h>             //BYTE_ORDER,LITTLE_ENDIAN
 #include <impl/Config.h>
-#include <impl/Template.h>      //CTypeTraits
+#include <Template.h>           //CTypeTraits
 
 NS_SERVER_BEGIN
 
@@ -246,7 +246,7 @@ namespace Tools
     //改变v的byte order.要求T是原始数据类型
     template<typename T>
     T SwapByteOrder(T v){
-        return NS_IMPL::CByteOrderTraits<T,sizeof(T)>::Swap(v);
+        return CByteOrderTraits<T,sizeof(T)>::Swap(v);
     }
 
     //得到v的16进制表示
@@ -435,7 +435,7 @@ namespace Tools
     //计算buf的crc
     template<typename Int>
     Int Crc(Int init, const char * buf, size_t sz){
-        const Int SIGN = (Int(1) << (NS_IMPL::CTypeTraits<Int>::MAX_BITS - 1));
+        const Int SIGN = (Int(1) << (CTypeTraits<Int>::MAX_BITS - 1));
         Int add = 0;
         for(size_t i = 0;i < sz;++i, init = (init << 1) + add)
             add = (init & SIGN ? 1 : 0) + buf[i];

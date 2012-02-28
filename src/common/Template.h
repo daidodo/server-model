@@ -3,7 +3,8 @@
 
 /*
     CTypeTraits
-    CAssert
+    STATIC_ASSERT
+    CHECK_TYPE_SIZE
     COmitCV
     CIdentity
     CSelect1st
@@ -14,7 +15,9 @@
 
 #include <byteswap.h>   //bswap_16, bswap_32, bswap_64
 
-NS_IMPL_BEGIN
+#include <impl/Template_impl.h>
+
+NS_SERVER_BEGIN
 
 //struct CIntegerTraits
 template<typename Integer>
@@ -42,13 +45,10 @@ __INTEGER_TRAITS_FOR_PODS(unsigned long long);
 #undef __INTEGER_TRAITS_FOR_PODS
 
 //compilation assertion
-template<bool>
-struct CAssert{};
+#define STATIC_ASSERT( expr )   __STATIC_ASSERT( JOIN_TOKEN(compile_assert_failed_at_line_, __LINE__), (expr) )
 
-template<>
-struct CAssert<true>{
-    typedef int Result;
-};
+//check type size
+#define CHECK_TYPE_SIZE( type, size )   __STATIC_ASSERT( size_of_type_is_not_##size, sizeof(type) == (size) )
 
 //omit const & volatile
 template<class T>
@@ -122,18 +122,6 @@ template<typename T>struct CByteOrderTraits<T, 8>{
 };
 
 //hashº¯Êý¼¯ºÏ
-inline size_t __stl_hash_string(const char * s){
-    size_t ret = 0;
-    for(;s && *s;++s)
-        ret = 5 * ret + *s;
-    return ret;
-}
-inline size_t __stl_hash_string(const char * s,size_t sz){
-    size_t ret = 0;
-    for(size_t i = 0;i < sz;++s,++i)
-        ret = 5 * ret + *s;
-    return ret;
-}
 template<class Key>struct HashFn{
     size_t operator()(const Key & v) const{
         return v.HashFn();
@@ -141,12 +129,12 @@ template<class Key>struct HashFn{
 };
 #define TEMPLATE_INSTANCE_FOR_TYPE(TYPE,HASH)   template<>struct HashFn<TYPE>{  \
     size_t operator()(TYPE v) const{return (HASH);}}
-TEMPLATE_INSTANCE_FOR_TYPE(char *,__stl_hash_string(v));
-TEMPLATE_INSTANCE_FOR_TYPE(const char *,__stl_hash_string(v));
-TEMPLATE_INSTANCE_FOR_TYPE(signed char *,__stl_hash_string((const char *)v));
-TEMPLATE_INSTANCE_FOR_TYPE(const signed char *,__stl_hash_string((const char *)v));
-TEMPLATE_INSTANCE_FOR_TYPE(unsigned char *,__stl_hash_string((const char *)v));
-TEMPLATE_INSTANCE_FOR_TYPE(const unsigned char *,__stl_hash_string((const char *)v));
+TEMPLATE_INSTANCE_FOR_TYPE(char *, NS_IMPL::__stl_hash_string(v));
+TEMPLATE_INSTANCE_FOR_TYPE(const char *, NS_IMPL::__stl_hash_string(v));
+TEMPLATE_INSTANCE_FOR_TYPE(signed char *, NS_IMPL::__stl_hash_string((const char *)v));
+TEMPLATE_INSTANCE_FOR_TYPE(const signed char *, NS_IMPL::__stl_hash_string((const char *)v));
+TEMPLATE_INSTANCE_FOR_TYPE(unsigned char *, NS_IMPL::__stl_hash_string((const char *)v));
+TEMPLATE_INSTANCE_FOR_TYPE(const unsigned char *, NS_IMPL::__stl_hash_string((const char *)v));
 TEMPLATE_INSTANCE_FOR_TYPE(char,size_t(v));
 TEMPLATE_INSTANCE_FOR_TYPE(signed char,size_t(v));
 TEMPLATE_INSTANCE_FOR_TYPE(unsigned char,size_t(v));
@@ -158,9 +146,9 @@ TEMPLATE_INSTANCE_FOR_TYPE(signed long,size_t(v));
 TEMPLATE_INSTANCE_FOR_TYPE(unsigned long,size_t(v));
 TEMPLATE_INSTANCE_FOR_TYPE(signed long long,size_t(v));
 TEMPLATE_INSTANCE_FOR_TYPE(unsigned long long,size_t(v));
-TEMPLATE_INSTANCE_FOR_TYPE(std::string,__stl_hash_string(v.c_str(),v.length()));
+TEMPLATE_INSTANCE_FOR_TYPE(std::string, NS_IMPL::__stl_hash_string(v.c_str(),v.length()));
 #undef TEMPLATE_INSTANCE_FOR_TYPE
 
-NS_IMPL_END
+NS_SERVER_END
 
 #endif
