@@ -1,10 +1,11 @@
-#include <arpa/inet.h>      //struct in_addr,htonl,inet_ntop,AF_INET,ntohl
 #include <sys/time.h>
 #include <sys/resource.h>   //struct rlimit,getrlimit,RLIMIT_NOFILE,RLIM_INFINITY,setrlimit
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <sys/stat.h>
 #include <sys/param.h>
+#include <sys/sysinfo.h>    //sysinfo
+#include <arpa/inet.h>      //struct in_addr,htonl,inet_ntop,AF_INET,ntohl
 #include <signal.h>
 #include <unistd.h>
 #include <cxxabi.h>         //abi::__cxa_demangle
@@ -355,6 +356,25 @@ namespace Tools{
         return (int)sysconf(_SC_NPROCESSORS_ONLN);
 #else
         return -1;
+#endif
+    }
+
+    U64 GetPhysicalMemorySize()
+    {
+        struct sysinfo si;
+        if(0 != sysinfo(&si))
+            return 0;
+        if(si.mem_unit > 0)
+            return U64(si.totalram) * si.mem_unit;
+        return si.totalram;
+    }
+
+    size_t GetPageSize()
+    {
+#ifdef PAGE_SIZE
+        return PAGE_SIZE;
+#else
+        return (size_t)sysconf(_SC_PAGESIZE);
 #endif
     }
 

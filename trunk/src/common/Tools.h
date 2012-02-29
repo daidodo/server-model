@@ -37,6 +37,8 @@
         SetMaxFileDescriptor
         GetMaxFileDescriptor
         GetProcessorCount
+        GetPhysicalMemorySize
+        GetPageSize
         ProgramName
         ExtractArg
         ToStringPtr
@@ -380,6 +382,12 @@ namespace Tools
 
     //获得计算机处理器个数,返回-1表示获取失败
     int GetProcessorCount();
+
+    //获取计算机物理内存大小(bytes)
+    U64 GetPhysicalMemorySize();
+
+    //获取系统页表大小(bytes)
+    size_t GetPageSize();
 
     //得到程序的文件名，去掉目录部分
     const char * ProgramName(const char * argstr);
