@@ -434,8 +434,8 @@ namespace Tools
     bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping = 0);
 
     //返回数组的元素个数
-    template<class T, size_t S>
-    size_t ArraySize(T (&)[S]){return S;}
+    template<class T, size_t N>
+    size_t ArraySize(T (&)[N]){return N;}
 
     //将std::typeinfo::name()的返回值转换成可读的类型名
     std::string CxxDemangle(const char * name);
