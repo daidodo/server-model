@@ -42,14 +42,13 @@ public:
     static const int FORMAT_EQUAL = 0;
     static const int FORMAT_SPACE = 1;
     //得到配置文件名
-    std::string GetFileName() const{return conf_file_;}
+    std::string GetConfFname() const{return conf_file_;}
     //清除读入的配置项
     void Clear(){content_.clear();}
     //从文件中读取配置项
-    bool Load(const char * file_name, int format = FORMAT_EQUAL){
-        if(!file_name)
-            return false;
-        std::ifstream inf(file_name);
+    bool Load(const std::string & file_name, int format = FORMAT_EQUAL){
+        std::string abs_file = Tools::AbsFilename(file_name);
+        std::ifstream inf(abs_file.c_str());
         if(!inf.is_open())
             return false;
         Clear();
@@ -57,7 +56,7 @@ public:
             std::getline(inf, line);
             parseFormat(line.substr(0, line.find_first_of("#")), format);
         }
-        conf_file_ = file_name;
+        conf_file_ = abs_file;
         return true;
     }
     //得到配置项的字符串值
@@ -90,6 +89,10 @@ public:
             }
         }
         return (ret < min ? min : (ret > max ? max : ret));
+    }
+    //得到配置项的字符串值，如果需要，转换成文件绝对路径
+    std::string GetFilepath(const std::string & key, const std::string & strdefault = "") const{
+        return Tools::AbsFilename(GetString(key, strdefault));
     }
 private:
     void parseFormat(const std::string & line, int format){

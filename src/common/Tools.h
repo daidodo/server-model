@@ -48,6 +48,8 @@
         GetHost
         UrlEncode
         UrlDecode
+        XmlEncode
+        AbsFilename
         IsTimeout
         ArraySize
         CxxDemangle
@@ -429,9 +431,18 @@ namespace Tools
     std::string UrlEncode(const std::string & url);
     std::string UrlDecode(const std::string & url);
 
-    //通用的检验是否超时的逻辑
-    //jumping: 可以容忍的时间跳变
-    bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping = 0);
+    //xml转码处理
+    std::string XmlEncode(const std::string & val);
+
+    //如果fname不是绝对路径，补全成绝对路径后返回
+	std::string AbsFilename(const std::string & fname);
+
+    //判断是否超时
+    //curtime: 当前时间
+    //oldtime: 需要判断的时间,0表示永不超时
+    //interval: 超时间隔,<0表示永不超时
+    //jump: 允许的时间跳变
+    inline bool IsTimeout(time_t curtime, time_t oldtime, int interval, int jump = 60);
 
     //返回数组的元素个数
     template<class T, size_t N>

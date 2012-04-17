@@ -143,7 +143,7 @@ public:
     __Myt & operator >>(unsigned long long & c) {return readPod(c);}
     //read std::string
     __Myt & operator >>(std::string & c){
-        __Length sz;
+        __Length sz = 0;
         operator >>(sz);
         if(ensure(sz)){
             c.assign(data_ + cur_ ,data_ + cur_ + sz);
