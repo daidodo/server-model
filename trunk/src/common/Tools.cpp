@@ -516,6 +516,42 @@ namespace Tools{
         return oss.str();
     }
 
+    std::string XmlEncode(const std::string & val)
+    {
+        std::ostringstream oss;
+        for(std::string::const_iterator i = val.begin();i != val.end();++i){
+            switch(*i){
+                case '<':oss<<"&lt;";break;
+                case '>':oss<<"&gt;";break;
+                case '&':oss<<"&amp;";break;
+                case '\'':oss<<"&apos;";break;
+                case '"':oss<<"&quot;";break;
+                default:oss<<*i;
+            }
+        }
+        return oss.str();
+    }
+
+    std::string AbsFilename(const std::string & fname)
+    {
+        if(fname.empty())
+            return fname;
+        std::string cwd;
+        if(fname[0] != '/'){
+            cwd.resize(4096);
+            if(NULL == getcwd(&cwd[0], cwd.size()))
+                return "";
+            size_t len = cwd.find_first_of('\0');
+            if(!len)
+                return "";
+            if(std::string::npos != len)
+                cwd.resize(len);
+            if(*cwd.rbegin() != '/')
+                cwd.push_back('/');
+        }
+        return (fname[0] != '/' ? cwd += fname : fname);
+    }
+
     bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping)
     {
         if(!oldTime || timeout <= 0)
