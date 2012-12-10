@@ -81,6 +81,7 @@ bool CSockAddr::SetAddr(const std::string & eth)
         return false;
     sa_.resize(sizeof(struct sockaddr));
     memcpy(&sa_[0], &ifr.ifr_addr, sizeof(struct sockaddr));
+    close(fd);
     return true;
 }
 
