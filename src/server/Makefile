@@ -4,7 +4,7 @@ SVROBJ = $(filter-out %_server.o, $(OBJ))
 # common defines
 BASEDIR := ..
 SRC_DIR := .
-SRC_SUFFIX := cpp
+SRC_SUFFIX := cpp cc
 sinclude $(BASEDIR)/inc.mak
 
 all: debug
