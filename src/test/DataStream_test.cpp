@@ -42,9 +42,38 @@ struct CTest
     bool operator !=(const CTest & t) const{
         return !operator ==(t);
     }
+    std::string toString() const{
+        std::ostringstream oss;
+        oss<<"{\na="<<a
+            <<"\nb="<<b
+            <<"\nc="<<c
+            <<"\nd="<<d
+            <<"\ne="<<e
+            <<"\nf="<<f
+            <<"\ng="<<g
+            <<"\nh="<<h
+            <<"\ni="<<int(i)
+            <<"\nj="<<int(j)
+            <<"\nk="<<int(k)
+            <<"\nl="<<Tools::Dump(l)
+            <<"\nm={";
+        for(size_t index = 0;index < m.size();++index){
+            if(index)
+                oss<<", ";
+            oss<<m[index];
+        }
+        oss<<"}\nn="<<Tools::DumpHex(n, sizeof n)
+            <<"\no={";
+        for(size_t index = 0;index < o.size();++index)
+            oss<<"\n    "<<Tools::Dump(o[index]);
+        oss<<"\n}\np="<<p
+            <<"\n}";
+        return oss.str();
+    }
 };
 
-static COutByteStream & operator <<(COutByteStream & obs, const CTest & t)
+template<class OutStream>
+static OutStream & operator <<(OutStream & obs, const CTest & t)
 {
     size_t cur = obs.Size();
     obs<<t.a<<t.b<<t.c<<t.d<<t.e<<t.f<<t.g<<t.h<<t.i<<t.j<<t.k<<t.l
@@ -74,13 +103,14 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
     return ibs;
 }
 
-template<class Buf>
+template<class OutStream>
 static bool testStreamInOut()
 {
+    const int COUNT = 10;
     const char str1[20] = "this is for test";
     std::vector<CTest> tests;
-    COutByteStream obs;
-    for(int i = 0;i < 10;++i){
+    OutStream obs;
+    for(int i = 0;i < COUNT;++i){
         CTest t;
         t.a = 111;
         t.b = 222;
@@ -110,20 +140,86 @@ static bool testStreamInOut()
         }
         tests.push_back(t);
     }
-    Buf buf;
+    typename OutStream::__Buf buf;
     if(!obs.ExportData(buf)){
         cerr<<"COutByteStream::ExportData() failed\n";
         return false;
     }
     CInByteStream ibs(buf);
-    for(int i = 0;i < 10;++i){
+    for(int i = 0;i < COUNT;++i){
         CTest t2;
         if(!(ibs>>t2)){
             cerr<<"decode with CInByteStream failed\n";
             return false;
         }
         if(tests[i] != t2){
-            cerr<<"encode and decode not match\n";
+            cerr<<"encode and decode not match, tests["<<i<<"]="<<tests[i].toString()<<", t2="<<t2.toString()<<endl;
+            cerr<<"ibs.CurPos()="<<ibs.CurPos()<<", buf="<<Tools::DumpHex(&buf[0], ibs.CurPos())
+                <<" | "
+                <<Tools::DumpHex(&buf[ibs.CurPos()], buf.size() - ibs.CurPos(), ' ', false)
+                <<"...\n";
+            return false;
+        }
+    }
+    return true;
+}
+
+static bool testStreamInOutBuf()
+{
+    const int COUNT = 10;
+    const char str1[20] = "this is for test";
+    std::vector<CTest> tests;
+    std::vector<char> buf(8 << 10);
+    COutByteStreamBuf obs(&buf[0], buf.size());
+    for(int i = 0;i < COUNT;++i){
+        CTest t;
+        t.a = 111;
+        t.b = 222;
+        t.c = 333;
+        t.d = 444;
+        t.e = 555;
+        t.f = 666;
+        t.g = 777;
+        t.h = 888;
+        t.i = 99;
+        t.j = 100;
+        t.k = 200;
+        t.l = "300";
+        for(int i = 0;i < 53;++i)
+            t.m.push_back(i * i);
+        memcpy(t.n, str1, sizeof t.n);
+        std::string str2;
+        for(int i = 0;i < 30;++i){
+            str2.push_back('a' + i);
+            t.o.push_back(str2);
+        }
+        t.p = 400;
+
+        if(!(obs<<t)){
+            cerr<<"encode with COutByteStreamBuf failed\n";
+            return false;
+        }
+        tests.push_back(t);
+    }
+    std::vector<char> buf2(8 << 10);
+    size_t sz = buf2.size();
+    if(!obs.ExportData(&buf2[0], sz)){
+        cerr<<"COutByteStreamBuf::ExportData() failed\n";
+        return false;
+    }
+    CInByteStream ibs(&buf2[0], sz);
+    for(int i = 0;i < COUNT;++i){
+        CTest t2;
+        if(!(ibs>>t2)){
+            cerr<<"decode with CInByteStream failed\n";
+            return false;
+        }
+        if(tests[i] != t2){
+            cerr<<"encode and decode not match, tests["<<i<<"]="<<tests[i].toString()<<", t2="<<t2.toString()<<endl;
+            cerr<<"ibs.CurPos()="<<ibs.CurPos()<<", buf="<<Tools::DumpHex(&buf[0], ibs.CurPos())
+                <<" | "
+                <<Tools::DumpHex(&buf[ibs.CurPos()], buf.size() - ibs.CurPos(), ' ', false)
+                <<"...\n";
             return false;
         }
     }
@@ -132,9 +228,11 @@ static bool testStreamInOut()
 
 int main()
 {
-    if(!testStreamInOut<std::string>())
+    if(!testStreamInOut<COutByteStream>())
         return -1;
-    if(!testStreamInOut<std::vector<char> >())
+    if(!testStreamInOut<COutByteStreamVec>())
+        return -1;
+    if(!testStreamInOutBuf())
         return -1;
     cout<<"DataStream test succ\n";
 }

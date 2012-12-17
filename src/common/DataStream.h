@@ -2,31 +2,37 @@
 #define DOZERG_DATA_STREAM_H_20070905
 
 /*
-    ·â×°Êı¾İÁ÷µÄ¶ÁÈ¡ºÍĞ´Èë
-    ×¢Òâ²âÊÔoperator !(), ÔÚ´íÎó×´Ì¬ÏÂ, ËùÓĞ¶ÁĞ´Êı¾İ²Ù×÷¶¼»áÎŞĞ§
-    ÀàĞÍ:
-        CInByteStream       ÒÔ×Ö½ÚÎªµ¥Î»µÄÊäÈëÁ÷
-        COutByteStream      ÒÔ×Ö½ÚÎªµ¥Î»µÄÊä³öÁ÷
-    ²Ù×÷·û:
-        array               ÊäÈë/Êä³öÊı×é
-        raw                 ÊäÈë/Êä³öÊı×éÊı¾İ
-        range               ÊäÈë/Êä³ö·¶Î§
-        set_order           ÉèÖÃÊäÈë/Êä³öÁ÷µÄ×Ö½ÚĞò
-        seek                ÉèÖÃÊäÈë/Êä³öÁ÷µÄÆ«ÒÆ
-        skip                Ìø¹ı/Ô¤ÁôÖ¸¶¨×Ö½ÚÊı¾İ
-        offset_value        ÊäÈë/Êä³öÖ¸¶¨Î»ÖÃµÄÊı¾İ
-        insert              ÔÚÖ¸¶¨Î»ÖÃ²åÈëÊı¾İ
+    å°è£…æ•°æ®æµçš„è¯»å–å’Œå†™å…¥
+    æ³¨æ„æµ‹è¯•operator !(), åœ¨é”™è¯¯çŠ¶æ€ä¸‹, æ‰€æœ‰è¯»å†™æ•°æ®æ“ä½œéƒ½ä¼šæ— æ•ˆ
+    ç±»å‹:
+        CInByteStream       ä»¥å­—èŠ‚ä¸ºå•ä½çš„è¾“å…¥æµ
+        COutByteStreamBasic ä»¥ä»»æ„bufä¸ºåº•å±‚çš„å­—èŠ‚è¾“å‡ºæµ
+        COutByteStream      ä»¥std::stringä¸ºåº•å±‚bufçš„å­—èŠ‚è¾“å‡ºæµ
+        COutByteStreamVec   ä»¥std::vector<char>ä¸ºåº•å±‚bufçš„å­—èŠ‚è¾“å‡ºæµ
+        COutByteStreamBuf   ä»¥[char *, size_t]ä¸ºåº•å±‚bufçš„å­—èŠ‚è¾“å‡ºæµ
+    æ“ä½œç¬¦:
+        array               è¾“å…¥/è¾“å‡ºæ•°ç»„
+        raw                 è¾“å…¥/è¾“å‡ºæ•°ç»„æ•°æ®
+        range               è¾“å…¥/è¾“å‡ºèŒƒå›´
+        set_order           è®¾ç½®è¾“å…¥/è¾“å‡ºæµçš„å­—èŠ‚åº
+        seek                è®¾ç½®è¾“å…¥/è¾“å‡ºæµçš„åç§»
+        skip                è·³è¿‡/é¢„ç•™æŒ‡å®šå­—èŠ‚æ•°æ®
+        offset_value        è¾“å…¥/è¾“å‡ºæŒ‡å®šä½ç½®çš„æ•°æ®
+        insert              åœ¨æŒ‡å®šä½ç½®æ’å…¥æ•°æ®
+        protobuf            å°è£…protobufç±»çš„è¾“å…¥è¾“å‡º
     History
-        20070926    ¸øCInByteStream¼ÓÈëstatus_×´Ì¬, ·ÀÖ¹Òò·Ç·¨Êı¾İÒıÆğÄÚ´æ·ÃÎÊÔ½½ç
-        20071228    ĞŞÕıCInByteStream::LeftSizeÔÚlen < cur_Ê±·µ»ØºÜ´ósize_tµÄÎÊÌâ;²¢°Ñ2¸öensureÀïµÄ¼õ·¨¸Ä³É¼Ó·¨
-        20080204    È¥µôCInByteStream::DumpLeft, ¼ÓÈëToString, Êä³ö¶ÔÏóÄÚ²¿×´Ì¬
-        20081008    ½«CInDataStreamºÍCOutDataStream¸üÃûÎªCInByteStreamºÍCOutByteStream
-        20081016    µ÷ÕûÀà½á¹¹£¬ÒıÈëCDataStreamBase×÷ÎªËùÓĞÊı¾İÁ÷»ùÀà
-                    ÖØĞ´CInByteStreamºÍCOutByteStream£¬¼ÓÈë¸ü¶àÀàĞÍÖ§³Ö
-                    ÒıÈëmanipulator£¬²¢ÊµÏÖ¶àÖÖÊäÈëÊä³ö·½Ê½
-        20081106    Ôö¼ÓManip::insert
+        20070926    ç»™CInByteStreamåŠ å…¥status_çŠ¶æ€, é˜²æ­¢å› éæ³•æ•°æ®å¼•èµ·å†…å­˜è®¿é—®è¶Šç•Œ
+        20071228    ä¿®æ­£CInByteStream::LeftSizeåœ¨len < cur_æ—¶è¿”å›å¾ˆå¤§size_tçš„é—®é¢˜;å¹¶æŠŠ2ä¸ªensureé‡Œçš„å‡æ³•æ”¹æˆåŠ æ³•
+        20080204    å»æ‰CInByteStream::DumpLeft, åŠ å…¥ToString, è¾“å‡ºå¯¹è±¡å†…éƒ¨çŠ¶æ€
+        20081008    å°†CInDataStreamå’ŒCOutDataStreamæ›´åä¸ºCInByteStreamå’ŒCOutByteStream
+        20081016    è°ƒæ•´ç±»ç»“æ„ï¼Œå¼•å…¥CDataStreamBaseä½œä¸ºæ‰€æœ‰æ•°æ®æµåŸºç±»
+                    é‡å†™CInByteStreamå’ŒCOutByteStreamï¼ŒåŠ å…¥æ›´å¤šç±»å‹æ”¯æŒ
+                    å¼•å…¥manipulatorï¼Œå¹¶å®ç°å¤šç§è¾“å…¥è¾“å‡ºæ–¹å¼
+        20081106    å¢åŠ Manip::insert
+        20121217    å¢åŠ COutByteStreamVec, COutByteStreamBuf, ä¿®æ”¹COutByteStreamä¸ºä»¥std::stringä¸ºåº•å±‚buf
+                    å¢åŠ protobufç±»çš„è¾“å…¥è¾“å‡º
     Manual:
-        Çë²Î¿¼"docs/DataStream-manual.txt"
+        è¯·å‚è€ƒ"doc/DataStream-manual.txt"
 
 //*/
 
@@ -34,21 +40,21 @@
 #include <string>
 #include <cstring>  //memcpy
 #include <vector>
-#include <impl/DataStream_impl.h>
-#include <Tools.h>   //Tools::SwapByteOrder
+#include "impl/DataStream_impl.h"
+#include "Tools.h"   //Tools::SwapByteOrder
 
 NS_SERVER_BEGIN
 
 class CInByteStream : public NS_IMPL::CDataStreamBase
 {
     typedef CInByteStream __Myt;
-    static const bool DEF_NET_BYTEORDER = true;    //Ä¬ÈÏÊ¹ÓÃÍøÂç×Ö½ÚĞò(true)»¹ÊÇ±¾µØ×Ö½ÚĞò(false)
+    static const bool DEF_NET_BYTEORDER = true;    //é»˜è®¤ä½¿ç”¨ç½‘ç»œå­—èŠ‚åº(true)è¿˜æ˜¯æœ¬åœ°å­—èŠ‚åº(false)
     const char *    data_;
     size_t          len_;
     size_t          cur_;
-    bool            need_reverse_;  //ÊÇ·ñĞèÒª¸Ä±ä×Ö½ÚĞò
+    bool            need_reverse_;  //æ˜¯å¦éœ€è¦æ”¹å˜å­—èŠ‚åº
 public:
-    CInByteStream(const char * d, size_t l,bool netByteOrder = DEF_NET_BYTEORDER){   //netByteOrder±íÊ¾ÊÇ·ñ°´ÍøÂç×Ö½ÚĞò
+    CInByteStream(const char * d, size_t l,bool netByteOrder = DEF_NET_BYTEORDER){   //netByteOrderè¡¨ç¤ºæ˜¯å¦æŒ‰ç½‘ç»œå­—èŠ‚åº
         SetSource(d,l,netByteOrder);
     }
     CInByteStream(const unsigned char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){
@@ -94,10 +100,10 @@ public:
     void SetSource(const std::string & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d.c_str(),d.size(),netByteOrder);
     }
-    //ÉèÖÃ×Ö½ÚĞòÀàĞÍ
+    //è®¾ç½®å­—èŠ‚åºç±»å‹
     void OrderType(EOrderType ot){need_reverse_ = NeedReverse(ot);}
-    //°´ÕÕdirÖ¸¶¨µÄ·½ÏòÉèÖÃcur_Ö¸ÕëÆ«ÒÆ
-    //·µ»Øcur_×îºóµÄ¾ø¶ÔÆ«ÒÆ
+    //æŒ‰ç…§diræŒ‡å®šçš„æ–¹å‘è®¾ç½®cur_æŒ‡é’ˆåç§»
+    //è¿”å›cur_æœ€åçš„ç»å¯¹åç§»
     size_t Seek(ssize_t off,ESeekDir dir = Begin){
         switch(dir){
             case Begin:
@@ -115,7 +121,7 @@ public:
         }
         return cur_;
     }
-    //·µ»Øµ±Ç°cur_Ö¸ÕëµÄÆ«ÒÆ£¬dir±íÊ¾Ïà¶ÔÎ»ÖÃ
+    //è¿”å›å½“å‰cur_æŒ‡é’ˆçš„åç§»ï¼Œdirè¡¨ç¤ºç›¸å¯¹ä½ç½®
     size_t Tell(ESeekDir dir = Begin) const{
         switch(dir){
             case Begin:
@@ -127,7 +133,7 @@ public:
         return 0;
     }
     size_t CurPos() const{return Tell();}
-    //Ê£ÓàµÄ×Ö½ÚÊı
+    //å‰©ä½™çš„å­—èŠ‚æ•°
     size_t LeftSize() const{return Tell(End);}
     //read PODs
     __Myt & operator >>(char & c)               {return readPod(c);}
@@ -202,6 +208,19 @@ public:
         Seek(old,Begin);
         return *this;
     }
+    //read protobuf message
+    template<class T>
+    __Myt & operator >>(const NS_IMPL::CManipulatorProtobuf<T> & m){
+        size_t sz = m.Size();
+        if(sz && ensure(sz)){
+            typename NS_IMPL::CManipulatorProtobuf<T>::__Msg & msg = m.Msg();
+            if(msg.ParseFromArray(data_ + cur_, sz)){
+                cur_ += sz;
+            }else
+                Status(1);
+        }
+        return *this;
+    }
 private:
     template<typename T>
     __Myt & readPod(T & c){
@@ -237,7 +256,7 @@ private:
         operator >>(sz);
         return readRaw(c,sz);
     }
-    bool ensure(size_t sz){     //·ÀÖ¹Ô½½ç·ÃÎÊdata_
+    bool ensure(size_t sz){     //é˜²æ­¢è¶Šç•Œè®¿é—®data_
         if(operator !())
             return false;
         if(len_ < cur_ + sz){
@@ -248,80 +267,57 @@ private:
     }
 };
 
-class COutByteStream : public NS_IMPL::CDataStreamBase
+template<class Buf>
+class COutByteStreamBasic : public NS_IMPL::CDataStreamBase
 {
-    typedef COutByteStream __Myt;
-    static const bool DEF_NET_BYTEORDER = true;    //Ä¬ÈÏÊ¹ÓÃÍøÂç×Ö½ÚĞò(true)»¹ÊÇ±¾µØ×Ö½ÚĞò(false)
-    std::vector<char>   data_;
-    size_t              cur_;
-    bool                need_reverse_;  //ÊÇ·ñĞèÒª¸Ä±ä½á¹ûµÄbyte order
+    typedef COutByteStreamBasic<Buf>    __Myt;
+    typedef NS_IMPL::__buf_adapter<Buf> __BufAdapter;
+    typedef typename __BufAdapter::__Char   __Char;
+protected:
+    typedef Buf __Buf;
+    static const bool DEF_NET_BYTEORDER = true;    //é»˜è®¤ä½¿ç”¨ç½‘ç»œå­—èŠ‚åº(true)è¿˜æ˜¯æœ¬åœ°å­—èŠ‚åº(false)
 public:
-    explicit COutByteStream(size_t sz = 128,bool netByteOrder = DEF_NET_BYTEORDER)
-        : data_(sz, 0)
-        , cur_(0)
+    explicit COutByteStreamBasic(__Buf & buf, bool netByteOrder)
+        : adapter_(buf)
         , need_reverse_(NeedReverse(netByteOrder))
     {}
-    //ÉèÖÃ/»ñÈ¡×Ö½ÚĞòÀàĞÍ
+    //è®¾ç½®/è·å–å­—èŠ‚åºç±»å‹
     void OrderType(EOrderType ot){need_reverse_ = NeedReverse(ot);}
     EOrderType OrderType() const{return (need_reverse_ ? HostOrder : NetOrder);}
-    //°´ÕÕdirÖ¸¶¨µÄ·½ÏòÉèÖÃcur_Ö¸ÕëÆ«ÒÆ
-    //·µ»Øcur_×îºóµÄ¾ø¶ÔÆ«ÒÆ
-    //×¢Òâ£ºÈç¹ûcur_±äĞ¡£¬Ïàµ±ÓÚÄ¨µôÁËcur_Ö®ºóµÄÊı¾İ£»Èç¹ûcur_±ä´óÁË£¬Ïàµ±ÓÚÁô³öÖ¸¶¨µÄ¿ÕÎ»
-    size_t Seek(ssize_t off,ESeekDir dir){
+    //è¿”å›å½“å‰æ•°æ®å­—èŠ‚æ•°
+    size_t Size() const{return adapter_.size();}
+    //æŒ‰ç…§diræŒ‡å®šçš„æ–¹å‘è®¾ç½®Size
+    //æ³¨æ„ï¼šå¦‚æœSizeå˜å°ï¼Œç›¸å½“äºæŠ¹æ‰äº†ä¹‹åçš„æ•°æ®ï¼›å¦‚æœSizeå˜å¤§äº†ï¼Œç›¸å½“äºç•™å‡ºæŒ‡å®šçš„ç©ºä½
+    //return:
+    //      å¦‚æœæˆåŠŸï¼Œè¿”å›æœ€åçš„Size()
+    //      å¦‚æœå¤±è´¥ï¼Œè¿”å›-1
+    ssize_t Seek(ssize_t off, ESeekDir dir){
         switch(dir){
             case Begin:
-                assert(off >= 0);
-                if(size_t(off) > cur_)
-                    ensure(size_t(off) - cur_);
-                cur_ = off;
+                if(off < 0)
+                    Status(1);
+                else if(ensureSize(off))
+                    adapter_.resize(off);
                 break;
             case End:
             case Cur:
-                if(off > 0)
-                    ensure(off);
-                else
-                    assert(size_t(-off) < cur_);
-                cur_ += off;
+                if(ensureRoom(off))
+                    adapter_.resize(Size() + off);
                 break;
             default:
-                assert(0);
+                Status(1);
         }
-        return cur_;
+        return (operator !() ? -1 : Size());
     }
-    //·µ»Øµ±Ç°cur_Ö¸ÕëµÄ¾ø¶ÔÆ«ÒÆ
-    size_t Tell() const{return cur_;}
-    size_t Size() const{return Tell();}
-    //µ¼³öËùÓĞĞ´ÈëµÄÊı¾İ
-    //bAppend±íÊ¾ÊÇ×·¼Óµ½dstÒÑÓĞÊı¾İºóÃæ£¬»¹ÊÇ¸²¸ÇdstÔ­ÓĞµÄÊı¾İ
-    bool ExportData(std::string & dst,bool bAppend = false){
-        data_.resize(cur_);
-        if(bAppend){    //Êı¾İ¼Óµ½dstºóÃæ
-            dst.insert(dst.end(),data_.begin(),data_.end());
-        }else{          //¸²¸ÇdstÔ­ÓĞÊı¾İ
-            dst.assign(data_.begin(),data_.end());
-        }
-        cur_ = 0;
-        return true;
+    //å¯¼å‡ºæ‰€æœ‰å†™å…¥çš„æ•°æ®ï¼Œè¿½åŠ åˆ°dstå·²æœ‰æ•°æ®åé¢
+    template<class BufType>
+    bool ExportData(BufType & dst){
+        return adapter_.exportData(dst);
     }
-    bool ExportData(std::vector<char> & dst,bool bAppend = false){
-        data_.resize(cur_);
-        if(bAppend){    //Êı¾İ¼Óµ½dstºóÃæ
-            dst.insert(dst.end(),data_.begin(),data_.end());
-        }else{          //¸²¸ÇdstÔ­ÓĞÊı¾İ
-            data_.swap(dst);
-        }
-        cur_ = 0;
-        return true;
-    }
-    bool ExportData(char * dst,size_t & sz){
-        if(sz < data_.size())
-            return false;
-        sz = data_.size();
-        if(sz > 0){
-            memcpy(dst,&data_[0],sz);
-        }
-        cur_ = 0;
-        return true;
+    //å¯¼å‡ºæ‰€æœ‰å†™å…¥çš„æ•°æ®ï¼Œè¦†ç›–dstå·²æœ‰æ•°æ®
+    template<typename Char>
+    bool ExportData(Char * dst, size_t & sz){
+        return adapter_.exportData(dst, sz);
     }
     //write PODs
     __Myt & operator <<(char c)                 {return writePod(c);}
@@ -347,7 +343,7 @@ public:
     //write raw array through CManipulatorRaw
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorRaw<T> & m){
-        return writeRaw(m.Ptr(),m.Size());
+        return writeRaw(m.Ptr(), m.Size());
     }
     //write range of raw array through CManipulatorRange
     template<class Iter>
@@ -363,72 +359,152 @@ public:
     }
     //set cur_ position through CManipulatorSeek
     __Myt & operator <<(const NS_IMPL::CManipulatorSeek & m){
-        Seek(m.Off(),m.Dir());
+        Seek(m.Off(), m.Dir());
         return *this;
     }
     //write value to a particular position but not change cur_
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorOffsetValue<T> & m){
-        size_t old = cur_;
-        Seek(m.Off(),Begin);
-        *this<<(m.Value());
-        if(old > cur_)
-            Seek(old,Begin);
+        size_t old = Size();
+        if(ensureSize(m.Off())){
+            adapter_.resize(m.Off());
+            *this<<(m.Value());
+            adapter_.resize(old);
+        }
         return *this;
     }
     //insert value into a particular position and change cur_ relatively
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorInsert<T> & m){
-        __Myt ds;
-        ds.need_reverse_ = need_reverse_;
-        if(ds<<m.Value()){
-            std::vector<char> tmp;
-            ds.ExportData(tmp);
-            data_.insert(data_.begin() + m.Off(),tmp.begin(),tmp.end());
-            cur_ += tmp.size();
+        typedef COutByteStreamBasic<std::string> __OutStreamStr;
+        std::string buf;
+        __OutStreamStr ds(buf, need_reverse_);
+        if(ds<<m.Value())
+            if(ensureRoom(ds.Size()))
+                adapter_.insert(m.Off(), &buf[0], ds.Size());
+        return *this;
+    }
+    //write protobuf message
+    template<class T>
+    __Myt & operator <<(const NS_IMPL::CManipulatorProtobuf<T> & m){
+        typename NS_IMPL::CManipulatorProtobuf<T>::__Msg & msg = m.Msg();
+        size_t old = Size();
+        size_t sz = msg.ByteSize();
+        if(ensureRoom(sz)){
+            adapter_.resize(old + sz);
+            if(!msg.SerializeToArray(&adapter_[old], sz)){
+                adapter_.resize(old);
+                Status(1);
+            }
         }
         return *this;
     }
+protected:
+    void init(){adapter_.init();}
 private:
     template<typename T>
     __Myt & writePod(T c){
-        ensure(sizeof(T));
-        if(need_reverse_ && sizeof(T) > 1)
-            c = Tools::SwapByteOrder(c);
-        memcpy(&data_[cur_],&c,sizeof(T));
-        cur_ += sizeof(T);
+        if(ensureRoom(sizeof(T))){
+            if(need_reverse_ && sizeof c > 1)
+                c = Tools::SwapByteOrder(c);
+            adapter_.append(reinterpret_cast<const __Char *>(&c), sizeof c);
+        }
         return *this;
     }
     template<typename T>
-    __Myt & writeRaw(const T * c,size_t sz){
+    __Myt & writeRaw(const T * c, size_t sz){
         assert(c);
         if(!NS_IMPL::__ManipTypeTraits<T>::CanMemcpy
             || (sizeof(T) > 1 && need_reverse_))
         {
             for(size_t i = 0;i < sz;++i,++c)
-                *this<<(*c);
+                if(!(*this<<(*c)))
+                    break;
         }else{
             sz *= sizeof(T);
-            ensure(sz);
-            memcpy(&data_[cur_],c,sz);
-            cur_ += sz;
+            if(ensureRoom(sz))
+                adapter_.append(reinterpret_cast<const __Char *>(c), sz);
         }
         return *this;
     }
     template<typename T>
-    __Myt & writeArray(const T * c,size_t sz){
-        operator <<(__Length(sz));
-        if(sz){
-            assert(c);
-            return writeRaw(c,sz);
-        }else
-            return *this;
+    __Myt & writeArray(const T * c, size_t sz){
+        if(operator <<(__Length(sz))){
+            if(sz){
+                assert(c);
+                return writeRaw(c, sz);
+            }
+        }
+        return *this;
     }
-    void ensure(size_t len){
-        size_t curLen = data_.size();
-        if(curLen < len + cur_)
-            data_.resize(curLen + (curLen >> 1) + len);
+    bool ensureSize(size_t sz){
+        if(operator !())
+            return false;
+        if(!adapter_.ensureSize(sz)){
+            Status(1);
+            return false;
+        }
+        return true;
     }
+    bool ensureRoom(ssize_t len){
+        if(operator !())
+            return false;
+        if(!adapter_.ensureRoom(len)){
+            Status(1);
+            return false;
+        }
+        return true;
+    }
+    __BufAdapter adapter_;
+    bool need_reverse_;  //æ˜¯å¦éœ€è¦æ”¹å˜ç»“æœçš„byte order
+};
+
+class COutByteStream : public COutByteStreamBasic<std::string>
+{
+    typedef COutByteStreamBasic<std::string> __MyBase;
+    typedef COutByteStream __Myt;
+public:
+    typedef __MyBase::__Buf __Buf;
+    explicit COutByteStream(size_t reserve = 100, bool netByteOrder = DEF_NET_BYTEORDER)
+        : __MyBase(buf_, netByteOrder)
+    {
+        buf_.reserve(reserve);
+        init();
+    }
+private:
+    __Buf buf_;
+};
+
+class COutByteStreamVec : public COutByteStreamBasic<std::vector<char> >
+{
+    typedef COutByteStreamBasic<std::vector<char> > __MyBase;
+    typedef COutByteStream __Myt;
+public:
+    typedef __MyBase::__Buf __Buf;
+    explicit COutByteStreamVec(size_t reserve = 100, bool netByteOrder = DEF_NET_BYTEORDER)
+        : __MyBase(buf_, netByteOrder)
+    {
+        buf_.reserve(reserve);
+        init();
+    }
+private:
+    __Buf buf_;
+};
+
+class COutByteStreamBuf : public COutByteStreamBasic<NS_IMPL::__byte_buf_wrap<char> >
+{
+    typedef NS_IMPL::__byte_buf_wrap<char> __Buf;
+    typedef COutByteStream __Myt;
+    typedef COutByteStreamBasic<__Buf> __MyBase;
+public:
+    COutByteStreamBuf(char * buf, size_t capacity, bool netByteOrder = DEF_NET_BYTEORDER, size_t size = 0)
+        : __MyBase(buf_, netByteOrder)
+        , buf_(buf, capacity, size)
+    {
+        init();
+    }
+private:
+    __Buf buf_;
 };
 
 //manipulators' functions:
@@ -485,6 +561,16 @@ namespace Manip{
     template<class T>
     inline NS_IMPL::CManipulatorInsert<T> insert(size_t offset,const T & val){
         return NS_IMPL::CManipulatorInsert<T>(offset,val);
+    }
+
+    //read/write protobuf message
+    template<class T>
+    inline NS_IMPL::CManipulatorProtobuf<T> protobuf(T & msg, size_t size = 0){
+        return NS_IMPL::CManipulatorProtobuf<T>(msg, size);
+    }
+    template<class T>
+    inline NS_IMPL::CManipulatorProtobuf<const T> protobuf(const T & msg, size_t size = 0){
+        return NS_IMPL::CManipulatorProtobuf<const T>(msg, size);
     }
 
 }//namespace Manip

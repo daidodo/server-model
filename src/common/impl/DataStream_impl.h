@@ -1,8 +1,9 @@
 #ifndef DOZERG_DATA_STREAM_IMPL_H_20081016
 #define DOZERG_DATA_STREAM_IMPL_H_20081016
 
+#include <algorithm>
 #include <arpa/inet.h>          //ntohl
-#include <impl/Config.h>
+#include "Config.h"
 
 NS_IMPL_BEGIN
 
@@ -42,6 +43,170 @@ protected:
     }
 private:
     int status_;
+};
+
+template<typename Char>
+class __byte_buf_wrap
+{
+    typedef __byte_buf_wrap<Char> __Myt;
+public:
+    typedef Char __Char;
+    __byte_buf_wrap()
+        : buf_(NULL)
+        , capa_(0)
+        , sz_(0)
+    {}
+    __byte_buf_wrap(__Char * buf, size_t capacity, size_t size = 0)
+        : buf_(buf)
+        , capa_(capacity)
+        , sz_(size)
+    {}
+    void init(__Char * buf, size_t capacity, size_t size = 0){
+        buf_ = buf;
+        capa_ = capacity;
+        sz_ = size;
+    }
+    size_t size() const{return sz_;}
+    size_t capacity() const{return capa_;}
+    __Char & operator [](size_t index){return buf_[index];}
+    const __Char & operator [](size_t index) const{return buf_[index];}
+    void resize(size_t sz, __Char val = 0){
+        if(sz <= capa_){
+            if(sz > sz_)
+                std::fill_n(buf_ + sz_, sz - sz_, val);
+            sz_ = sz;
+        }else{
+            assert(sz < capa_);
+        }
+    }
+    void append(const __Char * buf, size_t sz){insert(sz_, buf, sz);}
+    void insert(size_t offset, const __Char * buf, size_t sz){
+        if(offset <= sz_){
+            if(sz_ + sz <= capa_){
+                if(offset < sz_)
+                    std::copy_backward(buf_ + offset, buf_ + sz_, buf_ + (sz_ + sz));
+                std::copy(buf, buf + sz, buf_ + offset);
+                sz_ += sz;
+            }else{
+                assert(sz_ + sz <= capa_);
+            }
+        }else{
+            assert(offset <= sz_);
+        }
+    }
+
+private:
+    __Char * buf_;
+    size_t capa_;
+    size_t sz_;
+};
+
+template<class Buf>
+class __buf_adapter
+{
+    typedef __buf_adapter<Buf>  __Myt;
+    typedef Buf                 __Buf;
+public:
+    typedef typename __Buf::value_type   __Char;
+    explicit __buf_adapter(__Buf & buf)
+        : buf_(buf)
+        , begin_(0)
+    {}
+    void init(){begin_ = buf_.size();}
+    __Char & operator [](size_t index){return buf_[index];}
+    const __Char & operator [](size_t index) const{return buf_[index];}
+    size_t size() const{return buf_.size();}
+    bool ensureRoom(ssize_t sz){
+        size_t cur = buf_.size();
+        if(sz < 0 && size_t(-sz) + begin_ > cur)
+            return false;
+        size_t old = buf_.capacity();
+        if(cur + sz > old)
+            buf_.reserve(old + (old >> 1) + sz);
+        return true;
+    }
+    bool ensureSize(size_t sz){
+        size_t cur = buf_.size();
+        if(sz > cur)
+            return ensureRoom(sz - cur);
+        return true;
+    }
+    void resize(size_t sz){buf_.resize(sz);}
+    void append(const __Char * buf, size_t sz){
+        buf_.insert(buf_.end(), buf, buf + sz);
+    }
+    void insert(size_t offset, const __Char * buf, size_t sz){
+        buf_.insert(buf_.begin() + offset, buf, buf + sz);
+    }
+    bool exportData(__Buf & buf){
+        if(buf.empty())
+            buf.swap(buf_);
+        else
+            buf.insert(buf.end(), buf_.begin(), buf_.end());
+        return true;
+    }
+    template<typename __Char>
+    bool exportData(__Char * buf, size_t & sz) const{
+        if(sz < buf_.size())
+            return false;
+        memcpy(buf, &buf_[0], buf_.size());
+        sz = buf_.size();
+        return true;
+    }
+private:
+    __buf_adapter(const __Myt &);
+    __Myt & operator =(const __Myt &);
+    __Buf & buf_;
+    size_t begin_;
+};
+
+template<typename Char>
+class __buf_adapter<__byte_buf_wrap<Char> >
+{
+    typedef __buf_adapter<__byte_buf_wrap<Char> >   __Myt;
+    typedef __byte_buf_wrap<Char>                   __Buf;
+public:
+    typedef Char                                    __Char;
+    explicit __buf_adapter(__Buf & buf)
+        : buf_(buf)
+        , begin_(0)
+    {}
+    void init(){begin_ = buf_.size();}
+    __Char & operator [](size_t index){return buf_[index];}
+    const __Char & operator [](size_t index) const{return buf_[index];}
+    size_t size() const{return buf_.size();}
+    bool ensureRoom(ssize_t sz){
+        size_t cur = buf_.size();
+        if(sz < 0 && size_t(-sz) + begin_ > cur)
+            return false;
+        return (cur + sz <= buf_.capacity());
+    }
+    bool ensureSize(size_t sz){
+        size_t cur = buf_.size();
+        if(sz > cur)
+            return ensureRoom(sz - cur);
+        return true;
+    }
+    void resize(size_t sz){buf_.resize(sz);}
+    void append(const __Char * buf, size_t sz){
+        buf_.append(buf, sz);
+    }
+    void insert(size_t offset, const __Char * buf, size_t sz){
+        buf_.insert(offset, buf, sz);
+    }
+    template<typename CharT>
+    bool exportData(CharT * buf, size_t & sz) const{
+        if(sz < buf_.size())
+            return false;
+        memcpy(buf, &buf_[0], buf_.size());
+        sz = buf_.size();
+        return true;
+    }
+private:
+    __buf_adapter(const __Myt &);
+    __Myt & operator =(const __Myt &);
+    __Buf & buf_;
+    size_t begin_;
 };
 
 //manipulators
@@ -161,6 +326,22 @@ public:
     {}
     const T & Value() const{return val_;}
     size_t Off() const{return off_;}
+};
+
+template<class T>
+class CManipulatorProtobuf
+{
+public:
+    typedef T __Msg;
+    CManipulatorProtobuf(__Msg & msg, size_t sz)
+        : msg_(msg)
+        , sz_(sz)
+    {}
+    __Msg & Msg() const{return msg_;}
+    size_t Size() const{return sz_;}
+private:
+    __Msg & msg_;
+    size_t  sz_;
 };
 
 NS_IMPL_END
