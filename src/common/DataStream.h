@@ -471,6 +471,11 @@ public:
         buf_.reserve(reserve);
         init();
     }
+    template<class T>
+    __Myt & operator <<(const T & val){
+        __MyBase::operator <<(val);
+        return *this;
+    }
 private:
     __Buf buf_;
 };
@@ -487,6 +492,11 @@ public:
         buf_.reserve(reserve);
         init();
     }
+    template<class T>
+    __Myt & operator <<(const T & val){
+        __MyBase::operator <<(val);
+        return *this;
+    }
 private:
     __Buf buf_;
 };
@@ -502,6 +512,11 @@ public:
         , buf_(buf, capacity, size)
     {
         init();
+    }
+    template<class T>
+    __Myt & operator <<(const T & val){
+        __MyBase::operator <<(val);
+        return *this;
     }
 private:
     __Buf buf_;
