@@ -365,11 +365,17 @@ public:
     //write value to a particular position but not change cur_
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorOffsetValue<T> & m){
-        size_t old = Size();
         if(ensureSize(m.Off())){
+            size_t old = Size();
+            std::string tmp;    //TODO
+            if(m.Off() < old)
+                tmp.assign(&adapter_[m.Off()], &adapter_[old]);
             adapter_.resize(m.Off());
             *this<<(m.Value());
+            size_t newOff = Size();
             adapter_.resize(old);
+            if(newOff < old)
+                std::copy(tmp.begin() + (newOff - m.Off()), tmp.end(), &adapter_[newOff]);
         }
         return *this;
     }
@@ -483,7 +489,7 @@ private:
 class COutByteStreamVec : public COutByteStreamBasic<std::vector<char> >
 {
     typedef COutByteStreamBasic<std::vector<char> > __MyBase;
-    typedef COutByteStream __Myt;
+    typedef COutByteStreamVec __Myt;
 public:
     typedef __MyBase::__Buf __Buf;
     explicit COutByteStreamVec(size_t reserve = 100, bool netByteOrder = DEF_NET_BYTEORDER)
@@ -504,7 +510,7 @@ private:
 class COutByteStreamBuf : public COutByteStreamBasic<NS_IMPL::__byte_buf_wrap<char> >
 {
     typedef NS_IMPL::__byte_buf_wrap<char> __Buf;
-    typedef COutByteStream __Myt;
+    typedef COutByteStreamBuf __Myt;
     typedef COutByteStreamBasic<__Buf> __MyBase;
 public:
     COutByteStreamBuf(char * buf, size_t capacity, bool netByteOrder = DEF_NET_BYTEORDER, size_t size = 0)
