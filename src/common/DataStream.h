@@ -322,7 +322,9 @@ public:
     bool ExportData(){
         return data_.exportData();
     }
-    template<class BufT>
+    bool ExportData(size_t & sz){
+        return data_.exportData(sz);
+    }
     //导出所有写入的数据，追加到dst已有数据后面
     //并清空自己
     bool ExportData(__Buf & dst){
@@ -393,14 +395,18 @@ public:
     //insert value into a particular position and change cur_ relatively
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorInsert<T> & m){
-        //TODO
-        /*/typedef COutByteStreamBasic<std::string> __OutStreamStr;
-        std::string buf;
-        __OutStreamStr ds(buf, need_reverse_);
-        if(ds<<m.Value())
-            if(ensureRoom(ds.Size()))
-                adapter_.insert(m.Off(), &buf[0], ds.Size());
-        //*/
+        typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::string> > __OutStream;
+        if(m.Off() < 0 || m.Off() > data_.cur()){
+            Status(1);
+        }else{
+            std::string buf;
+            __OutStream ds(buf);
+            if(ds<<m.Value()){
+                ds.ExportData();
+                if(!buf.empty() && ensureRoom(buf.size()))
+                    data_.insert(m.Off(), reinterpret_cast<const __Char *>(&buf[0]), buf.size());
+            }
+        }
         return *this;
     }
     //write protobuf message
@@ -466,6 +472,12 @@ private:
 typedef COutByteStreamBasic<NS_IMPL::__buf_data<std::string> > COutByteStream;
 
 typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::string> > COutByteStreamStr;
+
+typedef COutByteStreamBasic<NS_IMPL::__buf_data<std::vector<char> > > COutByteStreamVec;
+
+typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::vector<char> > > COutByteStreamVecRef;
+
+typedef COutByteStreamBasic<NS_IMPL::__buf_data<CCharBuffer<char> > > COutByteStreamBuf;
 
 /*
 class COutByteStream : public COutByteStreamBasic<std::string>
