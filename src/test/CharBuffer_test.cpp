@@ -2,16 +2,18 @@
 
 #include "comm.h"
 
+#define __CharP  (Char *)
+
 template<typename Char>
 static bool test()
 {
     typedef CCharBuffer<Char> __Buffer;
-    Char str[100] = "abcdefg";
+    Char str[100] = {'a','b', 'c', 'd', 'e', 'f', 'g'};
     //ctor
     __Buffer buf1;
-    __Buffer buf2("abcdefg");
+    __Buffer buf2(__CharP"abcdefg");
     const __Buffer buf3(str, sizeof str, 7);
-    __Buffer buf4 = "abcdefg";
+    __Buffer buf4 = __CharP"abcdefg";
     if(buf1 == buf2)
         return false;
     if(buf2 != buf3)
@@ -45,7 +47,7 @@ static bool test()
     Char str2[8] = {};
     if(7 != buf2.copy(str2, 7))
         return false;
-    if(0 != strcmp(str, str2))
+    if(0 != strcmp((const char *)str, (const char *)str2))
         return false;
     //get_allocator
     typename __Buffer::allocator_type a = buf1.get_allocator();
@@ -130,13 +132,13 @@ static bool test()
             return false;
     buf1.clear();
     for(size_t i = 0;i < 20;++i)
-        buf1.append("ssdeb");
+        buf1.append(__CharP"ssdeb");
     if(100 != buf1.size())
         return false;
     for(size_t i = 0;i < buf1.size();i += 5)
         if(0 != memcmp(&buf1[i], "ssdeb", 5))
             return false;
-    buf4.assign("gadfdengb");
+    buf4.assign(__CharP"gadfdengb");
     buf1.clear();
     for(size_t i = 0;i < 20;++i)
         buf1.append(buf4, 4, 5);
@@ -157,13 +159,13 @@ static bool test()
     //operator +=
     buf1.clear();
     for(size_t i = 0;i < 20;++i)
-        buf1 += "sgdeb";
+        buf1 += __CharP"sgdeb";
     if(100 != buf1.size())
         return false;
     for(size_t i = 0;i < buf1.size();i += 5)
         if(0 != memcmp(&buf1[i], "sgdeb", 5))
             return false;
-    buf4.assign("f90rg");
+    buf4.assign(__CharP"f90rg");
     buf1.clear();
     for(size_t i = 0;i < 20;++i)
         buf1 += buf4;
@@ -183,7 +185,7 @@ static bool test()
             return false;
         }
     //insert
-    buf4.assign("3e4r5");
+    buf4.assign(__CharP"3e4r5");
     buf1.clear();
     buf1 += buf4;
     if(5 != buf1.size())
@@ -206,7 +208,7 @@ static bool test()
     buf1.clear();
     buf1 += buf4;
     for(int i = 0;i < 19;++i)
-        buf1.insert(i * 5 + 3, "3g89a", 5);
+        buf1.insert(i * 5 + 3, __CharP"3g89a", 5);
     if(100 != buf1.size()){
         cerr<<"2: buf1.size()="<<buf1.size()<<" is not 100\n";
         return false;
@@ -223,7 +225,7 @@ static bool test()
     buf1.clear();
     buf1 += buf4;
     for(int i = 0;i < 19;++i)
-        buf1.insert(i * 5 + 3, "3g89a");
+        buf1.insert(i * 5 + 3, __CharP"3g89a");
     if(100 != buf1.size()){
         cerr<<"3: buf1.size()="<<buf1.size()<<" is not 100\n";
         return false;
@@ -237,7 +239,7 @@ static bool test()
             return false;
     if(0 != memcmp(&buf1[98], &buf4[3], 2))
         return false;
-    buf4.assign("23e32t2g22");
+    buf4.assign(__CharP"23e32t2g22");
     buf1.clear();
     buf1.append(buf4, 0, 5);
     for(int i = 0;i < 19;++i)
@@ -295,7 +297,7 @@ static bool test()
         return false;
     //replace
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -316,50 +318,50 @@ static bool test()
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(4, 3, "000", 3);
+    buf1.replace(4, 3, __CharP"000", 3);
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123000789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(4, 3, "11111", 5);
+    buf1.replace(4, 3, __CharP"11111", 5);
     if(12 != buf1.size())
         return false;
     if(0 != memcmp("012311111789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(4, 5, "aaa", 3);
+    buf1.replace(4, 5, __CharP"aaa", 3);
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(4, 3, "000");
+    buf1.replace(4, 3, __CharP"000");
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123000789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(4, 3, "11111");
+    buf1.replace(4, 3, __CharP"11111");
     if(12 != buf1.size())
         return false;
     if(0 != memcmp("012311111789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(4, 5, "aaa");
+    buf1.replace(4, 5, __CharP"aaa");
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("00011111aaa");
+    buf4.assign(__CharP"00011111aaa");
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -380,24 +382,24 @@ static bool test()
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("000");
+    buf4.assign(__CharP"000");
     buf1.replace(4, 3, buf4);
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123000789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("11111");
+    buf4.assign(__CharP"11111");
     buf1.replace(4, 3, buf4);
     if(12 != buf1.size())
         return false;
     if(0 != memcmp("012311111789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("aaa");
+    buf4.assign(__CharP"aaa");
     buf1.replace(4, 5, buf4);
     if(10 != buf1.size())
         return false;
@@ -405,7 +407,7 @@ static bool test()
         return false;
 
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -426,50 +428,50 @@ static bool test()
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, "000", 3);
+    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, __CharP"000", 3);
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123000789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, "11111", 5);
+    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, __CharP"11111", 5);
     if(12 != buf1.size())
         return false;
     if(0 != memcmp("012311111789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(buf1.begin() + 4, buf1.begin() + 9, "aaa", 3);
+    buf1.replace(buf1.begin() + 4, buf1.begin() + 9, __CharP"aaa", 3);
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, "000");
+    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, __CharP"000");
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123000789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, "11111");
+    buf1.replace(buf1.begin() + 4, buf1.begin() + 7, __CharP"11111");
     if(12 != buf1.size())
         return false;
     if(0 != memcmp("012311111789", &buf1[0], buf1.size()))
         return false;
-    buf1.replace(buf1.begin() + 4, buf1.begin() + 9, "aaa");
+    buf1.replace(buf1.begin() + 4, buf1.begin() + 9, __CharP"aaa");
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("00011111aaa");
+    buf4.assign(__CharP"00011111aaa");
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -490,24 +492,24 @@ static bool test()
     if(0 != memcmp("0123aaa789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("000");
+    buf4.assign(__CharP"000");
     buf1.replace(buf1.begin() + 4, buf1.begin() + 7, buf4);
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123000789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("11111");
+    buf4.assign(__CharP"11111");
     buf1.replace(buf1.begin() + 4, buf1.begin() + 7, buf4);
     if(12 != buf1.size())
         return false;
     if(0 != memcmp("012311111789", &buf1[0], buf1.size()))
         return false;
-    buf4.assign("aaa");
+    buf4.assign(__CharP"aaa");
     buf1.replace(buf1.begin() + 4, buf1.begin() + 9, buf4);
     if(10 != buf1.size())
         return false;
@@ -515,7 +517,7 @@ static bool test()
         return false;
     //erase
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -528,7 +530,7 @@ static bool test()
     if(0 != memcmp("089", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -541,7 +543,7 @@ static bool test()
     if(0 != memcmp("012346789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -552,7 +554,7 @@ static bool test()
     if(0 != memcmp("012789", &buf1[0], buf1.size()))
         return false;
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -567,7 +569,7 @@ static bool test()
         return false;
     //substr
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
     if(0 != memcmp("0123456789", &buf1[0], buf1.size()))
@@ -579,43 +581,43 @@ static bool test()
         return false;
     //compare
     buf1.clear();
-    buf1 += "0123456789";
+    buf1 += __CharP"0123456789";
     if(10 != buf1.size())
         return false;
-    if(buf1.compare(2, 5, "256444", 5))
+    if(buf1.compare(2, 5, __CharP"256444", 5))
         return false;
-    if(!buf1.compare(2, 5, "23456444", 5))
+    if(!buf1.compare(2, 5, __CharP"23456444", 5))
         return false;
-    if(buf1.compare(2, 5, "256444"))
+    if(buf1.compare(2, 5, __CharP"256444"))
         return false;
-    if(!buf1.compare(2, 5, "23456"))
+    if(!buf1.compare(2, 5, __CharP"23456"))
         return false;
-    if(buf1.compare("23425"))
+    if(buf1.compare(__CharP"23425"))
         return false;
-    if(!buf1.compare("0123456"))
+    if(!buf1.compare(__CharP"0123456"))
         return false;
-    buf4.assign("238623456444");
+    buf4.assign(__CharP"238623456444");
     if(buf1.compare(2, 6, buf4, 4, 8))
         return false;
     if(!buf1.compare(2, 5, buf4, 4, 8))
         return false;
-    buf4.assign("2345626234");
+    buf4.assign(__CharP"2345626234");
     if(buf1.compare(2, 6, buf4))
         return false;
     if(!buf1.compare(2, 5, buf4))
         return false;
-    buf4.assign("2623424");
+    buf4.assign(__CharP"2623424");
     if(buf1.compare(buf4))
         return false;
     if(buf1 == buf4)
         return false;
-    buf4.assign("0123456789");
+    buf4.assign(__CharP"0123456789");
     if(!buf1.compare(buf4))
         return false;
     if(buf1 != buf4)
         return false;
     //operators ==, !=, <, <=, >, >=
-    buf4.assign("0123455789ag");
+    buf4.assign(__CharP"0123455789ag");
     if((buf1 == buf4))
         return false;
     if(!(buf1 != buf4))
@@ -628,7 +630,7 @@ static bool test()
         return false;
     if(!(buf1 >= buf4))
         return false;
-    buf4.assign("012345678");
+    buf4.assign(__CharP"012345678");
     if((buf1 == buf4))
         return false;
     if(!(buf1 != buf4))
@@ -641,7 +643,7 @@ static bool test()
         return false;
     if(!(buf1 >= buf4))
         return false;
-    buf4.assign("0123456789");
+    buf4.assign(__CharP"0123456789");
     if(!(buf1 == buf4))
         return false;
     if((buf1 != buf4))
@@ -654,7 +656,7 @@ static bool test()
         return false;
     if(!(buf1 >= buf4))
         return false;
-    buf4.assign("012345688");
+    buf4.assign(__CharP"012345688");
     if((buf1 == buf4))
         return false;
     if(!(buf1 != buf4))
@@ -667,7 +669,7 @@ static bool test()
         return false;
     if((buf1 >= buf4))
         return false;
-    buf4.assign("01234567890");
+    buf4.assign(__CharP"01234567890");
     if((buf1 == buf4))
         return false;
     if(!(buf1 != buf4))
@@ -681,7 +683,7 @@ static bool test()
     if((buf1 >= buf4))
         return false;
 
-    const Char * cstr = "0123455789ag";
+    const Char * cstr = __CharP"0123455789ag";
     if((buf1 == cstr))
         return false;
     if(!(buf1 != cstr))
@@ -694,7 +696,7 @@ static bool test()
         return false;
     if(!(buf1 >= cstr))
         return false;
-    cstr = "012345678";
+    cstr = __CharP"012345678";
     if((buf1 == cstr))
         return false;
     if(!(buf1 != cstr))
@@ -707,7 +709,7 @@ static bool test()
         return false;
     if(!(buf1 >= cstr))
         return false;
-    cstr = "0123456789";
+    cstr = __CharP"0123456789";
     if(!(buf1 == cstr))
         return false;
     if((buf1 != cstr))
@@ -720,7 +722,7 @@ static bool test()
         return false;
     if(!(buf1 >= cstr))
         return false;
-    cstr = "012345688";
+    cstr = __CharP"012345688";
     if((buf1 == cstr))
         return false;
     if(!(buf1 != cstr))
@@ -733,7 +735,7 @@ static bool test()
         return false;
     if((buf1 >= cstr))
         return false;
-    cstr = "01234567890";
+    cstr = __CharP"01234567890";
     if((buf1 == cstr))
         return false;
     if(!(buf1 != cstr))
@@ -747,8 +749,8 @@ static bool test()
     if((buf1 >= cstr))
         return false;
 
-    cstr = "0123455789";
-    buf4.assign("0123455789ag");
+    cstr = __CharP"0123455789";
+    buf4.assign(__CharP"0123455789ag");
     if((cstr == buf4))
         return false;
     if(!(cstr != buf4))
@@ -761,7 +763,7 @@ static bool test()
         return false;
     if(!(cstr >= buf4))
         return false;
-    buf4.assign("012345678");
+    buf4.assign(__CharP"012345678");
     if((cstr == buf4))
         return false;
     if(!(cstr != buf4))
@@ -774,7 +776,7 @@ static bool test()
         return false;
     if(!(cstr >= buf4))
         return false;
-    buf4.assign("0123456789");
+    buf4.assign(__CharP"0123456789");
     if(!(cstr == buf4))
         return false;
     if((cstr != buf4))
@@ -787,7 +789,7 @@ static bool test()
         return false;
     if(!(cstr >= buf4))
         return false;
-    buf4.assign("012345688");
+    buf4.assign(__CharP"012345688");
     if((cstr == buf4))
         return false;
     if(!(cstr != buf4))
@@ -800,7 +802,7 @@ static bool test()
         return false;
     if((cstr >= buf4))
         return false;
-    buf4.assign("01234567890");
+    buf4.assign(__CharP"01234567890");
     if((cstr == buf4))
         return false;
     if(!(cstr != buf4))
@@ -820,6 +822,10 @@ static bool test()
 int main()
 {
     if(!test<char>())
+        return 1;
+    if(!test<signed char>())
+        return 1;
+    if(!test<unsigned char>())
         return 1;
     cout<<"CharBuff test succ\n";
     return 0;
