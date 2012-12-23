@@ -232,178 +232,6 @@ private:
     size_t cur_;
 };
 
-
-
-
-
-/*
-template<typename Char>
-class __byte_buf_wrap
-{
-    typedef __byte_buf_wrap<Char> __Myt;
-public:
-    typedef Char __Char;
-    __byte_buf_wrap()
-        : buf_(NULL)
-        , capa_(0)
-        , sz_(0)
-    {}
-    __byte_buf_wrap(__Char * buf, size_t capacity, size_t size = 0)
-        : buf_(buf)
-        , capa_(capacity)
-        , sz_(size)
-    {}
-    void init(__Char * buf, size_t capacity, size_t size = 0){
-        buf_ = buf;
-        capa_ = capacity;
-        sz_ = size;
-    }
-    size_t size() const{return sz_;}
-    size_t capacity() const{return capa_;}
-    __Char & operator [](size_t index){return buf_[index];}
-    const __Char & operator [](size_t index) const{return buf_[index];}
-    void resize(size_t sz, __Char val = 0){
-        if(sz <= capa_){
-            if(sz > sz_)
-                std::fill_n(buf_ + sz_, sz - sz_, val);
-            sz_ = sz;
-        }else{
-            assert(sz < capa_);
-        }
-    }
-    void append(const __Char * buf, size_t sz){insert(sz_, buf, sz);}
-    void insert(size_t offset, const __Char * buf, size_t sz){
-        if(offset <= sz_){
-            if(sz_ + sz <= capa_){
-                if(offset < sz_)
-                    std::copy_backward(buf_ + offset, buf_ + sz_, buf_ + (sz_ + sz));
-                std::copy(buf, buf + sz, buf_ + offset);
-                sz_ += sz;
-            }else{
-                assert(sz_ + sz <= capa_);
-            }
-        }else{
-            assert(offset <= sz_);
-        }
-    }
-
-private:
-    __Char * buf_;
-    size_t capa_;
-    size_t sz_;
-};
-
-template<class Buf>
-class __buf_adapter
-{
-    typedef __buf_adapter<Buf>  __Myt;
-    typedef Buf                 __Buf;
-public:
-    typedef typename __Buf::value_type   __Char;
-    explicit __buf_adapter(__Buf & buf)
-        : buf_(buf)
-        , begin_(0)
-        , cur_(0)
-    {}
-    void init(){resize(begin_ = buf_.size());}
-    size_t size() const{return cur_;}
-    void resize(size_t sz){cur_ = sz;}
-    __Char & operator [](size_t index){return buf_[index];}
-    const __Char & operator [](size_t index) const{return buf_[index];}
-    bool ensureRoom(ssize_t sz){
-        size_t cur = size();
-        if(sz < 0 && size_t(-sz) + begin_ > cur)
-            return false;
-        size_t old = buf_.size();
-        if(cur + sz > old)
-            buf_.resize(old + (old >> 1) + sz);
-        return true;
-    }
-    bool ensureSize(size_t sz){
-        size_t cur = size();
-        if(sz > cur)
-            return ensureRoom(sz - cur);
-        return true;
-    }
-    void append(const __Char * buf, size_t sz){insert(size(), buf, sz);}
-    void insert(size_t offset, const __Char * buf, size_t sz){
-        assert(offset + sz <= buf_.size());
-        std::copy(buf, buf + sz, buf_.begin() + offset);
-    }
-    bool exportData(__Buf & buf){
-        buf_.resize(size());
-        if(buf.empty())
-            buf.swap(buf_);
-        else
-            buf.insert(buf.end(), buf_.begin(), buf_.end());
-        return true;
-    }
-    template<typename __Char>
-    bool exportData(__Char * buf, size_t & sz) const{
-        if(sz < size())
-            return false;
-        std::copy(buf, &buf_[0], size());
-        sz = size();
-        return true;
-    }
-private:
-    __buf_adapter(const __Myt &);
-    __Myt & operator =(const __Myt &);
-    __Buf & buf_;
-    size_t begin_;
-    size_t cur_;
-};
-
-template<typename Char>
-class __buf_adapter<__byte_buf_wrap<Char> >
-{
-    typedef __buf_adapter<__byte_buf_wrap<Char> >   __Myt;
-    typedef __byte_buf_wrap<Char>                   __Buf;
-public:
-    typedef Char                                    __Char;
-    explicit __buf_adapter(__Buf & buf)
-        : buf_(buf)
-        , begin_(0)
-    {}
-    void init(){begin_ = buf_.size();}
-    __Char & operator [](size_t index){return buf_[index];}
-    const __Char & operator [](size_t index) const{return buf_[index];}
-    size_t size() const{return buf_.size();}
-    bool ensureRoom(ssize_t sz){
-        size_t cur = buf_.size();
-        if(sz < 0 && size_t(-sz) + begin_ > cur)
-            return false;
-        return (cur + sz <= buf_.capacity());
-    }
-    bool ensureSize(size_t sz){
-        size_t cur = buf_.size();
-        if(sz > cur)
-            return ensureRoom(sz - cur);
-        return true;
-    }
-    void resize(size_t sz){buf_.resize(sz);}
-    void append(const __Char * buf, size_t sz){
-        buf_.append(buf, sz);
-    }
-    void insert(size_t offset, const __Char * buf, size_t sz){
-        buf_.insert(offset, buf, sz);
-    }
-    template<typename CharT>
-    bool exportData(CharT * buf, size_t & sz) const{
-        if(sz < buf_.size())
-            return false;
-        memcpy(buf, &buf_[0], buf_.size());
-        sz = buf_.size();
-        return true;
-    }
-private:
-    __buf_adapter(const __Myt &);
-    __Myt & operator =(const __Myt &);
-    __Buf & buf_;
-    size_t begin_;
-};
-//*/
-
 //manipulators
 template<class T>
 struct __ManipTypeTraits{static const bool CanMemcpy = false;};
@@ -447,6 +275,23 @@ public:
     void Size2(size_t sz) const{
         if(sz2_)
             *sz2_ = sz;
+    }
+};
+
+tmplate<class T>
+class CManipulatorContainer
+{
+    T & c_;
+    size_t * sz_;
+public:
+    CManipulatorContainer(T & c, size_t * sz = NULL)
+        : c_(c)
+        , sz_(sz)
+    {}
+    T & Container() const{return c;}
+    void Size(size_t sz) const{
+        if(sz_)
+            *sz = sz;
     }
 };
 
