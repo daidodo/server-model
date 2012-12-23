@@ -2,7 +2,7 @@
 
 #include <DataStream.h>
 
-#define TEST_INSERT 0
+#define TEST_INSERT 1
 
 struct CTest
 {
@@ -116,7 +116,7 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
 template<class OutStream>
 static bool testStreamInOut()
 {
-    const int COUNT = 1;
+    const int COUNT = 10;
     const char str1[20] = "this is for test";
     std::vector<CTest> tests;
     OutStream obs;
@@ -155,6 +155,7 @@ static bool testStreamInOut()
         cerr<<"COutByteStream::ExportData() failed\n";
         return false;
     }
+    //cout<<"buf.size()="<<buf.size()<<endl;
     //cout<<"buf="<<Tools::Dump(buf)<<endl;
     CInByteStream ibs(buf);
     for(int i = 0;i < COUNT;++i){
@@ -178,10 +179,10 @@ static bool testStreamInOut()
 template<class OutStream>
 static bool testStreamInOutRef()
 {
-    const int COUNT = 1;
+    const int COUNT = 10;
     const char str1[20] = "this is for test";
     std::vector<CTest> tests;
-    typename OutStream::__Buf buf;
+    typename OutStream::__Buf buf(100, 'a');
     OutStream obs(buf);
     for(int i = 0;i < COUNT;++i){
         CTest t;
@@ -217,6 +218,7 @@ static bool testStreamInOutRef()
         cerr<<"COutByteStream::ExportData() failed\n";
         return false;
     }
+    buf.erase(buf.begin(), buf.begin() + 100);
     //cout<<"buf="<<Tools::Dump(buf)<<endl;
     CInByteStream ibs(buf);
     for(int i = 0;i < COUNT;++i){
@@ -237,13 +239,12 @@ static bool testStreamInOutRef()
     return true;
 }
 
-/*
 static bool testStreamInOutBuf()
 {
     const int COUNT = 10;
     const char str1[20] = "this is for test";
     std::vector<CTest> tests;
-    std::vector<char> buf(8 << 10);
+    std::vector<char> buf(10 << 10);
     COutByteStreamBuf obs(&buf[0], buf.size());
     for(int i = 0;i < COUNT;++i){
         CTest t;
@@ -275,13 +276,12 @@ static bool testStreamInOutBuf()
         }
         tests.push_back(t);
     }
-    std::vector<char> buf2(8 << 10);
-    size_t sz = buf2.size();
-    if(!obs.ExportData(&buf2[0], sz)){
+    size_t sz = buf.size();
+    if(!obs.ExportData(sz)){
         cerr<<"COutByteStreamBuf::ExportData() failed\n";
         return false;
     }
-    CInByteStream ibs(&buf2[0], sz);
+    CInByteStream ibs(&buf[0], sz);
     for(int i = 0;i < COUNT;++i){
         CTest t2;
         if(!(ibs>>t2)){
@@ -299,7 +299,6 @@ static bool testStreamInOutBuf()
     }
     return true;
 }
-*/
 
 int main()
 {
@@ -307,9 +306,11 @@ int main()
         return -1;
     if(!testStreamInOutRef<COutByteStreamStr>())
         return -1;
-    //if(!testStreamInOut<COutByteStreamVec>())
-    //    return -1;
-    //if(!testStreamInOutBuf())
-    //    return -1;
+    if(!testStreamInOut<COutByteStreamVec>())
+        return -1;
+    if(!testStreamInOutRef<COutByteStreamVecRef>())
+        return -1;
+    if(!testStreamInOutBuf())
+        return -1;
     cout<<"DataStream test succ\n";
 }
