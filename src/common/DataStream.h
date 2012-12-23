@@ -267,57 +267,76 @@ private:
     }
 };
 
-template<class Buf>
+template<class Data>
 class COutByteStreamBasic : public NS_IMPL::CDataStreamBase
 {
-    typedef COutByteStreamBasic<Buf>    __Myt;
-    typedef NS_IMPL::__buf_adapter<Buf> __BufAdapter;
-    typedef typename __BufAdapter::__Char   __Char;
-protected:
-    typedef Buf __Buf;
-    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
+    typedef COutByteStreamBasic<Data>   __Myt;
+    typedef Data                        __Data;
 public:
-    explicit COutByteStreamBasic(__Buf & buf, bool netByteOrder)
-        : adapter_(buf)
+    typedef typename Data::__Buf        __Buf;
+    typedef typename Data::__Char       __Char;
+    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
+    explicit COutByteStreamBasic(size_t reserve = 1024, bool netByteOrder = DEF_NET_BYTEORDER)
+        : data_(reserve)
+        , need_reverse_(NeedReverse(netByteOrder))
+    {}
+    COutByteStreamBasic(__Char * buf, size_t sz, bool netByteOrder = DEF_NET_BYTEORDER)
+        : data_(buf, sz)
+        , need_reverse_(NeedReverse(netByteOrder))
+    {}
+    explicit COutByteStreamBasic(__Buf & buf, bool netByteOrder = DEF_NET_BYTEORDER)
+        : data_(buf)
         , need_reverse_(NeedReverse(netByteOrder))
     {}
     //设置/获取字节序类型
     void OrderType(EOrderType ot){need_reverse_ = NeedReverse(ot);}
     EOrderType OrderType() const{return (need_reverse_ ? HostOrder : NetOrder);}
     //返回当前数据字节数
-    size_t Size() const{return adapter_.size();}
+    size_t Size() const{return data_.cur();}
     //按照dir指定的方向设置Size
     //注意：如果Size变小，相当于抹掉了之后的数据；如果Size变大了，相当于留出指定的空位
     //return:
     //      如果成功，返回最后的Size()
     //      如果失败，返回-1
-    ssize_t Seek(ssize_t off, ESeekDir dir){
+    ssize_t Seek(ssize_t off, ESeekDir dir = Begin){
+        if(operator !())
+            return -1;
         switch(dir){
             case Begin:
-                if(off < 0)
-                    Status(1);
-                else if(ensureSize(off))
-                    adapter_.resize(off);
                 break;
             case End:
             case Cur:
-                if(ensureRoom(off))
-                    adapter_.resize(Size() + off);
+                off += Size();
                 break;
             default:
                 Status(1);
+                return -1;
         }
-        return (operator !() ? -1 : Size());
+        if(data_.seek(off))
+            return Size();
+        Status(1);
+        return -1;
     }
+    //导出所有写入的数据
+    //并清空自己
+    bool ExportData(){
+        return data_.exportData();
+    }
+    template<class BufT>
     //导出所有写入的数据，追加到dst已有数据后面
-    template<class BufType>
-    bool ExportData(BufType & dst){
-        return adapter_.exportData(dst);
+    //并清空自己
+    bool ExportData(__Buf & dst){
+        return data_.exportData(dst);
+    }
+    template<class BufT>
+    bool ExportData(BufT & dst){
+        return data_.exportData(dst);
     }
     //导出所有写入的数据，覆盖dst已有数据
-    template<typename Char>
-    bool ExportData(Char * dst, size_t & sz){
-        return adapter_.exportData(dst, sz);
+    //并清空自己
+    template<typename CharT>
+    bool ExportData(CharT * dst, size_t & sz){
+        return data_.exportData(dst, sz);
     }
     //write PODs
     __Myt & operator <<(char c)                 {return writePod(c);}
@@ -365,106 +384,90 @@ public:
     //write value to a particular position but not change cur_
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorOffsetValue<T> & m){
-        if(ensureSize(m.Off())){
-            size_t old = Size();
-            std::string tmp;    //TODO
-            if(m.Off() < old)
-                tmp.assign(&adapter_[m.Off()], &adapter_[old]);
-            adapter_.resize(m.Off());
-            *this<<(m.Value());
-            size_t newOff = Size();
-            adapter_.resize(old);
-            if(newOff < old)
-                std::copy(tmp.begin() + (newOff - m.Off()), tmp.end(), &adapter_[newOff]);
-        }
+        const size_t old = Size();
+        if(0 <= Seek(m.Off())
+                && (*this<<(m.Value())))
+            Seek(old);
         return *this;
     }
     //insert value into a particular position and change cur_ relatively
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorInsert<T> & m){
-        typedef COutByteStreamBasic<std::string> __OutStreamStr;
+        //TODO
+        /*/typedef COutByteStreamBasic<std::string> __OutStreamStr;
         std::string buf;
         __OutStreamStr ds(buf, need_reverse_);
         if(ds<<m.Value())
             if(ensureRoom(ds.Size()))
                 adapter_.insert(m.Off(), &buf[0], ds.Size());
+        //*/
         return *this;
     }
     //write protobuf message
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorProtobuf<T> & m){
         typename NS_IMPL::CManipulatorProtobuf<T>::__Msg & msg = m.Msg();
-        size_t old = Size();
-        size_t sz = msg.ByteSize();
-        if(ensureRoom(sz)){
-            adapter_.resize(old + sz);
-            if(!msg.SerializeToArray(&adapter_[old], sz)){
-                adapter_.resize(old);
-                Status(1);
-            }
+        const size_t old = Size();
+        const size_t sz = msg.ByteSize();
+        if(0 <= Seek(old + sz)
+                && !msg.SerializeToArray(data_.buf(old), sz)){
+            Seek(old);
+            Status(1);
         }
         return *this;
     }
-protected:
-    void init(){adapter_.init();}
 private:
     template<typename T>
     __Myt & writePod(T c){
         if(ensureRoom(sizeof(T))){
             if(need_reverse_ && sizeof c > 1)
                 c = Tools::SwapByteOrder(c);
-            adapter_.append(reinterpret_cast<const __Char *>(&c), sizeof c);
+            data_.append(reinterpret_cast<const __Char *>(&c), sizeof c);
         }
         return *this;
     }
     template<typename T>
     __Myt & writeRaw(const T * c, size_t sz){
-        assert(c);
-        if(!NS_IMPL::__ManipTypeTraits<T>::CanMemcpy
-            || (sizeof(T) > 1 && need_reverse_))
-        {
-            for(size_t i = 0;i < sz;++i,++c)
-                if(!(*this<<(*c)))
-                    break;
-        }else{
-            sz *= sizeof(T);
-            if(ensureRoom(sz))
-                adapter_.append(reinterpret_cast<const __Char *>(c), sz);
+        if(sz){
+            assert(c);
+            if(!NS_IMPL::__ManipTypeTraits<T>::CanMemcpy
+                    || (sizeof(T) > 1 && need_reverse_))
+            {
+                for(size_t i = 0;i < sz;++i,++c)
+                    if(!(*this<<(*c)))
+                        break;
+            }else{
+                sz *= sizeof(T);
+                if(ensureRoom(sz))
+                    data_.append(reinterpret_cast<const __Char *>(c), sz);
+            }
         }
         return *this;
     }
     template<typename T>
     __Myt & writeArray(const T * c, size_t sz){
-        if(operator <<(__Length(sz))){
-            if(sz){
-                assert(c);
-                return writeRaw(c, sz);
-            }
-        }
+        if(operator <<(__Length(sz)))
+            writeRaw(c, sz);
         return *this;
     }
-    bool ensureSize(size_t sz){
+    bool ensureRoom(size_t len){
         if(operator !())
             return false;
-        if(!adapter_.ensureSize(sz)){
+        if(!data_.ensure(len)){
             Status(1);
             return false;
         }
         return true;
     }
-    bool ensureRoom(ssize_t len){
-        if(operator !())
-            return false;
-        if(!adapter_.ensureRoom(len)){
-            Status(1);
-            return false;
-        }
-        return true;
-    }
-    __BufAdapter adapter_;
+    __Data data_;
     bool need_reverse_;  //是否需要改变结果的byte order
 };
 
+typedef COutByteStreamBasic<NS_IMPL::__buf_data<std::string> > COutByteStream;
+
+typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::string> > COutByteStreamStr;
+
+/*
 class COutByteStream : public COutByteStreamBasic<std::string>
 {
     typedef COutByteStreamBasic<std::string> __MyBase;
@@ -527,6 +530,7 @@ public:
 private:
     __Buf buf_;
 };
+//*/
 
 //manipulators' functions:
 namespace Manip{
