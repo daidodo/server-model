@@ -5,15 +5,18 @@
     封装数据流的读取和写入
     注意测试operator !(), 在错误状态下, 所有读写数据操作都会无效
     类型:
-        CInByteStream       以字节为单位的输入流
-        COutByteStreamBasic 以任意buf为底层的字节输出流
-        COutByteStream      以std::string为底层buf的字节输出流
-        COutByteStreamVec   以std::vector<char>为底层buf的字节输出流
-        COutByteStreamBuf   以[char *, size_t]为底层buf的字节输出流
+        CInByteStream           以字节为单位的输入流
+        COutByteStreamBasic     以任意buf为底层的字节输出流
+        COutByteStream          以std::string为底层buf的字节输出流
+        COutByteStreamStr       同COutByteStream
+        COutByteStreamStrRef    以外部std::string对象为底层buf的字节输出流
+        COutByteStreamVec       以std::vector<char>为底层buf的字节输出流
+        COutByteStreamVecRef    以外部std::vector<char>对象为底层buf的字节输出流
+        COutByteStreamBuf       以(char *, size_t)为底层buf的字节输出流
     操作符:
-        array               输入/输出数组
+        array               输入/输出长度+数组数据
         raw                 输入/输出数组数据
-        range               输入/输出范围
+        range               输入/输出[first, last)范围内的数据
         set_order           设置输入/输出流的字节序
         seek                设置输入/输出流的偏移
         skip                跳过/预留指定字节数据
@@ -31,6 +34,7 @@
         20081106    增加Manip::insert
         20121217    增加COutByteStreamVec, COutByteStreamBuf, 修改COutByteStream为以std::string为底层buf
                     增加protobuf类的输入输出
+        20121223    增加COutByteStreamStr, COutByteStreamStrRef, COutByteStreamVecRef, 优化COutByteStreamBasic实现
     Manual:
         请参考"doc/DataStream-manual.txt"
 
@@ -469,88 +473,34 @@ private:
     bool need_reverse_;  //是否需要改变结果的byte order
 };
 
-typedef COutByteStreamBasic<NS_IMPL::__buf_data<std::string> > COutByteStream;
+//COutByteStream, COutByteStreamStr
+typedef COutByteStreamBasic<NS_IMPL::__buf_data<std::string> > COutByteStreamStr;
 
-typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::string> > COutByteStreamStr;
+typedef COutByteStreamStr COutByteStream;
 
+//COutByteStreamStr
+typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::string> > COutByteStreamStrRef;
+
+//COutByteStreamVec
 typedef COutByteStreamBasic<NS_IMPL::__buf_data<std::vector<char> > > COutByteStreamVec;
 
+//COutByteStreamVecRef
 typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::vector<char> > > COutByteStreamVecRef;
 
+//COutByteStreamBuf
 typedef COutByteStreamBasic<NS_IMPL::__buf_data<CCharBuffer<char> > > COutByteStreamBuf;
-
-/*
-class COutByteStream : public COutByteStreamBasic<std::string>
-{
-    typedef COutByteStreamBasic<std::string> __MyBase;
-    typedef COutByteStream __Myt;
-public:
-    typedef __MyBase::__Buf __Buf;
-    explicit COutByteStream(size_t reserve = 100, bool netByteOrder = DEF_NET_BYTEORDER)
-        : __MyBase(buf_, netByteOrder)
-    {
-        buf_.reserve(reserve);
-        init();
-    }
-    template<class T>
-    __Myt & operator <<(const T & val){
-        __MyBase::operator <<(val);
-        return *this;
-    }
-private:
-    __Buf buf_;
-};
-
-class COutByteStreamVec : public COutByteStreamBasic<std::vector<char> >
-{
-    typedef COutByteStreamBasic<std::vector<char> > __MyBase;
-    typedef COutByteStreamVec __Myt;
-public:
-    typedef __MyBase::__Buf __Buf;
-    explicit COutByteStreamVec(size_t reserve = 100, bool netByteOrder = DEF_NET_BYTEORDER)
-        : __MyBase(buf_, netByteOrder)
-    {
-        buf_.reserve(reserve);
-        init();
-    }
-    template<class T>
-    __Myt & operator <<(const T & val){
-        __MyBase::operator <<(val);
-        return *this;
-    }
-private:
-    __Buf buf_;
-};
-
-class COutByteStreamBuf : public COutByteStreamBasic<NS_IMPL::__byte_buf_wrap<char> >
-{
-    typedef NS_IMPL::__byte_buf_wrap<char> __Buf;
-    typedef COutByteStreamBuf __Myt;
-    typedef COutByteStreamBasic<__Buf> __MyBase;
-public:
-    COutByteStreamBuf(char * buf, size_t capacity, bool netByteOrder = DEF_NET_BYTEORDER, size_t size = 0)
-        : __MyBase(buf_, netByteOrder)
-        , buf_(buf, capacity, size)
-    {
-        init();
-    }
-    template<class T>
-    __Myt & operator <<(const T & val){
-        __MyBase::operator <<(val);
-        return *this;
-    }
-private:
-    __Buf buf_;
-};
-//*/
 
 //manipulators' functions:
 namespace Manip{
+
     //read/write array( = length + raw array)
     template<class T>
     inline NS_IMPL::CManipulatorArray<T> array(T * c,size_t sz,size_t * real_sz = 0){
         return NS_IMPL::CManipulatorArray<T>(c,sz,real_sz);
     }
+
+    //template<class T>
+    //inline NS_IMPL::CManipulatorContainer<T>
 
     //read/write raw array
     template<class T>
