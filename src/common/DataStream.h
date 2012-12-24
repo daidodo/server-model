@@ -51,12 +51,12 @@ NS_SERVER_BEGIN
 
 class CInByteStream : public NS_IMPL::CDataStreamBase
 {
+    typedef NS_IMPL::CDataStreamBase __MyBase;
     typedef CInByteStream __Myt;
     static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
     const char *    data_;
     size_t          len_;
     size_t          cur_;
-    bool            need_reverse_;  //是否需要改变字节序
 public:
     CInByteStream(const char * d, size_t l,bool netByteOrder = DEF_NET_BYTEORDER){   //netByteOrder表示是否按网络字节序
         SetSource(d,l,netByteOrder);
@@ -83,7 +83,7 @@ public:
         data_ = d;
         len_ = l;
         cur_ = 0;
-        need_reverse_ = NeedReverse(netByteOrder);
+        SetByteOrder(netByteOrder);
         ResetStatus();
     }
     void SetSource(const unsigned char * d,size_t l,bool netByteOrder = DEF_NET_BYTEORDER){
@@ -104,8 +104,6 @@ public:
     void SetSource(const std::string & d,bool netByteOrder = DEF_NET_BYTEORDER){
         SetSource(d.c_str(),d.size(),netByteOrder);
     }
-    //设置字节序类型
-    void OrderType(EOrderType ot){need_reverse_ = NeedReverse(ot);}
     //按照dir指定的方向设置cur_指针偏移
     //返回cur_最后的绝对偏移
     size_t Seek(ssize_t off,ESeekDir dir = Begin){
@@ -195,7 +193,7 @@ public:
     }
     //set order type(NetOrder or HostOrder) through CManipulatorSetOrder
     __Myt & operator >>(const NS_IMPL::CManipulatorSetOrder & m){
-        OrderType(m.Order());
+        SetByteOrder(m.NetByteOrder());
         return *this;
     }
     //set cur_ position through CManipulatorSeek
@@ -230,7 +228,7 @@ private:
     __Myt & readPod(T & c){
         if(ensure(sizeof(T))){
             memcpy(&c,data_ + cur_,sizeof(T));
-            if(need_reverse_ && sizeof(T) > 1)
+            if(sizeof(T) > 1 && NeedReverse())
                 c = Tools::SwapByteOrder(c);
             cur_ += sizeof(T);
         }
@@ -240,7 +238,7 @@ private:
     __Myt & readRaw(T * c,size_t sz){
         assert(c);
         if(!NS_IMPL::__ManipTypeTraits<T>::CanMemcpy
-            || (sizeof(T) > 1 && need_reverse_))
+            || (sizeof(T) > 1 && NeedReverse()))
         {
             for(size_t i = 0;i < sz;++i,++c)
                 if(!(*this>>(*c)))
@@ -274,27 +272,24 @@ private:
 template<class Data>
 class COutByteStreamBasic : public NS_IMPL::CDataStreamBase
 {
+    typedef NS_IMPL::CDataStreamBase    __MyBase;
     typedef COutByteStreamBasic<Data>   __Myt;
     typedef Data                        __Data;
 public:
     typedef typename Data::__Buf        __Buf;
     typedef typename Data::__Char       __Char;
-    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
     explicit COutByteStreamBasic(size_t reserve = 1024, bool netByteOrder = DEF_NET_BYTEORDER)
-        : data_(reserve)
-        , need_reverse_(NeedReverse(netByteOrder))
+        : __MyBase(netByteOrder)
+        , data_(reserve)
     {}
     COutByteStreamBasic(__Char * buf, size_t sz, bool netByteOrder = DEF_NET_BYTEORDER)
-        : data_(buf, sz)
-        , need_reverse_(NeedReverse(netByteOrder))
+        : __MyBase(netByteOrder)
+        , data_(buf, sz)
     {}
     explicit COutByteStreamBasic(__Buf & buf, bool netByteOrder = DEF_NET_BYTEORDER)
-        : data_(buf)
-        , need_reverse_(NeedReverse(netByteOrder))
+        : __MyBase(netByteOrder)
+        , data_(buf)
     {}
-    //设置/获取字节序类型
-    void OrderType(EOrderType ot){need_reverse_ = NeedReverse(ot);}
-    EOrderType OrderType() const{return (need_reverse_ ? HostOrder : NetOrder);}
     //返回当前数据字节数
     size_t Size() const{return data_.cur();}
     //按照dir指定的方向设置Size
@@ -379,7 +374,7 @@ public:
     }
     //set order type(NetOrder, HostOrder) through CManipulatorSetOrder
     __Myt & operator <<(const NS_IMPL::CManipulatorSetOrder & m){
-        OrderType(m.Order());
+        SetByteOrder(m.NetByteOrder());
         return *this;
     }
     //set cur_ position through CManipulatorSeek
@@ -430,7 +425,7 @@ private:
     template<typename T>
     __Myt & writePod(T c){
         if(ensureRoom(sizeof(T))){
-            if(need_reverse_ && sizeof c > 1)
+            if(sizeof c > 1 && NeedReverse())
                 c = Tools::SwapByteOrder(c);
             data_.append(reinterpret_cast<const __Char *>(&c), sizeof c);
         }
@@ -441,7 +436,7 @@ private:
         if(sz){
             assert(c);
             if(!NS_IMPL::__ManipTypeTraits<T>::CanMemcpy
-                    || (sizeof(T) > 1 && need_reverse_))
+                    || (sizeof(T) > 1 && NeedReverse()))
             {
                 for(size_t i = 0;i < sz;++i,++c)
                     if(!(*this<<(*c)))
@@ -470,7 +465,6 @@ private:
         return true;
     }
     __Data data_;
-    bool need_reverse_;  //是否需要改变结果的byte order
 };
 
 //COutByteStream, COutByteStreamStr
@@ -514,14 +508,9 @@ namespace Manip{
         return NS_IMPL::CManipulatorRange<Iter>(first,last);
     }
 
-    //set byte order type(NetOrder or HostOrder)
-    inline NS_IMPL::CManipulatorSetOrder set_order(NS_IMPL::CDataStreamBase::EOrderType order){
-        return NS_IMPL::CManipulatorSetOrder(order);
-    }
-
+    //set byte order type(true for NetByteOrder, false for HostByteOrder)
     inline NS_IMPL::CManipulatorSetOrder set_order(bool netByteOrder){
-        return NS_IMPL::CManipulatorSetOrder(
-            netByteOrder ? NS_IMPL::CDataStreamBase::NetOrder : NS_IMPL::CDataStreamBase::HostOrder);
+        return NS_IMPL::CManipulatorSetOrder(netByteOrder);
     }
 
     //set read/write position
