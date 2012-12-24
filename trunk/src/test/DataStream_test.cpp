@@ -304,7 +304,9 @@ int main()
 {
     if(!testStreamInOut<COutByteStream>())
         return -1;
-    if(!testStreamInOutRef<COutByteStreamStr>())
+    if(!testStreamInOut<COutByteStreamStr>())
+        return -1;
+    if(!testStreamInOutRef<COutByteStreamStrRef>())
         return -1;
     if(!testStreamInOut<COutByteStreamVec>())
         return -1;
