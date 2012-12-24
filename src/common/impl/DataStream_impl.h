@@ -257,55 +257,69 @@ struct __ManipTypeTraits<long long>{static const bool CanMemcpy = true;};
 template<>
 struct __ManipTypeTraits<unsigned long long>{static const bool CanMemcpy = true;};
 
-template<typename T>
-class CManipulatorArray
+template<typename LenT, class T>
+class CManipulatorArrayPtr
 {
     T *         c_;
-    size_t      sz1_;
-    size_t *    sz2_;
+    LenT      sz1_;
+    LenT *    sz2_;
 public:
-    CManipulatorArray(T * c,size_t sz,size_t * p)
+    CManipulatorArrayPtr(T * c, LenT sz, LenT * p)
         : c_(c)
         , sz1_(sz)
         , sz2_(p)
     {}
     T * Ptr() const{return c_;}
-    size_t Size1() const{return sz1_;}
-    void Size2(size_t sz) const{
+    LenT Size1() const{return sz1_;}
+    void Size2(LenT sz) const{
         if(sz2_)
             *sz2_ = sz;
     }
 };
 
-template<class T>
-class CManipulatorContainer
+template<typename LenT, class T>
+class CManipulatorArrayCont
 {
     T & c_;
-    size_t * sz_;
+    LenT max_;
 public:
-    CManipulatorContainer(T & c, size_t * sz = NULL)
+    CManipulatorArrayCont(T & c, LenT max_size)
         : c_(c)
-        , sz_(sz)
+        , max_(max_size)
     {}
-    T & Container() const{return c_;}
-    void Size(size_t sz) const{
-        if(sz_)
-            *sz_ = sz;
-    }
+    T & Cont() const{return c_;}
+    LenT Max() const{return max_;}
 };
 
-template<typename T>
-class CManipulatorRaw
+template<class T>
+class CManipulatorRawPtr
 {
     T *     c_;
     size_t  sz_;
 public:
-    CManipulatorRaw(T * c,size_t sz):c_(c),sz_(sz){}
+    CManipulatorRawPtr(T * c, size_t sz)
+        : c_(c)
+        , sz_(sz)
+    {}
     T * Ptr() const{return c_;}
     size_t Size() const{return sz_;}
 };
 
-template<typename Iter>
+template<class T>
+class CManipulatorRawCont
+{
+    T & c_;
+    size_t sz_;
+public:
+    CManipulatorRawCont(T & c, size_t sz)
+        : c_(c)
+        , sz_(sz)
+    {}
+    T & Cont() const{return c_;}
+    size_t Size() const{return sz_;}
+};
+
+template<class Iter>
 class CManipulatorRange
 {
     Iter beg_,end_;

@@ -49,6 +49,111 @@
 
 NS_SERVER_BEGIN
 
+//manipulators' functions:
+namespace Manip{
+
+    //read/write array( = length + raw array)
+    template<typename LenT, class T>
+    inline NS_IMPL::CManipulatorArrayPtr<LenT, T> array(T * c, LenT sz, LenT * real_sz = 0){
+        return NS_IMPL::CManipulatorArrayPtr<LenT, T>(c, sz, real_sz);
+    }
+
+    template<typename LenT, class T>
+    inline NS_IMPL::CManipulatorArrayCont<LenT, T> array(T & c, LenT max_size = 0){
+        return NS_IMPL::CManipulatorArrayCont<LenT, T>(c, max_size);
+    }
+
+    template<typename LenT, class T>
+    inline NS_IMPL::CManipulatorArrayCont<LenT, const T> array(const T & c){
+        return NS_IMPL::CManipulatorArrayCont<LenT, const T>(c, 0);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorArrayCont<uint16_t, T> array(T & c, uint16_t max_size = 0){
+        return NS_IMPL::CManipulatorArrayCont<uint16_t, T>(c, max_size);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorArrayCont<uint16_t, const T> array(const T & c){
+        return NS_IMPL::CManipulatorArrayCont<uint16_t, const T>(c, 0);
+    }
+
+    //read/write raw array
+    template<class T>
+    inline NS_IMPL::CManipulatorRawPtr<T> raw(T * c, size_t sz){
+        return NS_IMPL::CManipulatorRawPtr<T>(c, sz);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorRawCont<T> raw(T & c, size_t sz){
+        return NS_IMPL::CManipulatorRawCont<T>(c, sz);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorRawCont<const T> raw(const T & c){
+        return NS_IMPL::CManipulatorRawCont<const T>(c, 0);
+    }
+
+    //read/write range [first,last) of raw array
+    template<class Iter>
+    inline NS_IMPL::CManipulatorRange<Iter> range(Iter first,Iter last){
+        return NS_IMPL::CManipulatorRange<Iter>(first,last);
+    }
+
+    //set byte order type(true for NetByteOrder, false for HostByteOrder)
+    inline NS_IMPL::CManipulatorSetOrder set_order(bool netByteOrder){
+        return NS_IMPL::CManipulatorSetOrder(netByteOrder);
+    }
+
+    //read/write value with fixed byte order
+    template<class T>
+    inline NS_IMPL::CManipulatorValueByteOrder<T> value_byteorder(T & val, bool netByteOrder){
+        return NS_IMPL::CManipulatorValueByteOrder<T>(val, netByteOrder);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorValueByteOrder<const T> value_byteorder(const T & val, bool netByteOrder){
+        return NS_IMPL::CManipulatorValueByteOrder<const T>(val, netByteOrder);
+    }
+
+    //set read/write position
+    inline NS_IMPL::CManipulatorSeek seek(ssize_t off,NS_IMPL::CDataStreamBase::ESeekDir dir = NS_IMPL::CDataStreamBase::Begin){
+        return NS_IMPL::CManipulatorSeek(off,dir);
+    }
+
+    //skip/reserve certain bytes
+    inline NS_IMPL::CManipulatorSeek skip(ssize_t off){
+        return NS_IMPL::CManipulatorSeek(off,NS_IMPL::CDataStreamBase::Cur);
+    }
+
+    //read/write value from offset position
+    template<class T>
+    inline NS_IMPL::CManipulatorOffsetValue<T> offset_value(size_t offset,T & val){
+        return NS_IMPL::CManipulatorOffsetValue<T>(offset,val);
+    }
+    template<class T>
+    inline NS_IMPL::CManipulatorOffsetValue<const T> offset_value(size_t offset,const T & val){
+        return NS_IMPL::CManipulatorOffsetValue<const T>(offset,val);
+    }
+
+    //insert value into offset position
+    template<class T>
+    inline NS_IMPL::CManipulatorInsert<T> insert(size_t offset,const T & val){
+        return NS_IMPL::CManipulatorInsert<T>(offset,val);
+    }
+
+    //read/write protobuf message
+    template<class T>
+    inline NS_IMPL::CManipulatorProtobuf<T> protobuf(T & msg, size_t size = 0){
+        return NS_IMPL::CManipulatorProtobuf<T>(msg, size);
+    }
+    template<class T>
+    inline NS_IMPL::CManipulatorProtobuf<const T> protobuf(const T & msg, size_t size = 0){
+        return NS_IMPL::CManipulatorProtobuf<const T>(msg, size);
+    }
+
+}//namespace Manip
+
 class CInByteStream : public NS_IMPL::CDataStreamBase
 {
     typedef NS_IMPL::CDataStreamBase __MyBase;
@@ -152,7 +257,7 @@ public:
     __Myt & operator >>(unsigned long long & c) {return readPod(c);}
     //read std::string
     __Myt & operator >>(std::string & c){
-        __Length sz = 0;
+        uint16_t sz = 0;
         operator >>(sz);
         if(ensure(sz)){
             c.assign(data_ + cur_ ,data_ + cur_ + sz);
@@ -163,26 +268,46 @@ public:
     //read array( = length + raw array)
     template<class T>
     __Myt & operator >>(T * c){
-        __Length sz;
-        operator >>(sz);
-        return readRaw(c,sz);
+        return readArray<uint16_t>(c);
     }
-    //read array( = length + raw array) through CManipulatorArray
-    template<class T>
-    __Myt & operator >>(const NS_IMPL::CManipulatorArray<T> & m){
-        __Length sz;
-        operator >>(sz);
-        if(sz > m.Size1()){
-            Status(1);
-            return *this;
+    //read array( = length + raw array) through CManipulatorArrayPtr
+    template<typename LenT, class T>
+    __Myt & operator >>(const NS_IMPL::CManipulatorArrayPtr<LenT, T> & m){
+        LenT sz;
+        if(*this>>sz){
+            if(sz > m.Size1()){
+                Status(1);
+                return *this;
+            }
+            m.Size2(sz);
+            readRaw(m.Ptr(), sz);
         }
-        m.Size2(sz);
-        return readRaw(m.Ptr(),sz);
+        return *this;
     }
-    //read raw array through CManipulatorRaw
+    //read array( = length + raw array) through CManipulatorArrayCont
+    template<typename LenT, class T>
+    __Myt & operator >>(const NS_IMPL::CManipulatorArrayCont<LenT, T> & m){
+        LenT sz;
+        if(*this>>sz){
+            if(m.Max() && sz > m.Max()){
+                Status(1);
+                return *this;
+            }
+            m.Cont().resize(sz);
+            *this>>Manip::range(m.Cont().begin(), m.Cont().end());
+        }
+        return *this;
+    }
+    //read raw array through CManipulatorRawPtr
     template<class T>
-    __Myt & operator >>(const NS_IMPL::CManipulatorRaw<T> & m){
-        return readRaw(m.Ptr(),m.Size());
+    __Myt & operator >>(const NS_IMPL::CManipulatorRawPtr<T> & m){
+        return readRaw(m.Ptr(), m.Size());
+    }
+    //read raw array through CManipulatorRawCont
+    template<class T>
+    __Myt & operator >>(const NS_IMPL::CManipulatorRawCont<T> & m){
+        m.Cont().resize(m.Size());
+        return (*this>>Manip::range(m.Cont().begin(), m.Cont().end()));
     }
     //read range of raw array through CManipulatorRange
     template<class Iter>
@@ -248,7 +373,7 @@ private:
         return *this;
     }
     template<typename T>
-    __Myt & readRaw(T * c,size_t sz){
+    __Myt & readRaw(T * c, size_t sz){
         assert(c);
         if(!NS_IMPL::__ManipTypeTraits<T>::CanMemcpy
             || (sizeof(T) > 1 && needReverse()))
@@ -259,17 +384,17 @@ private:
         }else{
             sz *= sizeof(T);
             if(ensure(sz)){
-                memcpy(c,data_ + cur_,sz);
+                memcpy(c, data_ + cur_, sz);
                 cur_ += sz;
             }
         }
         return *this;
     }
-    template<typename T>
+    template<typename LenT, class T>
     __Myt & readArray(T * c){
-        __Length sz;
+        LenT sz;
         operator >>(sz);
-        return readRaw(c,sz);
+        return readRaw(c, sz);
     }
     bool ensure(size_t sz){     //防止越界访问data_
         if(operator !())
@@ -369,17 +494,33 @@ public:
     __Myt & operator <<(unsigned long long c)   {return writePod(c);}
     //write std::string
     __Myt & operator <<(std::string c){
-        return writeArray(c.c_str(),c.length());
+        return writeArray(c.c_str(), uint16_t(c.length()));
     }
-    //write array( = length + raw array) through CManipulatorArray
-    template<class T>
-    __Myt & operator <<(const NS_IMPL::CManipulatorArray<T> & m){
-        return writeArray(m.Ptr(),m.Size1());
+    //write array( = length + raw array) through CManipulatorArrayPtr
+    template<typename LenT, class T>
+    __Myt & operator <<(const NS_IMPL::CManipulatorArrayPtr<LenT, T> & m){
+        return writeArray(m.Ptr(), m.Size1());
     }
-    //write raw array through CManipulatorRaw
+    //write array( = length + raw array) through CManipulatorArrayCont
+    template<typename LenT, class T>
+    __Myt & operator <<(const NS_IMPL::CManipulatorArrayCont<LenT, T> & m){
+        if(m.Cont().empty()){
+            *this<<LenT(0);
+        }else{
+            *this<<LenT(m.Cont().size())
+                <<Manip::range(m.Cont().begin(), m.Cont().end());
+        }
+        return *this;
+    }
+    //write raw array through CManipulatorRawPtr
     template<class T>
-    __Myt & operator <<(const NS_IMPL::CManipulatorRaw<T> & m){
+    __Myt & operator <<(const NS_IMPL::CManipulatorRawPtr<T> & m){
         return writeRaw(m.Ptr(), m.Size());
+    }
+    //write raw array through CManipulatorRawCont
+    template<class T>
+    __Myt & operator <<(const NS_IMPL::CManipulatorRawCont<T> & m){
+        return (*this<<Manip::range(m.Cont().begin(), m.Cont().end()));
     }
     //write range of raw array through CManipulatorRange
     template<class Iter>
@@ -477,9 +618,9 @@ private:
         }
         return *this;
     }
-    template<typename T>
-    __Myt & writeArray(const T * c, size_t sz){
-        if(operator <<(__Length(sz)))
+    template<typename LenT, typename T>
+    __Myt & writeArray(const T * c, LenT sz){
+        if(*this<<sz)
             writeRaw(c, sz);
         return *this;
     }
@@ -513,84 +654,6 @@ typedef COutByteStreamBasic<NS_IMPL::__buf_ref_data<std::vector<char> > > COutBy
 
 //COutByteStreamBuf
 typedef COutByteStreamBasic<NS_IMPL::__buf_data<CCharBuffer<char> > > COutByteStreamBuf;
-
-//manipulators' functions:
-namespace Manip{
-
-    //read/write array( = length + raw array)
-    template<class T>
-    inline NS_IMPL::CManipulatorArray<T> array(T * c,size_t sz,size_t * real_sz = 0){
-        return NS_IMPL::CManipulatorArray<T>(c,sz,real_sz);
-    }
-
-    //template<class T>
-    //inline NS_IMPL::CManipulatorContainer<T>
-
-    //read/write raw array
-    template<class T>
-    inline NS_IMPL::CManipulatorRaw<T> raw(T * c,size_t sz){
-        return NS_IMPL::CManipulatorRaw<T>(c,sz);
-    }
-
-    //read/write range [first,last) of raw array
-    template<class Iter>
-    inline NS_IMPL::CManipulatorRange<Iter> range(Iter first,Iter last){
-        return NS_IMPL::CManipulatorRange<Iter>(first,last);
-    }
-
-    //set byte order type(true for NetByteOrder, false for HostByteOrder)
-    inline NS_IMPL::CManipulatorSetOrder set_order(bool netByteOrder){
-        return NS_IMPL::CManipulatorSetOrder(netByteOrder);
-    }
-
-    //read/write value with fixed byte order
-    template<class T>
-    inline NS_IMPL::CManipulatorValueByteOrder<T> value_byteorder(T & val, bool netByteOrder){
-        return NS_IMPL::CManipulatorValueByteOrder<T>(val, netByteOrder);
-    }
-
-    template<class T>
-    inline NS_IMPL::CManipulatorValueByteOrder<const T> value_byteorder(const T & val, bool netByteOrder){
-        return NS_IMPL::CManipulatorValueByteOrder<const T>(val, netByteOrder);
-    }
-
-    //set read/write position
-    inline NS_IMPL::CManipulatorSeek seek(ssize_t off,NS_IMPL::CDataStreamBase::ESeekDir dir = NS_IMPL::CDataStreamBase::Begin){
-        return NS_IMPL::CManipulatorSeek(off,dir);
-    }
-
-    //skip/reserve certain bytes
-    inline NS_IMPL::CManipulatorSeek skip(ssize_t off){
-        return NS_IMPL::CManipulatorSeek(off,NS_IMPL::CDataStreamBase::Cur);
-    }
-
-    //read/write value from offset position
-    template<class T>
-    inline NS_IMPL::CManipulatorOffsetValue<T> offset_value(size_t offset,T & val){
-        return NS_IMPL::CManipulatorOffsetValue<T>(offset,val);
-    }
-    template<class T>
-    inline NS_IMPL::CManipulatorOffsetValue<const T> offset_value(size_t offset,const T & val){
-        return NS_IMPL::CManipulatorOffsetValue<const T>(offset,val);
-    }
-
-    //insert value into offset position
-    template<class T>
-    inline NS_IMPL::CManipulatorInsert<T> insert(size_t offset,const T & val){
-        return NS_IMPL::CManipulatorInsert<T>(offset,val);
-    }
-
-    //read/write protobuf message
-    template<class T>
-    inline NS_IMPL::CManipulatorProtobuf<T> protobuf(T & msg, size_t size = 0){
-        return NS_IMPL::CManipulatorProtobuf<T>(msg, size);
-    }
-    template<class T>
-    inline NS_IMPL::CManipulatorProtobuf<const T> protobuf(const T & msg, size_t size = 0){
-        return NS_IMPL::CManipulatorProtobuf<const T>(msg, size);
-    }
-
-}//namespace Manip
 
 NS_SERVER_END
 

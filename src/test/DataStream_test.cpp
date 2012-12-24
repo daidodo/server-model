@@ -19,7 +19,10 @@ struct CTest
     unsigned char k;
     std::string l;
     std::vector<int> m;
+    std::vector<int> m2;
+    std::vector<int> m3;
     char n[20];
+    std::vector<int> n2;
     std::vector<std::string> o;
     int p;
     int q;
@@ -37,7 +40,10 @@ struct CTest
                 k == t.k &&
                 l == t.l &&
                 m == t.m &&
+                m2 == t.m2 &&
+                m3 == t.m3 &&
                 0 == memcmp(n, t.n, sizeof n) &&
+                n2 == t.n2 &&
                 o == t.o &&
                 p == t.p &&
                 q == t.q
@@ -66,11 +72,34 @@ struct CTest
                 oss<<", ";
             oss<<m[index];
         }
-        oss<<"}\nn="<<Tools::DumpHex(n, sizeof n)
+        oss<<"\n}";
+        oss<<"\nm2={";
+        for(size_t index = 0;index < m2.size();++index){
+            if(index)
+                oss<<", ";
+            oss<<m2[index];
+        }
+        oss<<"}\n";
+        oss<<"\nm3={";
+        for(size_t index = 0;index < m3.size();++index){
+            if(index)
+                oss<<", ";
+            oss<<m3[index];
+        }
+        oss<<"}\n";
+        oss<<"\nn="<<Tools::DumpHex(n, sizeof n);
+        oss<<"\nn2={";
+        for(size_t index = 0;index < n2.size();++index){
+            if(index)
+                oss<<", ";
+            oss<<n2[index];
+        }
+        oss<<"}\n"
             <<"\no={";
         for(size_t index = 0;index < o.size();++index)
             oss<<"\n    "<<Tools::Dump(o[index]);
-        oss<<"\n}\np="<<p
+        oss<<"\n}";
+        oss<<"\np="<<p
             <<"\nq="<<q
             <<"\n}";
         return oss.str();
@@ -83,10 +112,14 @@ static OutStream & operator <<(OutStream & obs, const CTest & t)
 #if TEST_INSERT
     size_t cur = obs.Size();
 #endif
-    obs<<t.a<<t.b<<t.c<<t.d<<t.e<<t.f<<t.g<<t.h<<t.i<<t.j<<t.k<<t.l
-        <<Manip::array(&t.m[0], t.m.size())
-        <<Manip::raw(t.n, sizeof t.n)
-        <<t.o.size()
+    obs<<t.a<<t.b<<t.c<<t.d<<t.e<<t.f<<t.g<<t.h<<t.i<<t.j<<t.k<<t.l;
+    obs<<Manip::array(&t.m[0], uint64_t(t.m.size()));
+    obs<<Manip::array<uint8_t>(t.m2);
+    obs<<Manip::array(t.m3);
+    obs<<Manip::raw(t.n, sizeof t.n);
+    obs<<uint16_t(t.n2.size());
+    obs<<Manip::raw(t.n2);
+    obs<<t.o.size()
         <<Manip::range(t.o.begin(), t.o.end())
 #if TEST_INSERT
         <<Manip::insert(cur, t.p)
@@ -103,13 +136,19 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
     ibs>>Manip::skip(sizeof t.p);
 #endif
     ibs>>t.a>>t.b>>t.c>>t.d>>t.e>>t.f>>t.g>>t.h>>t.i>>t.j>>t.k>>t.l;
-    size_t sz = 100;
+    uint64_t sz = 100;
     t.m.resize(sz);
-    ibs>>Manip::array(&t.m[0], t.m.size(), &sz);
+    ibs>>Manip::array(&t.m[0], uint64_t(t.m.size()), &sz);
     t.m.resize(sz);
+    ibs>>Manip::array<uint8_t>(t.m2);
+    ibs>>Manip::array(t.m3);
     ibs>>Manip::raw(t.n, sizeof t.n);
-    ibs>>sz;
-    t.o.resize(sz);
+    uint16_t n2Len;
+    ibs>>n2Len;
+    ibs>>Manip::raw(t.n2, n2Len);
+    size_t sz2;
+    ibs>>sz2;
+    t.o.resize(sz2);
     ibs>>Manip::range(t.o.begin(), t.o.end());
 #if TEST_INSERT
     ibs>>Manip::offset_value(cur, t.p);
@@ -142,7 +181,10 @@ static bool testStreamInOut()
         t.l = "300";
         for(int i = 0;i < 53;++i)
             t.m.push_back(i * i);
+        t.m2 = t.m;
+        t.m3 = t.m;
         memcpy(t.n, str1, sizeof t.n);
+        t.n2 = t.m;
         std::string str2;
         for(int i = 0;i < 30;++i){
             str2.push_back('a' + i);
@@ -168,7 +210,7 @@ static bool testStreamInOut()
     for(int i = 0;i < COUNT;++i){
         CTest t2;
         if(!(ibs>>t2)){
-            cerr<<"decode with CInByteStream failed\n";
+            cerr<<"1:decode with CInByteStream failed\n";
             return false;
         }
         if(tests[i] != t2){
@@ -231,7 +273,7 @@ static bool testStreamInOutRef()
     for(int i = 0;i < COUNT;++i){
         CTest t2;
         if(!(ibs>>t2)){
-            cerr<<"decode with CInByteStream failed\n";
+            cerr<<"2:decode with CInByteStream failed\n";
             return false;
         }
         if(tests[i] != t2){
@@ -292,7 +334,7 @@ static bool testStreamInOutBuf()
     for(int i = 0;i < COUNT;++i){
         CTest t2;
         if(!(ibs>>t2)){
-            cerr<<"decode with CInByteStream failed\n";
+            cerr<<"3:decode with CInByteStream failed\n";
             return false;
         }
         if(tests[i] != t2){
