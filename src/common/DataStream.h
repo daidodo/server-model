@@ -52,6 +52,51 @@ NS_SERVER_BEGIN
 //manipulators' functions:
 namespace Manip{
 
+    //read/write raw array
+    template<class T>
+    inline NS_IMPL::CManipulatorRawPtr<T> raw(T * c, size_t sz){
+        return NS_IMPL::CManipulatorRawPtr<T>(c, sz);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorRawPtr<T> raw(std::vector<T> & c, size_t sz){
+        size_t old = c.size();
+        c.resize(old + sz);
+        return NS_IMPL::CManipulatorRawPtr<T>(&c[old], sz);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorRawPtr<const T> raw(const std::vector<T> & c){
+        return NS_IMPL::CManipulatorRawPtr<const T>(&c[0], c.size());
+    }
+
+    template<typename Char>
+    inline NS_IMPL::CManipulatorRawPtr<Char> raw(std::basic_string<Char> & c, size_t len){
+        size_t old = c.size();
+        c.append(len, 0);
+        return NS_IMPL::CManipulatorRawPtr<Char>(&c[old], len);
+    }
+
+    template<typename Char>
+    inline NS_IMPL::CManipulatorRawPtr<const Char> raw(const std::basic_string<Char> & c){
+        return NS_IMPL::CManipulatorRawPtr<const Char>(&c[0], c.size());
+    }
+
+    template<class Iter>
+    inline NS_IMPL::CManipulatorRawRange<Iter> raw(Iter first, Iter last){
+        return NS_IMPL::CManipulatorRawRange<Iter>(first, last);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorRawSeqCont<T> raw(T & c, size_t sz){
+        return NS_IMPL::CManipulatorRawSeqCont<T>(c, sz);
+    }
+
+    template<class T>
+    inline NS_IMPL::CManipulatorRawSeqCont<const T> raw(const T & c){
+        return NS_IMPL::CManipulatorRawSeqCont<const T>(c, 0);
+    }
+
     //read/write array( = length + raw array)
     template<typename LenT, class T>
     inline NS_IMPL::CManipulatorArrayPtr<LenT, T> array(T * c, LenT sz, LenT * real_sz = 0){
@@ -76,27 +121,6 @@ namespace Manip{
     template<class T>
     inline NS_IMPL::CManipulatorArrayCont<uint16_t, const T> array(const T & c){
         return NS_IMPL::CManipulatorArrayCont<uint16_t, const T>(c, 0);
-    }
-
-    //read/write raw array
-    template<class T>
-    inline NS_IMPL::CManipulatorRawPtr<T> raw(T * c, size_t sz){
-        return NS_IMPL::CManipulatorRawPtr<T>(c, sz);
-    }
-
-    template<class Iter>
-    inline NS_IMPL::CManipulatorRawRange<Iter> raw(Iter first, Iter last){
-        return NS_IMPL::CManipulatorRawRange<Iter>(first, last);
-    }
-
-    template<class T>
-    inline NS_IMPL::CManipulatorRawCont<T> raw(T & c, size_t sz){
-        return NS_IMPL::CManipulatorRawCont<T>(c, sz);
-    }
-
-    template<class T>
-    inline NS_IMPL::CManipulatorRawCont<const T> raw(const T & c){
-        return NS_IMPL::CManipulatorRawCont<const T>(c, 0);
     }
 
     //set byte order type(true for NetByteOrder, false for HostByteOrder)
@@ -135,7 +159,7 @@ namespace Manip{
         return NS_IMPL::CManipulatorOffsetValue<const T>(offset,val);
     }
 
-    //insert value into offset position
+    //insert value to offset position
     template<class T>
     inline NS_IMPL::CManipulatorInsert<T> insert(size_t offset,const T & val){
         return NS_IMPL::CManipulatorInsert<T>(offset,val);
@@ -254,20 +278,40 @@ public:
     __Myt & operator >>(unsigned long & c)      {return readPod(c);}
     __Myt & operator >>(long long & c)          {return readPod(c);}
     __Myt & operator >>(unsigned long long & c) {return readPod(c);}
-    //read std::string
-    __Myt & operator >>(std::string & c){
-        uint16_t sz = 0;
-        operator >>(sz);
-        if(ensure(sz)){
-            c.assign(data_ + cur_ ,data_ + cur_ + sz);
-            cur_ += sz;
+    //read raw array through CManipulatorRawPtr
+    template<class T>
+    __Myt & operator >>(const NS_IMPL::CManipulatorRawPtr<T> & m){
+        return readRaw(m.Ptr(), m.Size());
+    }
+    //read raw array through CManipulatorRawSeqCont
+    template<class T>
+    __Myt & operator >>(const NS_IMPL::CManipulatorRawSeqCont<T> & m){
+        typedef typename T::value_type __Val;
+        for(size_t i = 0;i < m.Size();++i){
+            m.Cont().push_back(__Val());
+            if(!(*this>>m.Cont().back()))
+                break;
         }
         return *this;
     }
-    //read array( = length + raw array)
-    template<class T>
-    __Myt & operator >>(T * c){
-        return readArray<uint16_t>(c);
+    //read range of raw array through CManipulatorRawRange
+    template<class Iter>
+    __Myt & operator >>(const NS_IMPL::CManipulatorRawRange<Iter> & m){
+        for(Iter i = m.Begin();i != m.End();++i)
+            if(!(*this>>(*i)))
+                break;
+        return *this;
+    }
+    //read std::string( = length + bytes)
+    __Myt & operator >>(std::string & c){
+        uint16_t sz = 0;
+        if(*this>>sz){
+            if(ensure(sz)){
+                c.append(data_ + cur_ , sz);
+                cur_ += sz;
+            }
+        }
+        return *this;
     }
     //read array( = length + raw array) through CManipulatorArrayPtr
     template<typename LenT, class T>
@@ -295,25 +339,6 @@ public:
             m.Cont().resize(sz);
             *this>>Manip::raw(m.Cont().begin(), m.Cont().end());
         }
-        return *this;
-    }
-    //read raw array through CManipulatorRawPtr
-    template<class T>
-    __Myt & operator >>(const NS_IMPL::CManipulatorRawPtr<T> & m){
-        return readRaw(m.Ptr(), m.Size());
-    }
-    //read raw array through CManipulatorRawCont
-    template<class T>
-    __Myt & operator >>(const NS_IMPL::CManipulatorRawCont<T> & m){
-        m.Cont().resize(m.Size());
-        return (*this>>Manip::raw(m.Cont().begin(), m.Cont().end()));
-    }
-    //read range of raw array through CManipulatorRawRange
-    template<class Iter>
-    __Myt & operator >>(const NS_IMPL::CManipulatorRawRange<Iter> & m){
-        for(Iter i = m.Begin();i != m.End();++i)
-            if(!(*this>>(*i)))
-                break;
         return *this;
     }
     //set order type(NetOrder or HostOrder) through CManipulatorSetOrder
@@ -377,7 +402,7 @@ private:
         if(!NS_IMPL::__ManipTypeTraits<T>::CanMemcpy
             || (sizeof(T) > 1 && needReverse()))
         {
-            for(size_t i = 0;i < sz;++i,++c)
+            for(size_t i = 0;i < sz;++i, ++c)
                 if(!(*this>>(*c)))
                     break;
         }else{
@@ -491,6 +516,24 @@ public:
     __Myt & operator <<(unsigned long c)        {return writePod(c);}
     __Myt & operator <<(long long c)            {return writePod(c);}
     __Myt & operator <<(unsigned long long c)   {return writePod(c);}
+    //write raw array through CManipulatorRawPtr
+    template<class T>
+    __Myt & operator <<(const NS_IMPL::CManipulatorRawPtr<T> & m){
+        return writeRaw(m.Ptr(), m.Size());
+    }
+    //write raw array through CManipulatorRawSeqCont
+    template<class T>
+    __Myt & operator <<(const NS_IMPL::CManipulatorRawSeqCont<T> & m){
+        return (*this<<Manip::raw(m.Cont().begin(), m.Cont().end()));
+    }
+    //write range of raw array through CManipulatorRawRange
+    template<class Iter>
+    __Myt & operator <<(const NS_IMPL::CManipulatorRawRange<Iter> & m){
+        for(Iter i = m.Begin();i != m.End();++i)
+            if(!(*this<<(*i)))
+                break;
+        return *this;
+    }
     //write std::string
     __Myt & operator <<(std::string c){
         return writeArray(c.c_str(), uint16_t(c.length()));
@@ -509,24 +552,6 @@ public:
             *this<<LenT(m.Cont().size())
                 <<Manip::raw(m.Cont().begin(), m.Cont().end());
         }
-        return *this;
-    }
-    //write raw array through CManipulatorRawPtr
-    template<class T>
-    __Myt & operator <<(const NS_IMPL::CManipulatorRawPtr<T> & m){
-        return writeRaw(m.Ptr(), m.Size());
-    }
-    //write raw array through CManipulatorRawCont
-    template<class T>
-    __Myt & operator <<(const NS_IMPL::CManipulatorRawCont<T> & m){
-        return (*this<<Manip::raw(m.Cont().begin(), m.Cont().end()));
-    }
-    //write range of raw array through CManipulatorRawRange
-    template<class Iter>
-    __Myt & operator <<(const NS_IMPL::CManipulatorRawRange<Iter> & m){
-        for(Iter i = m.Begin();i != m.End();++i)
-            if(!(*this<<(*i)))
-                break;
         return *this;
     }
     //set order type(NetOrder, HostOrder) through CManipulatorSetOrder

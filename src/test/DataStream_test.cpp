@@ -23,10 +23,29 @@ struct CTest
     std::vector<int> m3;
     char n[20];
     std::vector<int> n2;
+    std::string n3;
+    std::list<int> n4;
     std::vector<std::string> o;
     int p;
     int q;
-    explicit CTest(int i = 0){
+    CTest()
+        : a(0)
+        , b(0)
+        , c(0)
+        , d(0)
+        , e(0)
+        , f(0)
+        , g(0)
+        , h(0)
+        , i(0)
+        , j(0)
+        , k(0)
+        , p(0)
+        , q(0)
+    {
+        memset(n, 0, sizeof n);
+    }
+    explicit CTest(int i){
         a = 111 - i;
         b = 222 + i;
         c = 333 * i;
@@ -46,6 +65,8 @@ struct CTest
         const char str1[20] = "this is for test";
         memcpy(n, str1, sizeof n);
         n2 = m;
+        n3 = "141112321f23f";
+        n4.assign(n2.begin(), n2.end());
         std::string str2;
         for(int ii = 0;ii < 30;++ii){
             str2.push_back('a' + ii);
@@ -72,6 +93,8 @@ struct CTest
                 m3 == t.m3 &&
                 0 == memcmp(n, t.n, sizeof n) &&
                 n2 == t.n2 &&
+                n3 == t.n3 &&
+                n4 == t.n4 &&
                 o == t.o &&
                 p == t.p &&
                 q == t.q
@@ -122,8 +145,16 @@ struct CTest
                 oss<<", ";
             oss<<n2[index];
         }
-        oss<<"}\n"
-            <<"\no={";
+        oss<<"}\n";
+        oss<<"\nn3="<<Tools::Dump(n3);
+        oss<<"\nn4={";
+        for(std::list<int>::const_iterator i = n4.begin();i != n4.end();++i){
+            if(i != n4.begin())
+                oss<<", ";
+            oss<<*i;
+        }
+        oss<<"}\n";
+        oss<<"\no={";
         for(size_t index = 0;index < o.size();++index)
             oss<<"\n    "<<Tools::Dump(o[index]);
         oss<<"\n}";
@@ -147,6 +178,10 @@ static OutStream & operator <<(OutStream & obs, const CTest & t)
     obs<<Manip::raw(t.n, sizeof t.n);
     obs<<uint16_t(t.n2.size());
     obs<<Manip::raw(t.n2);
+    obs<<uint8_t(t.n3.size());
+    obs<<Manip::raw(t.n3);
+    obs<<uint64_t(t.n4.size());
+    obs<<Manip::raw(t.n4);
     obs<<t.o.size()
         <<Manip::raw(t.o.begin(), t.o.end())
 #if TEST_INSERT
@@ -174,6 +209,12 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
     uint16_t n2Len;
     ibs>>n2Len;
     ibs>>Manip::raw(t.n2, n2Len);
+    uint8_t n3Len;
+    ibs>>n3Len;
+    ibs>>Manip::raw(t.n3, n3Len);
+    uint64_t n4Len;
+    ibs>>n4Len;
+    ibs>>Manip::raw(t.n4, n4Len);
     size_t sz2;
     ibs>>sz2;
     t.o.resize(sz2);
@@ -189,7 +230,7 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
 template<class OutStream>
 static bool testStreamInOut()
 {
-    const int COUNT = 10;
+    const int COUNT = 1;
     std::vector<CTest> tests;
     OutStream obs;
     for(int i = 0;i < COUNT;++i){
@@ -272,7 +313,7 @@ static bool testStreamInOutBuf()
 {
     const int COUNT = 10;
     std::vector<CTest> tests;
-    std::vector<char> buf(10 << 10);
+    std::vector<char> buf(1 << 20);
     COutByteStreamBuf obs(&buf[0], buf.size());
     for(int i = 0;i < COUNT;++i){
         CTest t(i);
