@@ -33,9 +33,12 @@ public:
     bool NetByteOrder() const{return netByteOrder_;}
     void SetByteOrder(bool netByteOrder){netByteOrder_ = netByteOrder;}
 protected:
-    bool NeedReverse() const{
+    //from, to: true-NetByteOrder, false-HostByteOrder
+    bool NeedReverse(bool from, bool to) const{
+        if(from == to)
+            return false;
         static bool host = Tools::HostByteOrder();
-        return (netByteOrder_ && host);
+        return host;
     }
 private:
     int status_;
@@ -321,6 +324,20 @@ class CManipulatorSetOrder
 public:
     explicit CManipulatorSetOrder(bool netByteOrder):netByteOrder_(netByteOrder){}
     bool NetByteOrder() const{return netByteOrder_;}
+};
+
+template<class T>
+class CManipulatorValueByteOrder
+{
+    T & val_;
+    bool nb_;
+public:
+    CManipulatorValueByteOrder(T & val, bool netByteOrder)
+        : val_(val)
+        , nb_(netByteOrder)
+    {}
+    T & Value() const{return val_;}
+    bool NetByteOrder() const{return nb_;}
 };
 
 class CManipulatorSeek

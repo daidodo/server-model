@@ -22,6 +22,7 @@ struct CTest
     char n[20];
     std::vector<std::string> o;
     int p;
+    int q;
     bool operator ==(const CTest & t) const{
         return (a == t.a &&
                 b == t.b &&
@@ -38,7 +39,8 @@ struct CTest
                 m == t.m &&
                 0 == memcmp(n, t.n, sizeof n) &&
                 o == t.o &&
-                p == t.p
+                p == t.p &&
+                q == t.q
                );
     }
     bool operator !=(const CTest & t) const{
@@ -69,6 +71,7 @@ struct CTest
         for(size_t index = 0;index < o.size();++index)
             oss<<"\n    "<<Tools::Dump(o[index]);
         oss<<"\n}\np="<<p
+            <<"\nq="<<q
             <<"\n}";
         return oss.str();
     }
@@ -88,6 +91,7 @@ static OutStream & operator <<(OutStream & obs, const CTest & t)
 #if TEST_INSERT
         <<Manip::insert(cur, t.p)
 #endif
+        <<Manip::value_byteorder(t.q, true)
         ;
     return obs;
 }
@@ -110,13 +114,15 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
 #if TEST_INSERT
     ibs>>Manip::offset_value(cur, t.p);
 #endif
+    ibs>>Manip::value_byteorder(t.q, false);
+    t.q = ntohl(t.q);
     return ibs;
 }
 
 template<class OutStream>
 static bool testStreamInOut()
 {
-    const int COUNT = 10;
+    const int COUNT = 1;
     const char str1[20] = "this is for test";
     std::vector<CTest> tests;
     OutStream obs;
@@ -143,6 +149,7 @@ static bool testStreamInOut()
             t.o.push_back(str2);
         }
         t.p = 400;
+        t.q = 500;
 
         if(!(obs<<t)){
             cerr<<"encode with COutByteStream failed\n";
