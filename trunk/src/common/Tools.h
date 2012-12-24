@@ -232,7 +232,10 @@ namespace Tools
         return UnHex(v.c_str(),v.length());
     }
 
-    //得到主机的字节序,返回little endian(true)或big endian(false)
+    //得到主机的字节序
+    //return:
+    //  true    little endian
+    //  false   big endian(网络序)
     inline bool HostByteOrder(){
 #ifdef BYTE_ORDER
 #   if BYTE_ORDER == LITTLE_ENDIAN
@@ -243,7 +246,7 @@ namespace Tools
 #else
         int t = 1;
         char * p = reinterpret_cast<char *>(&t);
-        return (*p == 0);
+        return (*p == 1);
 #endif
     }
 

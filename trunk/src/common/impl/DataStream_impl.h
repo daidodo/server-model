@@ -15,35 +15,31 @@ class CDataStreamBase
 protected:
     typedef U16 __Length;   // type of length field (string length, array length, etc.)
 public:
-    enum EByteOrder{
-        BigEndian,
-        LittleEndian
-    };
-    enum EOrderType{
-        NetOrder,
-        HostOrder
-    };
     enum ESeekDir{
         Begin,
         End,
         Cur
     };
+    static const bool DEF_NET_BYTEORDER = true;    //默认使用网络字节序(true)还是本地字节序(false)
+    explicit CDataStreamBase(bool netByteOrder = DEF_NET_BYTEORDER)
+        : status_(0)
+        , netByteOrder_(netByteOrder)
+    {}
     bool operator !() const{return status_ != 0;}
     operator __SafeBool() const{return operator !() ? 0 : &__Myt::ResetStatus;}
     void Status(int st){status_ = st;}
     int Status() const{return status_;}
     void ResetStatus(){Status(0);}
+    bool NetByteOrder() const{return netByteOrder_;}
+    void SetByteOrder(bool netByteOrder){netByteOrder_ = netByteOrder;}
 protected:
-    CDataStreamBase():status_(0){}
-    virtual ~CDataStreamBase(){}
-    bool NeedReverse(bool netOrder) const{
-        return (netOrder && ntohl(1) != 1);
-    }
-    bool NeedReverse(EOrderType ot) const{
-        return NeedReverse(ot == NetOrder);
+    bool NeedReverse() const{
+        static bool host = Tools::HostByteOrder();
+        return (netByteOrder_ && host);
     }
 private:
     int status_;
+    bool netByteOrder_;
 };
 
 template<typename Char>
@@ -321,10 +317,10 @@ public:
 
 class CManipulatorSetOrder
 {
-    CDataStreamBase::EOrderType order_;
+    bool netByteOrder_;
 public:
-    explicit CManipulatorSetOrder(CDataStreamBase::EOrderType od):order_(od){}
-    CDataStreamBase::EOrderType Order() const{return order_;}
+    explicit CManipulatorSetOrder(bool netByteOrder):netByteOrder_(netByteOrder){}
+    bool NetByteOrder() const{return netByteOrder_;}
 };
 
 class CManipulatorSeek
