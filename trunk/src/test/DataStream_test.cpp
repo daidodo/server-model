@@ -26,6 +26,34 @@ struct CTest
     std::vector<std::string> o;
     int p;
     int q;
+    explicit CTest(int i = 0){
+        a = 111 - i;
+        b = 222 + i;
+        c = 333 * i;
+        d = 444 - i;
+        e = 555 + i;
+        f = 666 + i;
+        g = 777 + i;
+        h = 888 + i;
+        i = 99 + i;
+        j = 100 + i;
+        k = 200 + i;
+        l = "300";
+        for(int ii = 0;ii < 53;++ii)
+            m.push_back(ii * ii);
+        m2 = m;
+        m3 = m;
+        const char str1[20] = "this is for test";
+        memcpy(n, str1, sizeof n);
+        n2 = m;
+        std::string str2;
+        for(int ii = 0;ii < 30;++ii){
+            str2.push_back('a' + ii);
+            o.push_back(str2);
+        }
+        p = 400 + i;
+        q = 500 + i;
+    }
     bool operator ==(const CTest & t) const{
         return (a == t.a &&
                 b == t.b &&
@@ -120,7 +148,7 @@ static OutStream & operator <<(OutStream & obs, const CTest & t)
     obs<<uint16_t(t.n2.size());
     obs<<Manip::raw(t.n2);
     obs<<t.o.size()
-        <<Manip::range(t.o.begin(), t.o.end())
+        <<Manip::raw(t.o.begin(), t.o.end())
 #if TEST_INSERT
         <<Manip::insert(cur, t.p)
 #endif
@@ -149,7 +177,7 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
     size_t sz2;
     ibs>>sz2;
     t.o.resize(sz2);
-    ibs>>Manip::range(t.o.begin(), t.o.end());
+    ibs>>Manip::raw(t.o.begin(), t.o.end());
 #if TEST_INSERT
     ibs>>Manip::offset_value(cur, t.p);
 #endif
@@ -161,37 +189,11 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
 template<class OutStream>
 static bool testStreamInOut()
 {
-    const int COUNT = 1;
-    const char str1[20] = "this is for test";
+    const int COUNT = 10;
     std::vector<CTest> tests;
     OutStream obs;
     for(int i = 0;i < COUNT;++i){
-        CTest t;
-        t.a = 111;
-        t.b = 222;
-        t.c = 333;
-        t.d = 444;
-        t.e = 555;
-        t.f = 666;
-        t.g = 777;
-        t.h = 888;
-        t.i = 99;
-        t.j = 100;
-        t.k = 200;
-        t.l = "300";
-        for(int i = 0;i < 53;++i)
-            t.m.push_back(i * i);
-        t.m2 = t.m;
-        t.m3 = t.m;
-        memcpy(t.n, str1, sizeof t.n);
-        t.n2 = t.m;
-        std::string str2;
-        for(int i = 0;i < 30;++i){
-            str2.push_back('a' + i);
-            t.o.push_back(str2);
-        }
-        t.p = 400;
-        t.q = 500;
+        CTest t(i);
 
         if(!(obs<<t)){
             cerr<<"encode with COutByteStream failed\n";
@@ -229,33 +231,11 @@ template<class OutStream>
 static bool testStreamInOutRef()
 {
     const int COUNT = 10;
-    const char str1[20] = "this is for test";
     std::vector<CTest> tests;
     typename OutStream::__Buf buf(100, 'a');
     OutStream obs(buf);
     for(int i = 0;i < COUNT;++i){
-        CTest t;
-        t.a = 111;
-        t.b = 222;
-        t.c = 333;
-        t.d = 444;
-        t.e = 555;
-        t.f = 666;
-        t.g = 777;
-        t.h = 888;
-        t.i = 99;
-        t.j = 100;
-        t.k = 200;
-        t.l = "300";
-        for(int i = 0;i < 53;++i)
-            t.m.push_back(i * i);
-        memcpy(t.n, str1, sizeof t.n);
-        std::string str2;
-        for(int i = 0;i < 30;++i){
-            str2.push_back('a' + i);
-            t.o.push_back(str2);
-        }
-        t.p = 400;
+        CTest t(i);
 
         if(!(obs<<t)){
             cerr<<"encode with COutByteStream failed\n";
@@ -291,33 +271,11 @@ static bool testStreamInOutRef()
 static bool testStreamInOutBuf()
 {
     const int COUNT = 10;
-    const char str1[20] = "this is for test";
     std::vector<CTest> tests;
     std::vector<char> buf(10 << 10);
     COutByteStreamBuf obs(&buf[0], buf.size());
     for(int i = 0;i < COUNT;++i){
-        CTest t;
-        t.a = 111;
-        t.b = 222;
-        t.c = 333;
-        t.d = 444;
-        t.e = 555;
-        t.f = 666;
-        t.g = 777;
-        t.h = 888;
-        t.i = 99;
-        t.j = 100;
-        t.k = 200;
-        t.l = "300";
-        for(int i = 0;i < 53;++i)
-            t.m.push_back(i * i);
-        memcpy(t.n, str1, sizeof t.n);
-        std::string str2;
-        for(int i = 0;i < 30;++i){
-            str2.push_back('a' + i);
-            t.o.push_back(str2);
-        }
-        t.p = 400;
+        CTest t(i);
 
         if(!(obs<<t)){
             cerr<<"encode with COutByteStreamBuf failed\n";

@@ -483,7 +483,7 @@ namespace Tools
 
     //specialization for integer types
     //区分iterator类型与数值类型,用于下面的iterator_traits
-    struct CInterTypeTag{};  //integer type tag
+    struct CIntegerTypeTag{};  //integer type tag
 
 }//namespace Tools
 
@@ -491,7 +491,7 @@ NS_SERVER_END
 
 #define ITERATOR_TRAITS_FOR_INTEGER_TYPE(TYPE)  \
     template<>struct iterator_traits< TYPE >{   \
-    typedef NS_SERVER::Tools::CInterTypeTag iterator_category;}
+    typedef NS_SERVER::Tools::CIntegerTypeTag iterator_category;}
 namespace std{
     ITERATOR_TRAITS_FOR_INTEGER_TYPE(bool);
     ITERATOR_TRAITS_FOR_INTEGER_TYPE(char);

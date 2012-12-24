@@ -16,7 +16,7 @@
 //*/
 
 #include <cassert>
-#include <Tools.h>   //Tools::CInterTypeTag,Tools::Destroy
+#include <Tools.h>   //Tools::CIntegerTypeTag,Tools::Destroy
 #include <impl/SingleList_impl.h>
 
 NS_SERVER_BEGIN
@@ -161,7 +161,7 @@ public:
     bool operator >=(const __Myt & other) const {return !(*this < other);}
 private:
     template<class IntegerType>
-    void assignAux(IntegerType sz,IntegerType val,Tools::CInterTypeTag){
+    void assignAux(IntegerType sz,IntegerType val,Tools::CIntegerTypeTag){
         assign(size_type(sz),value_type(val));
     }
     template<class InputIter>
@@ -184,7 +184,7 @@ private:
         }
     }
     template<class IntegerType>
-    void insertAfterAux(iterator pos,IntegerType sz,IntegerType val,Tools::CInterTypeTag){
+    void insertAfterAux(iterator pos,IntegerType sz,IntegerType val,Tools::CIntegerTypeTag){
         insert_after(pos,size_type(sz),value_type(val));
     }
     template<class InputIter>
