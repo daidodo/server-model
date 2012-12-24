@@ -278,7 +278,7 @@ public:
     }
 };
 
-tmplate<class T>
+template<class T>
 class CManipulatorContainer
 {
     T & c_;
@@ -288,10 +288,10 @@ public:
         : c_(c)
         , sz_(sz)
     {}
-    T & Container() const{return c;}
+    T & Container() const{return c_;}
     void Size(size_t sz) const{
         if(sz_)
-            *sz = sz;
+            *sz_ = sz;
     }
 };
 
