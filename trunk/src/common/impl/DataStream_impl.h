@@ -306,12 +306,12 @@ public:
 };
 
 template<class T>
-class CManipulatorRawCont
+class CManipulatorRawSeqCont
 {
     T & c_;
     size_t sz_;
 public:
-    CManipulatorRawCont(T & c, size_t sz)
+    CManipulatorRawSeqCont(T & c, size_t sz)
         : c_(c)
         , sz_(sz)
     {}
