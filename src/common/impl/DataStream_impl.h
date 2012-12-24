@@ -320,11 +320,11 @@ public:
 };
 
 template<class Iter>
-class CManipulatorRange
+class CManipulatorRawRange
 {
     Iter beg_,end_;
 public:
-    CManipulatorRange(Iter first,Iter last)
+    CManipulatorRawRange(Iter first, Iter last)
         : beg_(first)
         , end_(last)
     {}

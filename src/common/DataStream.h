@@ -84,6 +84,11 @@ namespace Manip{
         return NS_IMPL::CManipulatorRawPtr<T>(c, sz);
     }
 
+    template<class Iter>
+    inline NS_IMPL::CManipulatorRawRange<Iter> raw(Iter first, Iter last){
+        return NS_IMPL::CManipulatorRawRange<Iter>(first, last);
+    }
+
     template<class T>
     inline NS_IMPL::CManipulatorRawCont<T> raw(T & c, size_t sz){
         return NS_IMPL::CManipulatorRawCont<T>(c, sz);
@@ -92,12 +97,6 @@ namespace Manip{
     template<class T>
     inline NS_IMPL::CManipulatorRawCont<const T> raw(const T & c){
         return NS_IMPL::CManipulatorRawCont<const T>(c, 0);
-    }
-
-    //read/write range [first,last) of raw array
-    template<class Iter>
-    inline NS_IMPL::CManipulatorRange<Iter> range(Iter first,Iter last){
-        return NS_IMPL::CManipulatorRange<Iter>(first,last);
     }
 
     //set byte order type(true for NetByteOrder, false for HostByteOrder)
@@ -294,7 +293,7 @@ public:
                 return *this;
             }
             m.Cont().resize(sz);
-            *this>>Manip::range(m.Cont().begin(), m.Cont().end());
+            *this>>Manip::raw(m.Cont().begin(), m.Cont().end());
         }
         return *this;
     }
@@ -307,11 +306,11 @@ public:
     template<class T>
     __Myt & operator >>(const NS_IMPL::CManipulatorRawCont<T> & m){
         m.Cont().resize(m.Size());
-        return (*this>>Manip::range(m.Cont().begin(), m.Cont().end()));
+        return (*this>>Manip::raw(m.Cont().begin(), m.Cont().end()));
     }
-    //read range of raw array through CManipulatorRange
+    //read range of raw array through CManipulatorRawRange
     template<class Iter>
-    __Myt & operator >>(const NS_IMPL::CManipulatorRange<Iter> & m){
+    __Myt & operator >>(const NS_IMPL::CManipulatorRawRange<Iter> & m){
         for(Iter i = m.Begin();i != m.End();++i)
             if(!(*this>>(*i)))
                 break;
@@ -508,7 +507,7 @@ public:
             *this<<LenT(0);
         }else{
             *this<<LenT(m.Cont().size())
-                <<Manip::range(m.Cont().begin(), m.Cont().end());
+                <<Manip::raw(m.Cont().begin(), m.Cont().end());
         }
         return *this;
     }
@@ -520,13 +519,14 @@ public:
     //write raw array through CManipulatorRawCont
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorRawCont<T> & m){
-        return (*this<<Manip::range(m.Cont().begin(), m.Cont().end()));
+        return (*this<<Manip::raw(m.Cont().begin(), m.Cont().end()));
     }
-    //write range of raw array through CManipulatorRange
+    //write range of raw array through CManipulatorRawRange
     template<class Iter>
-    __Myt & operator <<(const NS_IMPL::CManipulatorRange<Iter> & m){
+    __Myt & operator <<(const NS_IMPL::CManipulatorRawRange<Iter> & m){
         for(Iter i = m.Begin();i != m.End();++i)
-            *this<<(*i);
+            if(!(*this<<(*i)))
+                break;
         return *this;
     }
     //set order type(NetOrder, HostOrder) through CManipulatorSetOrder
