@@ -1,8 +1,9 @@
 #ifndef DOZERG_DATA_STREAM_IMPL_H_20081016
 #define DOZERG_DATA_STREAM_IMPL_H_20081016
 
-#include <algorithm>
 #include <arpa/inet.h>          //ntohl
+#include <algorithm>
+#include <sstream>
 #include "../CharBuffer.h"
 #include "Config.h"
 
@@ -25,6 +26,7 @@ public:
         : status_(0)
         , netByteOrder_(netByteOrder)
     {}
+    virtual ~CDataStreamBase(){}
     bool operator !() const{return status_ != 0;}
     operator __SafeBool() const{return operator !() ? 0 : &__Myt::ResetStatus;}
     void Status(int st){status_ = st;}
@@ -32,6 +34,13 @@ public:
     void ResetStatus(){Status(0);}
     bool NetByteOrder() const{return netByteOrder_;}
     void SetByteOrder(bool netByteOrder){netByteOrder_ = netByteOrder;}
+    virtual std::string ToString() const{
+        std::ostringstream oss;
+        oss<<"{status_="<<status_
+            <<", netByteOrder_="<<netByteOrder_
+            <<"}";
+        return oss.str();
+    }
 protected:
     //from, to: true-NetByteOrder, false-HostByteOrder
     bool NeedReverse(bool from, bool to) const{
@@ -97,7 +106,7 @@ public:
     bool seek(ssize_t offset){
         if(offset < 0)
             return false;
-        if(offset > cur_)
+        if(size_t(offset) > cur_)
             ensure(offset - cur_);
         cur_ = offset;
         return true;
@@ -119,6 +128,16 @@ public:
         buf_.resize(offset(cur_));
         cur_ = 0;
         return true;
+    }
+    std::string ToString() const{
+        std::ostringstream oss;
+        oss<<"{begin_="<<begin_
+            <<", buf=("<<(cur_ + begin_)<<")"
+            <<Tools::DumpHex(&buf_[0], begin_, ' ', false)
+            <<" | "
+            <<Tools::DumpHex(&buf_[begin_], cur_, ' ', false)
+            <<"}";
+        return oss.str();
     }
 private:
     size_t offset(size_t i) const{return begin_ + i;}
@@ -171,6 +190,7 @@ public:
         sz = buf_.size();
         return true;
     }
+    std::string ToString() const{return ref_.ToString();}
 private:
     template<class BufT>
     void exportAppend(BufT & buf){
@@ -200,7 +220,7 @@ public:
     __Char * buf(size_t i){return &buf_[i];}
     bool ensure(size_t len){return (cur_ + len <= buf_.size());}
     bool seek(ssize_t offset){
-        if(offset < 0 || offset > buf_.size())
+        if(offset < 0 || size_t(offset) > buf_.size())
             return false;
         cur_ = offset;
         return true;
@@ -224,6 +244,13 @@ public:
         sz = buf_.size();
         cur_ = 0;
         return true;
+    }
+    std::string ToString() const{
+        std::ostringstream oss;
+        oss<<"{capacity="<<buf_.capacity()
+            <<", buf_="<<Tools::DumpHex(&buf_[0], cur_)
+            <<"}";
+        return oss.str();
     }
 private:
     //members
@@ -310,26 +337,40 @@ class CManipulatorRawSeqCont
 {
     T & c_;
     size_t sz_;
+    size_t * sz2_;
 public:
-    CManipulatorRawSeqCont(T & c, size_t sz)
+    CManipulatorRawSeqCont(T & c, size_t sz, size_t * sz2)
         : c_(c)
         , sz_(sz)
+        , sz2_(sz2)
     {}
     T & Cont() const{return c_;}
     size_t Size() const{return sz_;}
+    size_t Size2() const{return (sz2_ ? *sz2_ : 0);}
+    void Size2(size_t sz) const{
+        if(sz2_)
+            *sz2_ = sz;
+    }
 };
 
 template<class Iter>
 class CManipulatorRawRange
 {
     Iter beg_,end_;
+    size_t * sz_;
 public:
-    CManipulatorRawRange(Iter first, Iter last)
+    CManipulatorRawRange(Iter first, Iter last, size_t * sz)
         : beg_(first)
         , end_(last)
+        , sz_(sz)
     {}
     Iter Begin() const{return beg_;}
     Iter End() const{return end_;}
+    void Size(size_t sz) const{
+        if(sz_)
+            *sz_ = sz;
+    }
+    size_t Size() const{return (sz_ ? *sz_ : 0);}
 };
 
 class CManipulatorSetOrder
