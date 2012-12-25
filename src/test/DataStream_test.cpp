@@ -1,8 +1,18 @@
 #include "comm.h"
 
+#if 0
+#   define COUT(msg)    cout<<msg<<std::endl
+#   define WHER(msg)    COUT("line "<<__LINE__<<" "<<msg)
+#else
+#   define COUT(msg)
+#   define WHER()
+#endif
+
 #include <DataStream.h>
 
 #define TEST_INSERT 1
+
+const int COUNT = 10;
 
 struct CTest
 {
@@ -21,6 +31,10 @@ struct CTest
     std::vector<int> m;
     std::vector<int> m2;
     std::vector<int> m3;
+    std::list<int> m4;
+    std::list<int> m5;
+    std::string m6;
+    std::string m7;
     char n[20];
     std::vector<int> n2;
     std::string n3;
@@ -62,6 +76,10 @@ struct CTest
             m.push_back(ii * ii);
         m2 = m;
         m3 = m;
+        m4.assign(m.begin(), m.end());
+        m5 = m4;
+        m6 = "235g23r2gsdf";
+        m7 = "235g23r2gsdf32g";
         const char str1[20] = "this is for test";
         memcpy(n, str1, sizeof n);
         n2 = m;
@@ -91,12 +109,18 @@ struct CTest
                 m == t.m &&
                 m2 == t.m2 &&
                 m3 == t.m3 &&
+                m4 == t.m4 &&
+                m5 == t.m5 &&
+                m6 == t.m6 &&
+                m7 == t.m7 &&
                 0 == memcmp(n, t.n, sizeof n) &&
                 n2 == t.n2 &&
                 n3 == t.n3 &&
                 n4 == t.n4 &&
                 o == t.o &&
+#if TEST_INSERT
                 p == t.p &&
+#endif
                 q == t.q
                );
     }
@@ -138,6 +162,23 @@ struct CTest
             oss<<m3[index];
         }
         oss<<"}\n";
+        oss<<"\nm4={";
+        for(std::list<int>::const_iterator i = m4.begin();i != m4.end();++i){
+            if(i != m4.begin())
+                oss<<", ";
+            oss<<*i;
+        }
+        oss<<"}\n";
+        oss<<"\nm5={";
+        for(std::list<int>::const_iterator i = m5.begin();i != m5.end();++i){
+            if(i != m5.begin())
+                oss<<", ";
+            oss<<*i;
+        }
+        oss<<"}\n";
+        oss<<"\nm6="<<Tools::Dump(m6);
+        oss<<"\nm7="<<Tools::Dump(m7);
+        oss<<"\nn="<<Tools::DumpHex(n, sizeof n);
         oss<<"\nn="<<Tools::DumpHex(n, sizeof n);
         oss<<"\nn2={";
         for(size_t index = 0;index < n2.size();++index){
@@ -171,24 +212,41 @@ static OutStream & operator <<(OutStream & obs, const CTest & t)
 #if TEST_INSERT
     size_t cur = obs.Size();
 #endif
-    obs<<t.a<<t.b<<t.c<<t.d<<t.e<<t.f<<t.g<<t.h<<t.i<<t.j<<t.k<<t.l;
+    obs<<t.a<<t.b<<t.c<<t.d<<t.e<<t.f<<t.g<<t.h<<t.i<<t.j<<t.k;
+    COUT("------- << string -----");
+    obs<<t.l;
+    COUT("------- << array(T *, LenT) -----");
     obs<<Manip::array(&t.m[0], uint64_t(t.m.size()));
+    COUT("------- << array<LenT>(const vector<T> &) -----");
     obs<<Manip::array<uint8_t>(t.m2);
+    COUT("------- << array(const vector<T> &) -----");
     obs<<Manip::array(t.m3);
+    COUT("------- << array<LenT>(const list<T> &) -----");
+    obs<<Manip::array<uint8_t>(t.m4);
+    COUT("------- << array(const list<T> &) -----");
+    obs<<Manip::array(t.m5);
+    COUT("------- << array<LenT>(const string &) -----");
+    obs<<Manip::array<uint32_t>(t.m6);
+    COUT("------- << array(const string &) -----");
+    obs<<Manip::array(t.m7);
+    COUT("------- << raw(T *, size_t) ------");
     obs<<Manip::raw(t.n, sizeof t.n);
     obs<<uint16_t(t.n2.size());
+    COUT("------- << raw(const vector<T> &) ------");
     obs<<Manip::raw(t.n2);
     obs<<uint8_t(t.n3.size());
+    COUT("------- << raw(const string &) ------");
     obs<<Manip::raw(t.n3);
     obs<<uint64_t(t.n4.size());
+    COUT("------- << raw(const list<T> &) ------");
     obs<<Manip::raw(t.n4);
-    obs<<t.o.size()
-        <<Manip::raw(t.o.begin(), t.o.end())
+    obs<<t.o.size();
+    COUT("------- << raw(Iter, Iter) ------");
+    obs<<Manip::raw(t.o.begin(), t.o.end());
 #if TEST_INSERT
-        <<Manip::insert(cur, t.p)
+    obs<<Manip::insert(cur, t.p);
 #endif
-        <<Manip::value_byteorder(t.q, true)
-        ;
+    obs<<Manip::value_byteorder(t.q, true);
     return obs;
 }
 
@@ -198,26 +256,44 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
     size_t cur = ibs.CurPos();
     ibs>>Manip::skip(sizeof t.p);
 #endif
-    ibs>>t.a>>t.b>>t.c>>t.d>>t.e>>t.f>>t.g>>t.h>>t.i>>t.j>>t.k>>t.l;
+    ibs>>t.a>>t.b>>t.c>>t.d>>t.e>>t.f>>t.g>>t.h>>t.i>>t.j>>t.k;
+    COUT("-------- >> string ----------");
+    ibs>>t.l;
     uint64_t sz = 100;
     t.m.resize(sz);
+    COUT("-------- >> array(T *, LenT) ----------");
     ibs>>Manip::array(&t.m[0], uint64_t(t.m.size()), &sz);
     t.m.resize(sz);
+    COUT("-------- >> array<LenT>(vector<T> &) ----------");
     ibs>>Manip::array<uint8_t>(t.m2);
+    COUT("-------- >> array(vector<T> &) ----------");
     ibs>>Manip::array(t.m3);
+    COUT("-------- >> array<LenT>(list<T> &) ----------");
+    ibs>>Manip::array<uint8_t>(t.m4);
+    COUT("-------- >> array(list<T> &) ----------");
+    ibs>>Manip::array(t.m5);
+    COUT("-------- >> array<LenT>(string &) ----------");
+    ibs>>Manip::array<uint32_t>(t.m6);
+    COUT("-------- >> array(string &) ----------");
+    ibs>>Manip::array(t.m7);
+    COUT("-------- >> raw(T *, size_t) ----------");
     ibs>>Manip::raw(t.n, sizeof t.n);
     uint16_t n2Len;
     ibs>>n2Len;
+    COUT("-------- >> raw(vector<T> &, size_t) ----------");
     ibs>>Manip::raw(t.n2, n2Len);
     uint8_t n3Len;
     ibs>>n3Len;
+    COUT("-------- >> raw(string &, size_t) ----------");
     ibs>>Manip::raw(t.n3, n3Len);
     uint64_t n4Len;
     ibs>>n4Len;
+    COUT("-------- >> raw(list<T> &, size_t) ----------");
     ibs>>Manip::raw(t.n4, n4Len);
     size_t sz2;
     ibs>>sz2;
     t.o.resize(sz2);
+    COUT("-------- >> raw(Iter, Iter) ----------");
     ibs>>Manip::raw(t.o.begin(), t.o.end());
 #if TEST_INSERT
     ibs>>Manip::offset_value(cur, t.p);
@@ -230,7 +306,6 @@ static CInByteStream & operator >>(CInByteStream & ibs, CTest & t)
 template<class OutStream>
 static bool testStreamInOut()
 {
-    const int COUNT = 1;
     std::vector<CTest> tests;
     OutStream obs;
     for(int i = 0;i < COUNT;++i){
@@ -242,6 +317,7 @@ static bool testStreamInOut()
         }
         tests.push_back(t);
     }
+    //cout<<"obs="<<obs.ToString()<<endl;
     typename OutStream::__Buf buf;
     if(!obs.ExportData(buf)){
         cerr<<"COutByteStream::ExportData() failed\n";
@@ -258,10 +334,7 @@ static bool testStreamInOut()
         }
         if(tests[i] != t2){
             cerr<<"encode and decode not match, tests["<<i<<"]="<<tests[i].toString()<<", t2="<<t2.toString()<<endl;
-            cerr<<"ibs.CurPos()="<<ibs.CurPos()<<", buf="<<Tools::DumpHex(&buf[0], ibs.CurPos())
-                <<" | "
-                <<Tools::DumpHex(&buf[ibs.CurPos()], buf.size() - ibs.CurPos(), ' ', false)
-                <<"...\n";
+            cerr<<"ibs="<<ibs.ToString()<<std::endl;
             return false;
         }
     }
@@ -271,7 +344,6 @@ static bool testStreamInOut()
 template<class OutStream>
 static bool testStreamInOutRef()
 {
-    const int COUNT = 10;
     std::vector<CTest> tests;
     typename OutStream::__Buf buf(100, 'a');
     OutStream obs(buf);
@@ -284,6 +356,7 @@ static bool testStreamInOutRef()
         }
         tests.push_back(t);
     }
+    //cout<<"obs="<<obs.ToString()<<endl;
     if(!obs.ExportData()){
         cerr<<"COutByteStream::ExportData() failed\n";
         return false;
@@ -299,10 +372,7 @@ static bool testStreamInOutRef()
         }
         if(tests[i] != t2){
             cerr<<"encode and decode not match, tests["<<i<<"]="<<tests[i].toString()<<", t2="<<t2.toString()<<endl;
-            cerr<<"ibs.CurPos()="<<ibs.CurPos()<<", buf="<<Tools::DumpHex(&buf[0], ibs.CurPos())
-                <<" | "
-                <<Tools::DumpHex(&buf[ibs.CurPos()], buf.size() - ibs.CurPos(), ' ', false)
-                <<"...\n";
+            cerr<<"ibs="<<ibs.ToString()<<std::endl;
             return false;
         }
     }
@@ -311,7 +381,6 @@ static bool testStreamInOutRef()
 
 static bool testStreamInOutBuf()
 {
-    const int COUNT = 10;
     std::vector<CTest> tests;
     std::vector<char> buf(1 << 20);
     COutByteStreamBuf obs(&buf[0], buf.size());
@@ -324,6 +393,7 @@ static bool testStreamInOutBuf()
         }
         tests.push_back(t);
     }
+    //cout<<"obs="<<obs.ToString()<<endl;
     size_t sz = buf.size();
     if(!obs.ExportData(sz)){
         cerr<<"COutByteStreamBuf::ExportData() failed\n";
@@ -338,10 +408,7 @@ static bool testStreamInOutBuf()
         }
         if(tests[i] != t2){
             cerr<<"encode and decode not match, tests["<<i<<"]="<<tests[i].toString()<<", t2="<<t2.toString()<<endl;
-            cerr<<"ibs.CurPos()="<<ibs.CurPos()<<", buf="<<Tools::DumpHex(&buf[0], ibs.CurPos())
-                <<" | "
-                <<Tools::DumpHex(&buf[ibs.CurPos()], buf.size() - ibs.CurPos(), ' ', false)
-                <<"...\n";
+            cerr<<"ibs="<<ibs.ToString()<<std::endl;
             return false;
         }
     }

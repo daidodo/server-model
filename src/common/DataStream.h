@@ -16,8 +16,8 @@
     操作符:
         array               输入/输出长度+数组数据
         raw                 输入/输出数组数据
-        range               输入/输出[first, last)范围内的数据
         set_order           设置输入/输出流的字节序
+        value_byteorder     输入/输出指定字节序的数据
         seek                设置输入/输出流的偏移
         skip                跳过/预留指定字节数据
         offset_value        输入/输出指定位置的数据
@@ -35,6 +35,9 @@
         20121217    增加COutByteStreamVec, COutByteStreamBuf, 修改COutByteStream为以std::string为底层buf
                     增加protobuf类的输入输出
         20121223    增加COutByteStreamStr, COutByteStreamStrRef, COutByteStreamVecRef, 优化COutByteStreamBasic实现
+        201212225   优化array，raw，增加value_byteorder，去掉range（改为raw）
+                    优化std::string，std::vector容器的读写
+                    重新增加ToString
     Manual:
         请参考"doc/DataStream-manual.txt"
 
@@ -65,8 +68,11 @@ namespace Manip{
         return NS_IMPL::CManipulatorRawPtr<T>(&c[old], sz);
     }
 
+    //sz: return size of c
     template<class T>
-    inline NS_IMPL::CManipulatorRawPtr<const T> raw(const std::vector<T> & c){
+    inline NS_IMPL::CManipulatorRawPtr<const T> raw(const std::vector<T> & c, size_t * sz = NULL){
+        if(sz)
+            *sz = c.size();
         return NS_IMPL::CManipulatorRawPtr<const T>(&c[0], c.size());
     }
 
@@ -77,29 +83,34 @@ namespace Manip{
         return NS_IMPL::CManipulatorRawPtr<Char>(&c[old], len);
     }
 
+    //sz: return size of c
     template<typename Char>
-    inline NS_IMPL::CManipulatorRawPtr<const Char> raw(const std::basic_string<Char> & c){
+    inline NS_IMPL::CManipulatorRawPtr<const Char> raw(const std::basic_string<Char> & c, size_t * sz = NULL){
+        if(sz)
+            *sz = c.size();
         return NS_IMPL::CManipulatorRawPtr<const Char>(&c[0], c.size());
     }
 
+    //sz: return size of [first, last)
     template<class Iter>
-    inline NS_IMPL::CManipulatorRawRange<Iter> raw(Iter first, Iter last){
-        return NS_IMPL::CManipulatorRawRange<Iter>(first, last);
+    inline NS_IMPL::CManipulatorRawRange<Iter> raw(Iter first, Iter last, size_t * sz = NULL){
+        return NS_IMPL::CManipulatorRawRange<Iter>(first, last, sz);
     }
 
     template<class T>
     inline NS_IMPL::CManipulatorRawSeqCont<T> raw(T & c, size_t sz){
-        return NS_IMPL::CManipulatorRawSeqCont<T>(c, sz);
+        return NS_IMPL::CManipulatorRawSeqCont<T>(c, sz, NULL);
     }
 
+    //sz: return size of c
     template<class T>
-    inline NS_IMPL::CManipulatorRawSeqCont<const T> raw(const T & c){
-        return NS_IMPL::CManipulatorRawSeqCont<const T>(c, 0);
+    inline NS_IMPL::CManipulatorRawSeqCont<const T> raw(const T & c, size_t * sz = NULL){
+        return NS_IMPL::CManipulatorRawSeqCont<const T>(c, 0, sz);
     }
 
     //read/write array( = length + raw array)
     template<typename LenT, class T>
-    inline NS_IMPL::CManipulatorArrayPtr<LenT, T> array(T * c, LenT sz, LenT * real_sz = 0){
+    inline NS_IMPL::CManipulatorArrayPtr<LenT, T> array(T * c, LenT sz, LenT * real_sz = NULL){
         return NS_IMPL::CManipulatorArrayPtr<LenT, T>(c, sz, real_sz);
     }
 
@@ -297,20 +308,11 @@ public:
     //read range of raw array through CManipulatorRawRange
     template<class Iter>
     __Myt & operator >>(const NS_IMPL::CManipulatorRawRange<Iter> & m){
-        for(Iter i = m.Begin();i != m.End();++i)
+        size_t sz = 0;
+        for(Iter i = m.Begin();i != m.End();++i, ++sz)
             if(!(*this>>(*i)))
                 break;
-        return *this;
-    }
-    //read std::string( = length + bytes)
-    __Myt & operator >>(std::string & c){
-        uint16_t sz = 0;
-        if(*this>>sz){
-            if(ensure(sz)){
-                c.append(data_ + cur_ , sz);
-                cur_ += sz;
-            }
-        }
+        m.Size(sz);
         return *this;
     }
     //read array( = length + raw array) through CManipulatorArrayPtr
@@ -322,8 +324,8 @@ public:
                 Status(1);
                 return *this;
             }
-            m.Size2(sz);
-            readRaw(m.Ptr(), sz);
+            if(*this>>Manip::raw(m.Ptr(), sz))
+                m.Size2(sz);
         }
         return *this;
     }
@@ -336,10 +338,13 @@ public:
                 Status(1);
                 return *this;
             }
-            m.Cont().resize(sz);
-            *this>>Manip::raw(m.Cont().begin(), m.Cont().end());
+            *this>>Manip::raw(m.Cont(), sz);
         }
         return *this;
+    }
+    //read std::string( = length + bytes)
+    __Myt & operator >>(std::string & c){
+        return (*this>>Manip::array(c));
     }
     //set order type(NetOrder or HostOrder) through CManipulatorSetOrder
     __Myt & operator >>(const NS_IMPL::CManipulatorSetOrder & m){
@@ -381,6 +386,18 @@ public:
                 Status(1);
         }
         return *this;
+    }
+    std::string ToString() const{
+        std::ostringstream oss;
+        oss<<"{CDataStreamBase="<<__MyBase::ToString()
+            <<", toByteOrder_="<<toByteOrder_
+            <<", cur_="<<cur_
+            <<", data_=("<<len_<<")"
+            <<Tools::DumpHex(data_, cur_, ' ', false)
+            <<" | "
+            <<Tools::DumpHex(data_ +  cur_, len_ - cur_, ' ', false)
+            <<"}";
+        return oss.str();
     }
 private:
     bool needReverse() const{
@@ -524,24 +541,23 @@ public:
     //write raw array through CManipulatorRawSeqCont
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorRawSeqCont<T> & m){
-        return (*this<<Manip::raw(m.Cont().begin(), m.Cont().end()));
-    }
-    //write range of raw array through CManipulatorRawRange
-    template<class Iter>
-    __Myt & operator <<(const NS_IMPL::CManipulatorRawRange<Iter> & m){
-        for(Iter i = m.Begin();i != m.End();++i)
-            if(!(*this<<(*i)))
-                break;
+        size_t sz = writeRange(m.Cont().begin(), m.Cont().end());
+        m.Size2(sz);
         return *this;
     }
-    //write std::string
-    __Myt & operator <<(std::string c){
-        return writeArray(c.c_str(), uint16_t(c.length()));
+    //write raw array through CManipulatorRawRange
+    template<class Iter>
+    __Myt & operator <<(const NS_IMPL::CManipulatorRawRange<Iter> & m){
+        size_t sz = writeRange(m.Begin(), m.End());
+        m.Size(sz);
+        return *this;
     }
     //write array( = length + raw array) through CManipulatorArrayPtr
     template<typename LenT, class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorArrayPtr<LenT, T> & m){
-        return writeArray(m.Ptr(), m.Size1());
+        if(*this<<LenT(m.Size1()))
+            writeRaw(m.Ptr(), m.Size1());
+        return *this;
     }
     //write array( = length + raw array) through CManipulatorArrayCont
     template<typename LenT, class T>
@@ -549,17 +565,24 @@ public:
         if(m.Cont().empty()){
             *this<<LenT(0);
         }else{
-            *this<<LenT(m.Cont().size())
-                <<Manip::raw(m.Cont().begin(), m.Cont().end());
+            const size_t off = Size();
+            size_t sz = 0;
+            if(*this<<LenT(0)   //NOTE: m.Cont().size() may be O(n) complexity
+                    <<Manip::raw(m.Cont(), &sz))
+                *this<<Manip::offset_value(off, LenT(sz));
         }
         return *this;
+    }
+    //write std::string
+    __Myt & operator <<(const std::string & c){
+        return (*this<<Manip::array(c));
     }
     //set order type(NetOrder, HostOrder) through CManipulatorSetOrder
     __Myt & operator <<(const NS_IMPL::CManipulatorSetOrder & m){
         SetByteOrder(m.NetByteOrder());
         return *this;
     }
-    //read value with fixed byte order
+    //write value with fixed byte order
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorValueByteOrder<T> & m){
         bool oldBO = fromByteOrder_;
@@ -612,6 +635,14 @@ public:
         }
         return *this;
     }
+    std::string ToString() const{
+        std::ostringstream oss;
+        oss<<"{CDataStreamBase="<<__MyBase::ToString()
+            <<", fromByteOrder_="<<fromByteOrder_
+            <<", data_="<<data_.ToString()
+            <<"}";
+        return oss.str();
+    }
 private:
     bool needReverse() const{
         return NeedReverse(fromByteOrder_, NetByteOrder());
@@ -643,11 +674,13 @@ private:
         }
         return *this;
     }
-    template<typename LenT, typename T>
-    __Myt & writeArray(const T * c, LenT sz){
-        if(*this<<sz)
-            writeRaw(c, sz);
-        return *this;
+    template<class Iter>
+    size_t writeRange(Iter first, Iter last){
+        size_t c = 0;
+        for(Iter i = first;i != last;++i, ++c)
+            if(!(*this<<(*i)))
+                break;
+        return c;
     }
     bool ensureRoom(size_t len){
         if(operator !())
