@@ -26,6 +26,7 @@
         TimeStringUs
         IPv4String
         IPv4FromStr
+        IPv4FromEth
         SafeCopy
         Construct
         Destroy
@@ -42,6 +43,7 @@
         ProgramName
         ExtractArg
         ToStringPtr
+        toStringPtr
         ToStringBits
         ErrorMsg
         Daemon
@@ -50,10 +52,12 @@
         UrlDecode
         XmlEncode
         AbsFilename
+        Basename
         IsTimeout
         ArraySize
         CxxDemangle
         Crc
+        Md5
         IsPrime
         PrimeLess
         MEM_OFFSET
@@ -303,6 +307,8 @@ namespace Tools
 
     U32 IPv4FromStr(std::string ip,bool hostByteOrder = true);
 
+    U32 IPv4FromEth(const std::string & eth, bool hostByteOrder = true);
+
     //把[src_first,src_last)的内容copy到[dst_first,dst_first + dst_size)区间
     //return实际copy后,元素的src和dst尾标杆
     template<class InputIterator,class OutputIterator,class Size>
@@ -414,6 +420,12 @@ namespace Tools
         return (p ? p->ToString() : "NULL");
     }
 
+    //调用对象指针p的ToString()函数时，进行安全检查
+    template<class Ptr>
+    std::string toStringPtr(const Ptr & p){
+        return (p ? p->toString() : "NULL");
+    }
+
     //将U32类型的v及每个bit的name显示出来
     //name: 指定每个bit的名称，为0时不显示
     //name_len: name数组的长度
@@ -438,7 +450,10 @@ namespace Tools
     std::string XmlEncode(const std::string & val);
 
     //如果fname不是绝对路径，补全成绝对路径后返回
-	std::string AbsFilename(const std::string & fname);
+    std::string AbsFilename(const std::string & fname);
+
+    //去掉fname里的目录部分，只留文件名
+    std::string Basename(const std::string & fname);
 
     //判断是否超时
     //curtime: 当前时间
@@ -472,6 +487,18 @@ namespace Tools
     template<typename Int>
     Int Crc(Int init, const std::vector<char> & buf){
         return Crc(init, &buf[0], buf.size());
+    }
+
+    //计算buf的md5
+    //TODO
+    std::string Md5(const char * buf, size_t sz);
+
+    inline std::string Md5(const std::string & buf){
+        return Md5(&buf[0], buf.size());
+    }
+
+    inline std::string Md5(const std::vector<char> & buf){
+        return Md5(&buf[0], buf.size());
     }
 
     //返回v是否素数
