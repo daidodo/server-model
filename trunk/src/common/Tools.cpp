@@ -15,6 +15,8 @@
 #include <cstring>
 #include <cassert>
 #include <iomanip>          //std::setw
+#include <openssl/md5.h>
+#include "Sockets.h"
 #include "Tools.h"
 
 NS_SERVER_BEGIN
@@ -305,8 +307,8 @@ namespace Tools{
     std::string TimeStringUs(U64 timeUs,std::string format)
     {
         std::ostringstream oss;
-        oss<<" "<<(timeUs % 1000000)<<" us";
-        return TimeString(U32(timeUs / 1000000),format) + oss.str();
+        oss<<TimeString(U32(timeUs / 1000000),format)<<"."<<(timeUs % 1000000);
+        return oss.str();
     }
 
     std::string IPv4String(U32 ip,bool hostByteOrder)
@@ -325,6 +327,15 @@ namespace Tools{
         if(inet_pton(AF_INET,ip.c_str(),&in) == 0)
             return 0;
         return hostByteOrder ? ntohl(in.s_addr) : in.s_addr;	
+    }
+
+    U32 IPv4FromEth(const std::string & eth, bool hostByteOrder)
+    {
+        CSockAddr addr;
+        addr.SetAddr(eth);
+        if(!addr.IsValid())
+            return 0;
+        return addr.GetIPv4(hostByteOrder);
     }
 
     bool SetMaxFileDescriptor(U32 numfiles)
@@ -552,6 +563,16 @@ namespace Tools{
         return (fname[0] != '/' ? cwd += fname : fname);
     }
 
+    std::string Basename(const std::string & fname)
+    {
+        if(fname.empty())
+            return fname;
+        std::string::size_type pos = fname.find_last_of('/');
+        if(std::string::npos == pos)
+            return fname;
+        return fname.substr(pos + 1, fname.size() - pos);
+    }
+
     bool IsTimeout(U32 oldTime, U32 curtime, int timeout, int jumping)
     {
         if(!oldTime || timeout <= 0)
@@ -592,6 +613,16 @@ namespace Tools{
             if(IsPrime(v))
                 return v;
         return 0;
+    }
+
+    std::string Md5(const char * buf, size_t sz)
+    {
+        if(!sz)
+            return std::string();
+        assert(buf);
+        std::string md5(MD5_DIGEST_LENGTH, 0);
+        MD5(reinterpret_cast<const unsigned char *>(buf), sz, reinterpret_cast<unsigned char *>(&md5[0]));
+        return md5;
     }
 
 }//namespace Toos

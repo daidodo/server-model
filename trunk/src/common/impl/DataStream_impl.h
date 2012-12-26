@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <sstream>
 #include "../CharBuffer.h"
+#include "../Tools.h"
 #include "Config.h"
 
 NS_IMPL_BEGIN
