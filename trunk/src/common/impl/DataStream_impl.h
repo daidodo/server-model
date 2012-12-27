@@ -26,8 +26,8 @@ public:
     explicit CDataStreamBase(bool netByteOrder = DEF_NET_BYTEORDER)
         : status_(0)
         , netByteOrder_(netByteOrder)
+        , hostByteOrder_(Tools::HostByteOrder())
     {}
-    virtual ~CDataStreamBase(){}
     bool operator !() const{return status_ != 0;}
     operator __SafeBool() const{return operator !() ? 0 : &__Myt::ResetStatus;}
     void Status(int st){status_ = st;}
@@ -35,7 +35,7 @@ public:
     void ResetStatus(){Status(0);}
     bool NetByteOrder() const{return netByteOrder_;}
     void SetByteOrder(bool netByteOrder){netByteOrder_ = netByteOrder;}
-    virtual std::string ToString() const{
+    std::string ToString() const{
         std::ostringstream oss;
         oss<<"{status_="<<status_
             <<", netByteOrder_="<<netByteOrder_
@@ -44,15 +44,16 @@ public:
     }
 protected:
     //from, to: true-NetByteOrder, false-HostByteOrder
-    bool NeedReverse(bool from, bool to) const{
-        if(from == to)
-            return false;
-        static bool host = Tools::HostByteOrder();
-        return host;
+    //return:
+    //  true    need swap byte order
+    //  false   no need
+    inline bool NeedReverse(bool from, bool to) const{
+        return (from == to) && hostByteOrder_;
     }
 private:
     int status_;
     bool netByteOrder_;
+    const bool hostByteOrder_;
 };
 
 template<typename Char>

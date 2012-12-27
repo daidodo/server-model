@@ -8,24 +8,22 @@ FRAME := $(BASEDIR)/frame
 LIBCOMM := $(COMMON)/libcommon.a
 LIBFRAME := $(FRAME)/libframe.a
 
-
     #external
-EXTERN_FLAGS   :=#-pg
-EXTERN__LIB    :=
-
+EXTERN_FLAGS := #-g -pg
+EXTERN__LIB :=
 
 #### OPTIONS ###
     #------use logger(-DLOGGER) or not
 LOG            := -DLOGGER
     #------use logsys(LOGSYS=-DLOGSYS) or log4cpp(LOG4CLIB=-llog4cplus)
 LOGSYS         := -DLOGSYS
-#LOG4CLIB       := -llog4cplus
+LOG4CLIB       := #-llog4cplus
     #------use zlib or not
-#ZIP           := -lz
+ZIP            := #-lz
     #------use openssl(-lcrypto) or not
 CRYPTO         := -lcrypto
     #------use mysql(-lmysqlclient_r -lz) or not
-#MYSQL          := -lmysqlclient_r -lz
+MYSQL          := #-lmysqlclient_r -lz
     #------use epoll(-DUSEEPOLL) or poll
 EPOLL          := -DUSEEPOLL
     #------use mt_alloc or not

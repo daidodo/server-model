@@ -256,7 +256,7 @@ namespace Tools
 
     //改变v的byte order.要求T是原始数据类型
     template<typename T>
-    T SwapByteOrder(T v){
+    inline T SwapByteOrder(T v){
         return CByteOrderTraits<T,sizeof(T)>::Swap(v);
     }
 

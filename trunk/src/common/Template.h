@@ -97,26 +97,30 @@ struct CTypeSelector<T1,T2,false>{
 template<typename T, size_t N>
 struct CByteOrderTraits{};
 
-template<typename T>struct CByteOrderTraits<T, 1>{
-    static T Swap(T a){
+template<typename T>
+struct CByteOrderTraits<T, 1>{
+    inline static T Swap(T a){
         return a;
     }
 };
 
-template<typename T>struct CByteOrderTraits<T, 2>{
-    static T Swap(T a){
+template<typename T>
+struct CByteOrderTraits<T, 2>{
+    inline static T Swap(T a){
         return bswap_16(a);
     }
 };
 
-template<typename T>struct CByteOrderTraits<T, 4>{
-    static T Swap(T a){
+template<typename T>
+struct CByteOrderTraits<T, 4>{
+    inline static T Swap(T a){
         return bswap_32(a);
     }
 };
 
-template<typename T>struct CByteOrderTraits<T, 8>{
-    static T Swap(T a){
+template<typename T>
+struct CByteOrderTraits<T, 8>{
+    inline static T Swap(T a){
         return bswap_64(a);
     }
 };

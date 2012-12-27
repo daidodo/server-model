@@ -2,6 +2,7 @@ COMMONDIR := common
 FRAMEDIR := frame
 SERVERDIR := server
 TESTDIR := test
+PFTESTDIR := pf_test
 
 all: debug
 
@@ -27,6 +28,7 @@ cleanall:
 	$(MAKE) -C $(FRAMEDIR) cleanall
 	$(MAKE) -C $(SERVERDIR) cleanall
 	$(MAKE) -C $(TESTDIR) cleanall
+	$(MAKE) -C $(PFTESTDIR) cleanall
 	$(RM) tags
 
 love: clean all
