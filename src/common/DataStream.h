@@ -19,8 +19,8 @@
         set_order           设置输入/输出流的字节序
         value_byteorder     输入/输出指定字节序的数据
         seek                设置输入/输出流的偏移
-        skip                跳过/预留指定字节数据
-        offset_value        输入/输出指定位置的数据
+        skip                预留/抹除指定字节数据
+        offset_value        输入/输出数据到指定位置
         insert              在指定位置插入数据
         protobuf            封装protobuf类的输入输出
     History
@@ -134,7 +134,7 @@ namespace Manip{
         return NS_IMPL::CManipulatorArrayCont<uint16_t, const T>(c, 0);
     }
 
-    //set byte order type(true for NetByteOrder, false for HostByteOrder)
+    //set byte order type(true for Net Byte Order, false for Host Byte Order)
     inline NS_IMPL::CManipulatorSetOrder set_order(bool netByteOrder){
         return NS_IMPL::CManipulatorSetOrder(netByteOrder);
     }
@@ -178,12 +178,12 @@ namespace Manip{
 
     //read/write protobuf message
     template<class T>
-    inline NS_IMPL::CManipulatorProtobuf<T> protobuf(T & msg, size_t size = 0){
+    inline NS_IMPL::CManipulatorProtobuf<T> protobuf(T & msg, size_t size = size_t(-1)){
         return NS_IMPL::CManipulatorProtobuf<T>(msg, size);
     }
     template<class T>
-    inline NS_IMPL::CManipulatorProtobuf<const T> protobuf(const T & msg, size_t size = 0){
-        return NS_IMPL::CManipulatorProtobuf<const T>(msg, size);
+    inline NS_IMPL::CManipulatorProtobuf<const T> protobuf(const T & msg){
+        return NS_IMPL::CManipulatorProtobuf<const T>(msg, 0);
     }
 
 }//namespace Manip
@@ -348,14 +348,14 @@ public:
     }
     //set order type(NetOrder or HostOrder) through CManipulatorSetOrder
     __Myt & operator >>(const NS_IMPL::CManipulatorSetOrder & m){
-        SetByteOrder(m.NetByteOrder());
+        SetByteOrder(m.GetByteOrder());
         return *this;
     }
     //read value with fixed byte order
     template<class T>
     __Myt & operator >>(const NS_IMPL::CManipulatorValueByteOrder<T> & m){
         bool oldBO = toByteOrder_;
-        toByteOrder_ = m.NetByteOrder();
+        toByteOrder_ = m.GetByteOrder();
         *this>>m.Value();
         toByteOrder_ = oldBO;
         return *this;
@@ -378,6 +378,8 @@ public:
     template<class T>
     __Myt & operator >>(const NS_IMPL::CManipulatorProtobuf<T> & m){
         size_t sz = m.Size();
+        if(size_t(-1) == sz)
+            sz = LeftSize();
         if(sz && ensure(sz)){
             typename NS_IMPL::CManipulatorProtobuf<T>::__Msg & msg = m.Msg();
             if(msg.ParseFromArray(data_ + cur_, sz)){
@@ -401,7 +403,7 @@ public:
     }
 private:
     bool needReverse() const{
-        return NeedReverse(NetByteOrder(), toByteOrder_);
+        return NeedReverse(GetByteOrder(), toByteOrder_);
     }
     template<typename T>
     __Myt & readPod(T & c){
@@ -579,14 +581,14 @@ public:
     }
     //set order type(NetOrder, HostOrder) through CManipulatorSetOrder
     __Myt & operator <<(const NS_IMPL::CManipulatorSetOrder & m){
-        SetByteOrder(m.NetByteOrder());
+        SetByteOrder(m.GetByteOrder());
         return *this;
     }
     //write value with fixed byte order
     template<class T>
     __Myt & operator <<(const NS_IMPL::CManipulatorValueByteOrder<T> & m){
         bool oldBO = fromByteOrder_;
-        fromByteOrder_ = m.NetByteOrder();
+        fromByteOrder_ = m.GetByteOrder();
         *this<<m.Value();
         fromByteOrder_ = oldBO;
         return *this;
@@ -601,7 +603,7 @@ public:
     __Myt & operator <<(const NS_IMPL::CManipulatorOffsetValue<T> & m){
         const size_t old = Size();
         if(0 <= Seek(m.Off())
-                && (*this<<(m.Value())))
+                && (*this<<m.Value()))
             Seek(old);
         return *this;
     }
@@ -645,7 +647,7 @@ public:
     }
 private:
     bool needReverse() const{
-        return NeedReverse(fromByteOrder_, NetByteOrder());
+        return NeedReverse(fromByteOrder_, GetByteOrder());
     }
     template<typename T>
     __Myt & writePod(T c){
