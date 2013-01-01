@@ -394,8 +394,8 @@ static bool testStreamInOutBuf()
         tests.push_back(t);
     }
     //cout<<"obs="<<obs.ToString()<<endl;
-    size_t sz = buf.size();
-    if(!obs.ExportData(sz)){
+    size_t sz;
+    if(!obs.ExportData(&sz)){
         cerr<<"COutByteStreamBuf::ExportData() failed\n";
         return false;
     }

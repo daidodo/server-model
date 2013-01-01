@@ -177,12 +177,6 @@ public:
             exportAppend(buf);
         return true;
     }
-    template<class BufT>
-    bool exportData(BufT & buf){
-        ref_.exportData();
-        exportAppend(buf);
-        return true;
-    }
     template<typename CharT>
     bool exportData(CharT * buf, size_t & sz){
         if(sz < cur())
@@ -194,8 +188,7 @@ public:
     }
     std::string ToString() const{return ref_.ToString();}
 private:
-    template<class BufT>
-    void exportAppend(BufT & buf){
+   void exportAppend(__Buf & buf){
         const size_t old = buf.size();
         buf.resize(old + buf_.size());
         __buf_copy(&buf[old], &buf_[0], buf_.size());
@@ -240,10 +233,10 @@ public:
         __buf_copy(&buf_[off], buf, sz);
         cur_ += sz;
     }
-    bool exportData(size_t & sz){
-        if(sz < cur())
-            return false;
-        sz = buf_.size();
+    template<typename SizeT>
+    bool exportData(SizeT * sz){
+        if(sz)
+            *sz = buf_.size();
         cur_ = 0;
         return true;
     }
