@@ -505,16 +505,13 @@ public:
     bool ExportData(){
         return data_.exportData();
     }
-    bool ExportData(size_t & sz){
+    template<typename SizeT>
+    bool ExportData(SizeT * sz){
         return data_.exportData(sz);
     }
     //导出所有写入的数据，追加到dst已有数据后面
     //并清空自己
     bool ExportData(__Buf & dst){
-        return data_.exportData(dst);
-    }
-    template<class BufT>
-    bool ExportData(BufT & dst){
         return data_.exportData(dst);
     }
     //导出所有写入的数据，覆盖dst已有数据
