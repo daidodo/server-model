@@ -1,320 +1,468 @@
-﻿	<common/DataStream.h>指南
+﻿	DataStream使用指南
 
-实现了二进制数据流库，即把任意类型的对象，转化成二进制流，以便于在网络间交换数
-据；或从2进制数据流中,取出需要的对象，还原数据。
+实现了二进制数据流库，即把任意类型的对象，转化成二进制流，以便于在网络间传输；或从二进制数据流中，取出需要的对象，还原数据。
 
-1 使用指南
 
-1.1 CInByteStream
+1. CInByteStream
 
-从指定的2进制数据流中，读取需要的数据。
+从二进制数据流中，读取数据。
 
-CInByteStream可以设置如下形式的2进制数据作为源：
+
+1.1 初始化
+CInByteStream可以设置如下形式的二进制数据作为源：
 	[const char * , size_t]
 	[const unsigned char * , size_t]
 	[const signed char * , size_t]
 	std::vector<char>
 	std::vector<unsigned char>
 	std::vector<signed char>
+	std::string
 除了通过构造函数设置数据源，还可以通过SetSource()在任意时间改变数据源。
-SetSource()会重置所有指针和错误状态。参数netByteOrder用于设置数据源的的字节序类
-型，可以是网络字节序(true)或本地字节序(false)。
-
-OrderType()函数用于设置输入流的字节序类型(NetOrder或HostOrder)。
-
-Seek()和Tell()函数用于设置/获取读指针cur_的位置。参数dir指定了偏移的方向和参照
-点，有效的取值为：
-	Begin	此时Seek()表示设置cur_相对于数据源起点的偏移为参数off的值。
-		Tell()表示获取cur_相对于数据源起点的偏移量。
-	End	此时Seek()表示设置cur_到数据源结尾之前off偏移量的位置。
-		Tell()表示cur_到数据源结尾的距离，即剩余的数据量。
-	Cur	此时Seek()表示把cur_移动off偏移量：如果off > 0，那么向后移动；
-		如果off < 0，那么向前移动。
-		Tell()总是返回0。
-Seek()函数总是返回cur_指针相对于数据源起点的偏移量。
-
-CurPos()和LeftSize()函数分别返回已读取的数据量和剩余的数据量。
-
-错误状态函数：
-Status()函数用于设置/获取错误状态，0表示正常状态，其他值表示异常状态。在错误状
-态下，任何流输入操作都无效（什么也不做）。
-ResetStatus()函数用于重置错误状态。
-另外定义了operator !()和operator __SafeBool()用于检测状态是否正常。
-例如：
-	CInByteStream ds;
-	if(!ds){
-	    cerr<<"CInByteStream is in error status."
-	        <<" status no = "<<ds.Status();
-	}
-	if(ds){
-	    cout<<"CInByteStream is in good status.";
-	}
-
-流输入操作：
-CInByteStream::operator >>()支持的C++内置简单类型包括：
-	char
-	signed char
-	unsigned char
-	short
-	unsigned short
-	int
-	unsigned int
-	long
-	unsigned long
-	long long
-	unsigned long long
-例如：
-	CInByteStream ds(source,true);	//假定source是有效的数据源；
-					//true参数表示采用网络字节序
-	int val;
-	char ch;
-	ds>>val>>ch;	//读取一个int，并赋值给val；再读取一个char，赋值给ch
-
-CInByteStream::operator >>()支持std::string，存储方式是：
-	length(4 bytes) + data(length bytes)
-例如：
-	std::string str;
-	ds>>str;	//首先读取一个U32，作为字符串的长度len，然后读取len字节
-			//的数据，作为字符串的内容，并赋值给str
-
-CInByteStream::operator >>()支持任意自定义类型T，只要重载
-	CInByteStream & operator >>(CInByteStream & , T &);
-函数，例如：
-	struct A{
-	    int i;
-	    std::string s;
-	};
-	CInByteStream & operator >>(CInByteStream & ds, A & a){
-	    return ds>>a.i>>a.s;
-	}
-然后按照下面的方式使用：
-	A a;
-	ds>>a;	//调用上面的operator >>(CInByteStream & , A &)
-
-CInByteStream::operator >>()支持任意类型的数组，只要每个数组元素都被支持，存储
-方式是：
-	size(4 bytes,对象个数) + data(size个对象)
-读取数组的方式有2种：通过对象指针，通过Manip::array()函数。
-通过对象指针的示例如下：
-	A arr[10];
-	ds>>arr;	//arr作为指针(A *)传递给ds，A类型已被支持
-			//首先读取一个U32，作为对象个数sz，然后依次读取sz个对象
-			//并赋值给arr[0],arr[1],...,arr[sz - 1]。
-			//注意：如果sz > 10，那么会访问越界的内存，所以这种方式
-			//使用简单，但是不安全
-通过array()函数的示例如下：
-	A arr[10];
-	size_t real_sz;
-	ds>>Manip::array(arr,10,&real_sz);
-			//Manip::array()包装了对象指针arr和最大长度10，real_sz
-			//参数用于接收实际读到的对象个数，可以省略不传。
-			//首先读取一个U32，作为对象个数sz，然后检查sz是否在数组
-			//最大长度限制以内。如果不是，则设置ds的错误状态并返回；
-			//如果是，则设置real_sz，依次读取sz个对象，并赋值给
-			//arr[0],arr[1],...,arr[sz - 1]。
-			//注意：请及时检查ds的状态。在出错状态下，ds的任何后续
-			//输入操作都会失效。
-
-CInByteStream::operator >>()支持直接读取指定个数的对象，即没有前面4字节的对象个
-字段数。读取的方式有2种：通过Manip::raw()函数，通过Manip::range()函数。
-通过Manip::raw()函数的示例如下：
-	A arr[10];
-	ds>>Manip::raw(arr,10);
-			//Manip::raw()函数包装数组指针arr和对象个数10
-			//直接读取10个A对象，并赋值给arr[0],...,arr[9]。
-			//对于CInByteStream支持的C++简单内置类型（见前面），只
-			//要可能，都会使用memcpy优化效率。
-			//注意：arr必须是数组，或者连续存储区域的首地址
-通过Manip::range()函数的示例如下：
-	std::vector<A> arr(10);
-	ds>>Manip::range(arr.begin(),arr.end());
-			//Manip::range()函数对迭代器进行包装，并依次读取若干对
-			//象赋值给迭代器指定范围内的每个元素。
-			//注意：这种方式不会采用memcpy优化，即使读取的对象是C++
-			//简单内置类型也不行，所以效率不会比采用Manip::raw()好，
-			//但是这种方式有更大的灵活性。
-
-CInByteStream::operator >>()支持从指定位置读取对象，而不改变原先读指针的位置。
-通过Manip::offset_value()函数实现，例如：
-	A a;
-	ds>>Manip::offset_value(12,a);
-			//从数据源偏移为12字节的位置，读取一个A对象，赋值给a。
-			//不会改变读指针cur_的值。
-
-CInByteStream::operator >>()支持的其他功能：
-设置字节序类型，通过Manip::set_order()函数实现。
-例如：
-	int x;
-	ds>>Manip::set_order(CInByteStream::HostOrder)
-	    >>x
-	    >>Manip::set_order(true);
-			//首先把ds设置成本地字节序，然后读取一个int，赋值给x，
-			//最后把ds设置成网络字节序
-			//注：Manip::set_order()函数可以接受
-			//CInByteStream::EOrderType和bool类型的参数
-设置读指针位置，通过Manip::seek()函数实现。
-例如：
-	int x;
-	ds>>Manip::seek(12,CInByteStream::Begin)
-	    >>x;	//首先设置读指针为绝对偏移12字节的位置，然后读取一个int
-			//Manip::seek()函数参数的意义与CInByteStream::Seek()函
-			//数相同
-跳过指定的字节，通过Manip::skip()函数实现。
-例如：
-	U32 x;
-	ds>>Manip::skip(10)
-	    >>x
-	    >>Manip::skip(-14);
-			//首先从当前读指针位置向后跳过10字节，读取一个U32，然后
-			//向前跳14字节，回到原来的位置
+注意：SetSource()会重置cur指针和错误状态。
+参数netByteOrder表示数据源的字节序，可以是网络字节序(true)或本地字节序(false)。
 
 
-1.2 COutByteStream
+1.2 字节序
 
-把对象写入2进制数据流中，便于传送。
-
-构造函数接受参数sz和netByteOrder，前者表示初始缓冲区大小，如果不够会自动增长，
-后者指定字节序类型（网络字节序(true)或本地字节序(false)）。
+GetByteOrder()      获取源数据的字节序，true为网络序，false为本地序。
+SetByteOrder(arg)   设置源数据的字节序，true为网络序，false为本地序。
 
 
-OrderType()函数用于设置输出流的字节序类型(NetOrder或HostOrder)。
+1.3 对象状态
 
-Seek()函数用于设置写指针cur_的位置。参数dir指定了偏移的方向和参照
-点，有效的取值为：
-	Begin	此时Seek()表示设置cur_相对于缓冲区起点的偏移为参数off的值。
-		Tell()表示获取cur_相对于缓冲区起点的偏移量。
-	End	与Cur相同。
-	Cur	此时Seek()表示把cur_移动off偏移量：如果off > 0，那么向后移动，
-		即保留off字节的空间；如果off < 0，那么向前移动，即丢弃(-off)字
-		节的数据。
-Seek()函数总是返回cur_指针相对于缓冲区起点的偏移量。
-Tell()用于获取cur_指针相对于缓冲区起点的偏移量。
+CInByteStream对象通过内部状态值，记录是否发生错误。
+只有状态值为0时，才能进行读取操作；
+如果发生错误，则将状态值置为非0；
+当状态值非0时，所有读取操作都无效。
 
-Size()函数用于获取已写入的数据量。
+Status(s)       设置状态值。
+Status()        获取状态值。
+ResetStatus()   重置状态值为0。
+ToString()      将对象转化成可读字符串。
 
-ExportData()函数用于导出缓冲区的2进制数据，支持的目的数据类型有：
-	std::string &
-	std::vector<char> &
-	[char * , size_t &]
-参数bAppend的意义：true表示将缓冲区数据追加到目的数据的后面；false表示直接用缓
-冲区数据覆盖目的地的原有数据。
-注意：当目的数据类型为[char * , size_t &]时，(size_t &)类型的参数既作为传入参数
-（目的地的大小），也作为传出参数（实际转移的数据大小）。如果目的地的大小不够，
-则导出数据失败，ExportData()函数返回false，并且不改变COutByteStream的任何内部状
-态。
-转移数据成功后，ExportData()函数返回true，并重置写入指针，但是不改变错误状态。
+另外可以通过如下代码，检测对象的状态：
 
-流输出操作：
-COutByteStream::operator <<()支持的C++内置简单类型包括：
-	char
-	signed char
-	unsigned char
-	short
-	unsigned short
-	int
-	unsigned int
-	long
-	unsigned long
-	long long
-	unsigned long long
-例如：
-	COutByteStream ds(100,true);	//初始缓冲区为100字节
-					//true参数表示采用网络字节序
-	int val = 1;
-	char ch = 'A';
-	ds<<val<<ch;	//写入一个值为1的int，和字符'A'
+CInByteStream in;
+if(in){
+    //对象状态正常
+}
+和
+if(!in){
+    //对象状态不正常
+}
 
-COutByteStream::operator <<()支持std::string，存储方式是：
-	length(4 bytes) + data(length bytes)
-例如：
-	std::string str;
-	ds<<str;	//首先以U32类型写入字符串的长度，然后写入str的内容
 
-COutByteStream::operator <<()支持任意自定义类型T，只要重载
-	COutByteStream & operator <<(COutByteStream & , T &);
-函数，例如：
-	struct A{
-	    int i;
-	    std::string s;
-	};
-	COutByteStream & operator <<(COutByteStream & ds, A & a){
-	    return ds<<a.i<<a.s;
-	}
-然后按照下面的方式使用：
-	A a;
-	ds<<a;	//调用上面的operator <<(COutByteStream & , A &)
+1.4 cur指针与源数据大小
 
-COutByteStream::operator <<()支持任意类型的数组，只要每个数组元素都被支持，存储
-方式是：
-	size(4 bytes,对象个数) + data(size个对象)
-通过Manip::array()函数实现，例如：
-	A arr[10];
-	ds<<Manip::array(arr,10);
-			//Manip::array()包装了对象指针arr和数组长度10
-			//首先以U32类型写入对象个数10，然后依次写入每个对象
+cur指针表示当前读取数据的位置，范围应该不超过源数据的长度。
 
-COutByteStream::operator <<()支持直接写入指定个数的对象，即没有前面4字节的对象个
-字段数。写入的方式有2种：通过Manip::raw()函数，通过Manip::range()函数。
-通过Manip::raw()函数的示例如下：
-	A arr[10];
-	ds<<Manip::raw(arr,10);
-			//Manip::raw()函数包装数组指针arr和对象个数10。
-			//直接写入10个A对象。
-			//对于COutByteStream支持的C++简单内置类型（见前面），只
-			//要可能，都会使用memcpy优化效率。
-			//注意：arr必须是数组，或者连续存储区域的首地址
-通过Manip::range()函数的示例如下：
-	std::vector<A> arr(10);
-	ds<<Manip::range(arr.begin(),arr.end());
-			//Manip::range()函数对迭代器进行包装，并依次写入迭代器
-			//指定范围内的每个元素。
-			//注意：这种方式不会采用memcpy优化，即使写的对象是C++简
-			//单内置类型也不行，所以效率不会比采用Manip::raw()好，
-			//但是这种方式更加灵活。
+Seek(off, dir)  设置cur指针，返回最后cur指针相对于数据源起点的偏移量。
+Tell(dir)       获取cur指针的位置。
+    其中，dir参数指定了偏移的方向和参照点，有效的取值为：
+        Begin   此时Seek()表示设置cur相对于数据源起点的偏移为参数off的值。
+                Tell()表示获取cur相对于数据源起点的偏移量。
+        End     此时Seek()表示设置cur到数据源结尾之前off偏移量的位置。
+                Tell()表示cur到数据源结尾的距离，即剩余的数据量。
+        Cur     此时Seek()表示把cur移动off偏移量：如果off > 0，那么向后移动；如果off < 0，那么向前移动。
+                Tell()总是返回0。
+CurPos()        返回当前cur指针相对于数据源起点的偏移量。
+LeftSize()      返回当前剩余数据的字节数。
 
-COutByteStream::operator <<()支持将对象写入到指定位置，而不改变原先写指针的位置。
-通过Manip::offset_value()函数实现，例如：
-	A a;
-	ds<<Manip::offset_value(12,a);
-			//将对象a写入缓冲区偏移为12字节的位置a，
-			//不会改变写指针cur_的值。
 
-COutByteStream::operator <<()支持的其他功能：
-设置字节序类型，通过Manip::set_order()函数实现。
-例如：
-	int x;
-	ds<<Manip::set_order(COutByteStream::HostOrder)
-	    <<x
-	    <<Manip::set_order(true);
-			//首先把ds设置成本地字节序，然后写入一个int，
-			//最后把ds设置成网络字节序
-			//注：Manip::set_order()函数可以接受
-			//COutByteStream::EOrderType和bool类型的参数
-设置写指针位置，通过Manip::seek()函数实现。
-例如：
-	int x;
-	ds<<Manip::seek(12,COutByteStream::Begin)
-	    <<x;	//首先设置写指针为绝对偏移12字节的位置，然后写入一个int
-			//Manip::seek()函数参数的意义与COutByteStream::Seek()函
-			//数相同
-跳过或预留指定的字节，通过Manip::skip()函数实现。
-例如：
-	U32 x;
-	ds<<Manip::skip(-14)
-	    <<x
-	    <<Manip::skip(10);
-			//首先从当前写指针位置向前跳14字节，写入一个U32，然后
-			//向前后10字节，回到原来的位置
+1.5 POD读取
 
-向指定位置插入数据，通过Manip::insert()函数实现。
-例如：
-	COutByteStream ds;
-	ds<<U32(1)<<std::string("abc")
-	    <<Manip::insert(4,U64(123));
-			//将U64(123)插入缓冲区偏移为4的位置，所有后面的数据将自
-			//向后移动8字节（U64的字节长度），写指针也会随之向后移
-			//动8字节
-等价于：
-	COutByteStream ds;
-	ds<<U32(1)<<U64(123)<<std::string("abc");
+对于下列C++的POD类型，CInByteStream支持直接读取：
+    char
+    signed char
+    unsigned char
+    short
+    unsigned short
+    int
+    unsigned int
+    long
+    unsigned long
+    long long
+    unsigned long long
+读取的方式为：
+in >> val;
+实现细节：in检查剩余数据是否足够sizeof(val)，将数据复制到val，根据需要调整val的字节序。
 
+
+1.6 数组数据读取
+
+CInByteStream通过Manip::raw()操作符来读取数组数据，示例：
+
+A a[10];
+in >> Manip::raw(a, 10);    //读取10个A对象，放入a数组中
+                            //A是任何支持(in >> val)的类型，包括POD
+
+std::string str;
+in >> Manip::raw(str, 16);  //读取16个字符，放入str中
+                            //如果str中已有数据，则会追加到后面
+
+std::vector<A> vec;
+in >> Manip::raw(vec, 100); //读取100个A对象，放入vec中
+                            //A是任何支持(in >> val)的类型，包括POD
+                            //如果vec中已有数据，则会追加到后面
+以上std::vector的代码还适用于以下类型：
+    std::list
+    std::deque
+    其他实现了push_back()和back()的容器
+
+Iter first, last;
+in >> Manip::raw(first, last);  //读取若干对象，放入[first, last)指定的内存/容器里
+                                //Iter表示迭代器类型
+                                //要求迭代器指向的数据类型，支持(in >> val)操作
+//实现细节：以下是简化版伪码
+for(;first != last;++first)
+    in >> *first;
+
+
+1.7 (长度+数组数据)读取
+
+CInByteStream通过Manip::array()操作符来读取(长度+数组数据)，示例：
+
+A a[10];
+uint32_t real_sz = 0;
+in >> Manip::array(a, 10, &real_sz);    //先读取uint32_t到real_sz里，然后读取real_sz个A对象到a数组里
+                                        //如果real_sz > 10，则读取失败，且in的状态值置为非0
+//如果不关心real_sz，可以使用如下方式：
+in >> Manip::array<uint32_t>(a, 10);    //先读取uint32_t作为sz，然后读取sz个A对象到a数组里
+                                        //如果sz > 10，则读取失败，且in的状态值置为非0
+                                        //sz无法返回给调用者
+//或者如下方式：
+in >> Manip::array(a, uint32_t(10));    //效果同上
+
+std::string str
+in >> str;                              //先读取uint16_t作为len，然后读取len个字符到str里
+                                        //如果str已有数据，则会追加到后面
+//以上代码等价于：
+in >> Manip::array(str);                //效果同上
+
+//如果len的类型不是uint16_t，可以通过如下形式指定：
+in >> Manip::array<uint32_t>(str);      //先读取uint32_t作为len，然后读取len个字符到str里
+
+//如果需要限制读取字符数，可以使用如下形式：
+in >> Manip::array<uint32_t>(str, 100); //先读取uint32_t作为len，然后读取len个字符到str里
+                                        //如果len > 100，则读取失败，且in的状态值置为非0
+//以上代码等价于：
+in >> Manip::array(str, uint32_t(100)); //效果同上，len的类型是uint32_t
+
+std::vector<A> vec;
+in >> Manip::array(vec);                //先读取uint16_t作为sz，然后读取sz个A对象到vec里
+                                        //如果vec里已有数据，则会追加到后面
+
+//如果sz的类型不是uint16_t，可以通过如下形式指定：
+in >> Manip::array<uint32_t>(vec);      //先读取uint32_t作为sz，然后读取sz个A对象到vec里
+
+//如果需要限制读取对象个数，可以使用如下形式：
+in >> Manip::array<uint32_t>(vec, 100); //先读取uint32_t作为sz，然后读取sz个A对象到vec里
+                                        //如果sz > 100，则读取失败，且in的状态值置为非0
+//以上代码等价于：
+in >> Manip::array(vec, uint32_t(100)); //效果同上，sz的类型是uint32_t
+
+以上std::vector的代码还适用于以下类型：
+    std::list
+    std::deque
+    其他实现了push_back()和back()的容器
+
+
+1.8 protobuf读取
+
+CInByteStream通过Manip::protobuf()操作符来读取protobuf消息，示例：
+
+PbMsg msg;
+in >> Manip::protobuf(msg);         //解析PbMsg对象，放到msg里
+                                    //如果解析失败，则in的状态值置为非0
+//实现细节：调用msg.ParseFromArray()从剩余数据里解析消息。
+
+//如果需要指定protobuf消息占用的字节数，可以增加一个参数：
+in >> Manip::protobuf(msg, 460);    //从460字节数据里解析PbMsg对象，放到msg里
+                                    //如果解析失败，则in的状态值置为非0
+                                    //解析完成后，cur指针只会增加460偏移
+
+
+1.9 特殊数据读取
+
+Manip::offset_value(off, val)
+在指定的位置off读取数据val，示例：
+in >> Manip::offset_value(100, val);    //在偏移100处，读取val数据
+                                        //完成后，cur指针的值保持不变
+//实现细节：先将cur指针跳到100（相对于源数据起始位置），读取val数据，最后将cur指针跳到原来的位置。
+
+Manip::value_byteorder(val, order)
+指定字节序order读取数据val，示例：
+in >> Manip::value_byteorder(ipv4, true);   //读取ipv4数据，并转换成网络字节序(true)
+                                            //如果源数据是以网络字节序编码的，则无需任何字节序转换
+                                            //第二个参数：网络字节序(true)，本地字节序(false)
+//实现细节：先读取数据到ipv4里，检查源数据的字节序和第二个参数，必要时交换ipv4的字节序。
+
+
+1.10 功能性操作符
+
+Manip::set_order(order)
+设置CInByteStream源数据的字节序为order，示例：
+in >> Manip::set_order(true);   //设置in的源数据为网络字节序(true)
+                                //第一个参数：网络字节序(true)，本地字节序(false)
+
+Manip::seek(off, dir)
+设置cur指针的位置，示例：
+in >> Manip::seek(32, Begin);   //设置cur指针为源数据起始位置偏移32字节处
+                                //参数意义与Seek()相同
+
+Manip::skip(off)
+设置cur指针跳过指定字节数off，示例：
+in >> Manip::skip(4);           //设置cur增加4，相当于向后跳过4字节
+                                //如果off为负数，则向前跳指定字节
+//实现细节：等价于(in >> Manip::seek(off, Cur))。
+
+
+
+
+
+2.  COutByteStream / COutByteStreamStr / COutByteStreamStrRef
+    COutByteStreamVec / COutByteStreamVecRef
+    COutByteStreamBuf
+
+将数据写入二进制数据流中，便于传输。
+其中：
+COutByteStream / COutByteStreamStr / COutByteStreamStrRef
+    底层使用std::string存储数据。
+    COutByteStream与COutByteStreamStr等价，自己管理std::string对象。
+    COutByteStreamStrRef使用外面的std::string对象存储数据。
+COutByteStreamVec / COutByteStreamVecRef
+    底层使用std::vector<char>存储数据。
+    COutByteStreamVec自己管理std::vector<char>对象。
+    COutByteStreamVecRef使用外面的std::vector<char>对象存储数据。
+COutByteStreamBuf
+    底层使用外面的[char *, size_t]缓冲区存储数据。
+
+以下用COutByteStreamX指代上面任意一种输出流类型。
+
+
+2.1 初始化
+
+COutByteStream(size_t reserve = 1024, bool netByteOrder = true)
+COutByteStreamVec(size_t reserve = 1024, bool netByteOrder = true)
+参数：
+reserve         底层预留数据长度，可减少扩展时的内存复制。默认1024字节。
+netByteOrder    二进制数据的字节序，可以是网络字节序(true)或本地字节序(false)。默认为true。
+
+COutByteStreamStrRef(std::string & buf, bool netByteOrder = true)
+COutByteStreamVecRef(std::vector<char> & buf, bool netByteOrder = true)
+参数：
+buf             指定的底层数据存储对象。如果buf已有数据，则新写入的二进制数据会追加到后面。
+netByteOrder    二进制数据的字节序，可以是网络字节序(true)或本地字节序(false)。默认为true。
+
+COutByteStreamBuf(char * buf, size_t sz, bool  netByteOrder = true)
+buf             指定的底层缓冲区地址。
+sz              底层缓冲区的大小。如果写入的数据超过sz，则会失败。
+netByteOrder    二进制数据的字节序，可以是网络字节序(true)或本地字节序(false)。默认为true。
+
+
+2.2 字节序
+
+GetByteOrder()      获取二进制数据的字节序，true为网络序，false为本地序。
+SetByteOrder(arg)   设置二进制数据的字节序，true为网络序，false为本地序。
+
+
+1.3 对象状态
+
+COutByteStreamX对象通过内部状态值，记录是否发生错误。
+只有状态值为0时，才能进行写入操作；
+如果发生写入错误，则状态值会被置为非0；
+当状态值非0时，所有写入操作都无效。
+
+Status(s)       设置状态值。
+Status()        获取状态值。
+ResetStatus()   重置状态值为0。
+ToString()      将对象转化成可读字符串。
+
+另外可以通过如下代码，检测对象的状态：
+
+COutByteStream out;
+if(out){
+    //对象状态正常
+}
+if(!out){
+    //对象状态不正常
+}
+
+
+2.4 cur指针与二进制数据大小
+
+cur指针表示当前写入数据的位置。
+
+Seek(off, dir)  设置cur指针到相对于dir参考点的off偏移位置，返回最后cur指针相对于二进制数据起点的偏移量。
+    其中，dir参数指定了偏移的参照点和方向，有效的取值为：
+        Begin   表示设置cur相对于二进制数据起点的偏移为参数off的值。
+        End     表示设置cur到(cur + off)的位置，off可以是负数。
+        Cur     同End。
+Size()          返回当前cur指针相对于二进制数据起点的偏移量。
+
+
+2.5 二进制数据导出
+
+COutByteStream / COutByteStreamStr
+ExportData(str)     将二进制数据导出到str里，str的类型是std::string
+                    如果str已有数据，则会追加到后面
+ExportData(buf, sz) 将二进制数据导出到[char *, size_t]里
+                    如果sz大小不够，则会返回false
+                    完成后，sz会改写成实际二进制数据的大小
+                    buf里的原有数据会被覆盖
+
+COutByteStreamStrRef
+ExportData()        将二进制数据导出到指定的存储对象里。
+                    指定的存储对象是指构造函数的第一个参数。
+                    此处主要是设置二进制数据的大小，没有内存复制。
+
+COutByteStreamVec
+ExportData(vec)     将二进制数据导出到vec里，vec的类型是std::vector<char>
+                    如果vec已有数据，则会追加到后面
+ExportData(buf, sz) 将二进制数据导出到[char *, size_t]里
+                    如果sz大小不够，则会返回false
+                    完成后，sz会改写成实际二进制数据的大小
+                    buf里的原有数据会被覆盖
+
+COutByteStreamVecRef
+ExportData()        将二进制数据导出到指定的存储对象里。
+                    指定的存储对象是指构造函数的第一个参数。
+                    此处主要是设置二进制数据的大小，没有内存复制。
+
+COutByteStreamBuf
+ExportData(sz)      将二进制数据导出到指定的缓冲区[char *, size_t]里。
+                    指定的缓冲区是指构造函数的前二个参数。
+                    此处主要是将sz设置成二进制数据的大小，没有内存复制。
+
+注意：ExportData后，cur指针会置0。
+
+
+2.5 POD写入
+
+对于下列C++的POD类型，COutByteStreamX支持直接写入：
+    char
+    signed char
+    unsigned char
+    short
+    unsigned short
+    int
+    unsigned int
+    long
+    unsigned long
+    long long
+    unsigned long long
+写入的方式为：
+out << val;
+//实现细节：out检查保证二进制数据是否足够容纳sizeof(val)，将val复制到二进制数据里，根据需要调整字节序。
+
+
+2.6 数组数据写入
+
+COutByteStreamX通过Manip::raw()操作符写入数组数据，示例：
+
+A a[10];
+out << Manip::raw(a, 10);   //将10个A对象写入二进制流
+                            //A是任何支持(out << val)的类型，包括POD
+
+std::string str;
+out << Manip::raw(str);     //将str的内容写入二进制流
+
+std::vector<A> vec;
+out << Manip::raw(vec);     //将vec的内容写入二进制流
+                            //A是任何支持(out << val)的类型，包括POD
+以上std::vector的代码还适用于以下类型：
+    std::list
+    std::deque
+    std::set
+    其他实现了begin()和end()迭代器的容器
+
+Iter first, last;
+out << Manip::raw(first, last); //将[first, last)范围内的若干对象写入二进制流
+                                //Iter表示迭代器类型
+                                //要求迭代器指向的数据类型，支持(out << val)操作
+//实现细节：以下是简化版伪码
+for(;first != last;++first)
+    out << *first;
+
+
+2.7 (长度+数组数据)写入
+
+COutByteStreamX通过Manip::array()操作符写入(长度+数组数据)，示例：
+
+A a[10];
+out << Manip::array<uint32_t>(a, 10);   //先写入uint32_t类型的10到二进制流里，然后将a的10个A对象写入二进制流里
+//或者如下方式：
+out << Manip::array(a, uint32_t(10));   //效果同上
+
+std::string str
+out << str;                             //先写入uint16_t类型的str.length()，然后将str的内容写入二进制流里
+//以上代码等价于：
+out << Manip::array(str);               //效果同上
+
+//如果length的类型不是uint16_t，可以通过如下形式指定：
+out << Manip::array<uint32_t>(str);     //先写入uint32_t类型的str.length()，然后将str的内容写入二进制流里
+
+std::vector<A> vec;
+out << Manip::array(vec);               //先写入uint16_t类型的vec.size()，然后将vec的内容写入二进制流里
+
+//如果size的类型不是uint16_t，可以通过如下形式指定：
+out << Manip::array<uint32_t>(vec);     //先写入uint32_t类型的vec.size()，然后将vec的内容写入二进制流里
+
+以上std::vector的代码还适用于以下类型：
+    std::list
+    std::deque
+    std::set
+    其他实现了begin()和end()迭代器的容器
+
+
+2.8 protobuf写入
+
+COutByteStreamX通过Manip::protobuf()操作符写入protobuf消息，示例：
+
+PbMsg msg;
+out << Manip::protobuf(msg);        //将PbMsg对象msg序列化到二进制流里
+                                    //如果序列化失败，则out的状态值置为非0
+//实现细节：调用msg.SerializeToArray()序列化到out。
+
+
+2.9 特殊数据写入
+
+Manip::offset_value(off, val)
+在指定的位置off写入数据val，覆盖原有数据，示例：
+out << Manip::offset_value(100, val);   //在偏移100处，写入val数据
+                                        //会覆盖100处的原有数据
+                                        //完成后，cur指针的值保持不变
+//实现细节：先将cur指针跳到100（相对于二进制数据的起始位置），写入val数据，最后将cur指针跳回原来的位置。
+
+Manip::value_byteorder(val, order)
+指定字节序order写入数据val，示例：
+out << Manip::value_byteorder(ipv4, true);  //将网络字节序(true)的ipv4数据，写入二进制流
+                                            //如果out的二进制数据是以网络字节序编码的，则无需任何字节序转换
+                                            //第二个参数：网络字节序(true)，本地字节序(false)
+//实现细节：检查out的字节序和第二个参数，必要时交换ipv4的字节序，然后将ipv4写入二进制流。
+
+Manip::insert(off, val)
+在指定的位置off，插入数据val，原有数据向后移动，示例：
+out << Manip::insert(100, val);         //在偏移100处，插入val数据
+                                        //偏移100处原有的数据会向后移动
+                                        //完成后，cur指针会增加，仍指向原有数据的结尾
+
+
+2.10 功能性操作符
+
+Manip::set_order(order)
+设置COutByteStreamX数据的字节序为order，示例：
+out << Manip::set_order(true);  //设置out的二进制数据为网络字节序(true)
+                                //第一个参数：网络字节序(true)，本地字节序(false)
+
+Manip::seek(off, dir)
+设置cur指针的位置，示例：
+out << Manip::seek(32, Begin);  //设置cur指针为二进制数据起始位置偏移32字节处
+                                //参数意义与Seek()相同
+
+Manip::skip(off)
+设置cur指针跳过指定字节数off，示例：
+out << Manip::skip(4);          //设置cur增加4，相当于向后跳过4字节
+                                //如果off为负数，则向前跳指定字节
+//注意：预留出来的空间，内容是不确定的。
+//实现细节：等价于(out << Manip::seek(off, Cur))。

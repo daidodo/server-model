@@ -33,7 +33,7 @@ public:
     void Status(int st){status_ = st;}
     int Status() const{return status_;}
     void ResetStatus(){Status(0);}
-    bool NetByteOrder() const{return netByteOrder_;}
+    bool GetByteOrder() const{return netByteOrder_;}
     void SetByteOrder(bool netByteOrder){netByteOrder_ = netByteOrder;}
     std::string ToString() const{
         std::ostringstream oss;
@@ -43,7 +43,7 @@ public:
         return oss.str();
     }
 protected:
-    //from, to: true-NetByteOrder, false-HostByteOrder
+    //from, to: true-Net Byte Order, false-Host Byte Order
     //return:
     //  true    need swap byte order
     //  false   no need
@@ -380,7 +380,7 @@ class CManipulatorSetOrder
     bool netByteOrder_;
 public:
     explicit CManipulatorSetOrder(bool netByteOrder):netByteOrder_(netByteOrder){}
-    bool NetByteOrder() const{return netByteOrder_;}
+    bool GetByteOrder() const{return netByteOrder_;}
 };
 
 template<class T>
@@ -394,7 +394,7 @@ public:
         , nb_(netByteOrder)
     {}
     T & Value() const{return val_;}
-    bool NetByteOrder() const{return nb_;}
+    bool GetByteOrder() const{return nb_;}
 };
 
 class CManipulatorSeek
