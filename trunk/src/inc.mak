@@ -19,11 +19,11 @@ LOG            := -DLOGGER
 LOGSYS         := -DLOGSYS
 LOG4CLIB       := #-llog4cplus
     #------use zlib or not
-ZIP            := #-lz
+ZIP            := -lz
     #------use openssl(-lcrypto) or not
 CRYPTO         := -lcrypto
     #------use mysql(-lmysqlclient_r -lz) or not
-MYSQL          := #-lmysqlclient_r -lz
+MYSQL          := -lmysqlclient_r
     #------use epoll(-DUSEEPOLL) or poll
 EPOLL          := -DUSEEPOLL
     #------use mt_alloc or not
